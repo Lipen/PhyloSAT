@@ -1,7 +1,3 @@
-import jebl.evolution.graphs.Node;
-import jebl.evolution.taxa.Taxon;
-import jebl.evolution.trees.SimpleRootedTree;
-
 import java.util.*;
 
 /**
@@ -20,7 +16,7 @@ public class FormulaBuilder {
 
     private Map<String, Integer> m;
 
-    private StringBuilder sb;
+    private StringBuilder sb, hb;
 
     private boolean enableReticulationConnection;
 
@@ -28,9 +24,9 @@ public class FormulaBuilder {
 
     private int clausesCount;
 
-    public FormulaBuilder(List<PhylogeneticTree> trees, int hybridisationNumber, Map<String, Integer> translationMap) {
-        this(trees, hybridisationNumber, translationMap, false, false);
-    }
+//    public FormulaBuilder(List<PhylogeneticTree> trees, int hybridisationNumber, Map<String, Integer> translationMap) {
+//        this(trees, hybridisationNumber, translationMap, false, false);
+//    }
 
     public FormulaBuilder(List<PhylogeneticTree> trees,
                           int hybridisationNumber,
@@ -49,12 +45,17 @@ public class FormulaBuilder {
         this.clausesCount = 0;
     }
 
+    public String getHelpMap() {
+        return this.hb.toString();
+    }
+
     public String buildCNF() {
         if (this.m.size() > 0) {
             throw new RuntimeException("Given translation map (variable -> int) is not empty");
         }
 
         this.sb = new StringBuilder();
+        this.hb = new StringBuilder();
         commentCNF("n = %d; k = %d; trees count = %d", n, k, phTrees.size());
 
         addParentConstraints();
@@ -93,6 +94,7 @@ public class FormulaBuilder {
             for (int nodeNumber = 0; nodeNumber < treeNodesCount - 1; nodeNumber++) {
                 for (int parentNumber : possibleParents(nodeNumber)) {
                     createVar("parent", nodeNumber, parentNumber);
+                    hb.append("p ").append(nodeNumber).append(" ").append(parentNumber).append(" ").append(m.size()).append("\n");
                 }
             }
             commentCNF("Variables parent_v_u is in [%d, %d]", intervalStart, m.size());
@@ -126,6 +128,7 @@ public class FormulaBuilder {
             for (int nodeNumber = n; nodeNumber < treeNodesCount; nodeNumber++) {
                 for (int childNumber : possibleChildren(nodeNumber)) {
                     createVar("left", nodeNumber, childNumber);
+                    hb.append("l ").append(nodeNumber).append(" ").append(childNumber).append(" ").append(m.size()).append("\n");
                 }
             }
             commentCNF("Variables left_v_u is in [%d, %d]", intervalStart, m.size());
@@ -134,6 +137,7 @@ public class FormulaBuilder {
             for (int nodeNumber = n; nodeNumber < treeNodesCount; nodeNumber++) {
                 for (int childNumber : possibleChildren(nodeNumber)) {
                     createVar("right", nodeNumber, childNumber);
+                    hb.append("r ").append(nodeNumber).append(" ").append(childNumber).append(" ").append(m.size()).append("\n");
                 }
             }
             commentCNF("Variables right_v_u is in [%d, %d]", intervalStart, m.size());
@@ -161,11 +165,11 @@ public class FormulaBuilder {
                         addClause(-getVar("right", nodeNumber, childNumber),
                                 -getVar("right", nodeNumber, otherNumber));
                     }
- // TODO: sdf
-//                    if (childNumber <= otherNumber) {
-//                        addClause(-getVar("right", nodeNumber, childNumber),
-//                                -getVar("left", nodeNumber, otherNumber));
-//                    }
+
+                    if (childNumber <= otherNumber) {
+                        addClause(-getVar("right", nodeNumber, childNumber),
+                                -getVar("left", nodeNumber, otherNumber));
+                    }
                 }
             }
         }
@@ -177,6 +181,7 @@ public class FormulaBuilder {
             for (int nodeNumber : reticulationNodes()) {
                 for (int childNumber : possibleChildren(nodeNumber)) {
                     createVar("ch", nodeNumber, childNumber);
+                    hb.append("e ").append(nodeNumber).append(" ").append(childNumber).append(" ").append(m.size()).append("\n");
                 }
             }
             commentCNF("Variables ch_v_u is in [%d, %d]", intervalStart, m.size());
@@ -209,6 +214,7 @@ public class FormulaBuilder {
             for (int nodeNumber : reticulationNodes()) {
                 for (int parentNumber : possibleParents(nodeNumber)) {
                     createVar("lp", nodeNumber, parentNumber);
+                    hb.append("el ").append(nodeNumber).append(" ").append(parentNumber).append(" ").append(m.size()).append("\n");
                 }
             }
             commentCNF("Variables lp_v_u is in [%d, %d]", intervalStart, m.size());
@@ -217,6 +223,7 @@ public class FormulaBuilder {
             for (int nodeNumber : reticulationNodes()) {
                 for (int parentNumber : possibleParents(nodeNumber)) {
                     createVar("rp", nodeNumber, parentNumber);
+                    hb.append("er ").append(nodeNumber).append(" ").append(parentNumber).append(" ").append(m.size()).append("\n");
                 }
             }
             commentCNF("Variables rp_v_u is in [%d, %d]", intervalStart, m.size());
@@ -247,10 +254,10 @@ public class FormulaBuilder {
                         addClause(-lpVar, -otherLpVar);
                         addClause(-rpVar, -otherRpVar);
                     }
- // TODO: uncomment
-//                    if (parent <= otherParent) {
-//                        addClause(-rpVar, -otherLpVar);
-//                    }
+
+                    if (parent <= otherParent) {
+                        addClause(-rpVar, -otherLpVar);
+                    }
                 }
             }
         }
@@ -453,7 +460,7 @@ public class FormulaBuilder {
                     // if parent is used
                     {
                         addClause(-parentVar, -usedVar, upVar); // if PARENT and USED then UP
-                        addClause(-parentVar, -upVar, usedVar); // if PARENT and UP then USED
+//                        addClause(-parentVar, -upVar, usedVar); // if PARENT and UP then USED
                     }
 
                     // if parent is not used
@@ -529,6 +536,8 @@ public class FormulaBuilder {
             for (int treeNodeNumber = n; treeNodeNumber < 2 * n - 1; treeNodeNumber++) {
                 for (int nodeNumber : treeNodes()) {
                     createVar("x", treeNumber, treeNodeNumber, nodeNumber);
+                    hb.append("x ").append(treeNumber).append(" ").append(treeNodeNumber).append(" ").
+                            append(nodeNumber).append(" ").append(m.size()).append("\n");
                 }
             }
             commentCNF("Variables x_%d_tv_v is in [%d, %d]", treeNumber, intervalStart, m.size());
@@ -582,7 +591,7 @@ public class FormulaBuilder {
         for (int treeNodeNumber = 0; treeNodeNumber < phTree.size(); treeNodeNumber++) {
             int treeParentNumber = phTree.getParent(treeNodeNumber);
             if (treeParentNumber == -1) {
-                addClause(getVar("x", treeNumber, treeNodeNumber, treeNodesCount - 1)); // root to root
+//                addClause(getVar("x", treeNumber, treeNodeNumber, treeNodesCount - 1)); // root to root
                 continue;
             }
 
@@ -611,7 +620,7 @@ public class FormulaBuilder {
 
                     for (int parentNodeNumber : treeNodes()) {
                         int parentXVar = m.get("x_" + treeNumber + "_" + treeParentNumber + "_" + parentNodeNumber);
-                        if (parentNodeNumber < nodeNumber) {
+                        if (parentNodeNumber <= nodeNumber) {
                             addClause(-xVar, -parentXVar);
                         }
                     }
@@ -709,7 +718,7 @@ public class FormulaBuilder {
             throw new RuntimeException("Node number out of bounds");
         }
 
-        List<Integer> ans = new ArrayList<Integer>();
+        List<Integer> ans = new ArrayList<>();
         if (nodeNumber < n) {
             return ans;
         }
@@ -731,7 +740,7 @@ public class FormulaBuilder {
             throw new RuntimeException("Node number out of bounds");
         }
 
-        List<Integer> ans = new ArrayList<Integer>();
+        List<Integer> ans = new ArrayList<>();
         if (nodeNumber == treeNodesCount - 1) {
             return ans;
         }
@@ -751,7 +760,7 @@ public class FormulaBuilder {
     }
 
     private List<Integer> possibleUp(int nodeNumber) {
-        List<Integer> ans = new ArrayList<Integer>();
+        List<Integer> ans = new ArrayList<>();
         for (int up : possibleParents(nodeNumber)) {
             if (up < treeNodesCount) {
                 ans.add(up);
@@ -761,7 +770,7 @@ public class FormulaBuilder {
     }
 
     private List<Integer> allNodes() {
-        List<Integer> ans = new ArrayList<Integer>();
+        List<Integer> ans = new ArrayList<>();
         for (int nodeNumber = 0; nodeNumber < this.treeNodesCount + k; nodeNumber++) {
             ans.add(nodeNumber);
         }
@@ -769,7 +778,7 @@ public class FormulaBuilder {
     }
 
     private List<Integer> treeNodes() {
-        List<Integer> ans = new ArrayList<Integer>();
+        List<Integer> ans = new ArrayList<>();
         for (int nodeNumber = this.n; nodeNumber < this.treeNodesCount; nodeNumber++) {
             ans.add(nodeNumber);
         }
@@ -777,7 +786,7 @@ public class FormulaBuilder {
     }
 
     private List<Integer> reticulationNodes() {
-        List<Integer> ans = new ArrayList<Integer>();
+        List<Integer> ans = new ArrayList<>();
         for (int nodeNumber = this.treeNodesCount; nodeNumber < this.treeNodesCount + k; nodeNumber++) {
             ans.add(nodeNumber);
         }

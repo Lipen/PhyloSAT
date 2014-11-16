@@ -20,7 +20,7 @@ import java.util.logging.SimpleFormatter;
  */
 public class Main {
     @Argument(usage = "paths to files with trees", metaVar = "treesPaths", required = true)
-    private List<String> treesPaths = new ArrayList<String>();
+    private List<String> treesPaths = new ArrayList<>();
 
     @Option(name = "--log", aliases = {"-l"}, usage = "write log to this file", metaVar = "<file>")
     private String logFilePath = null;
@@ -88,7 +88,7 @@ public class Main {
             }
         }
 
-        List<SimpleRootedTree> trees = new ArrayList<SimpleRootedTree>();
+        List<SimpleRootedTree> trees = new ArrayList<>();
         for (String filePath : treesPaths) {
             try {
                 BufferedReader reader = new BufferedReader(new FileReader(filePath));
@@ -104,13 +104,14 @@ public class Main {
                 logger.info(String.format("Loaded %d trees from %s", treesCount, filePath));
             } catch (Exception e) {
                 logger.warning("Can't load trees from file " + filePath);
+                e.printStackTrace();
                 return;
             }
         }
         checkTrees(trees);
 
         String loggerString = "Input original trees:";
-        List<PhylogeneticTree> inputTrees = new ArrayList<PhylogeneticTree>();
+        List<PhylogeneticTree> inputTrees = new ArrayList<>();
         for (SimpleRootedTree srt : trees) {
             PhylogeneticTree inputTree = new PhylogeneticTree(srt);
             inputTrees.add(inputTree);
@@ -126,7 +127,7 @@ public class Main {
             }
             logger.info(loggerStr);
 
-            int k = 0;
+            int k;
             if (hn >= 0) {
                 k = solveSubtask(subtaskTrees, hn, 1000000, new long[1]) ? hn : -1;
             } else {
@@ -192,22 +193,23 @@ public class Main {
         return trees.get(0).getTaxaSize();
     }
 
-    private int solveSubtask(List<PhylogeneticTree> trees, int mink, int maxk) throws IOException {
-        long TIME_LIMIT = 1000000;
-        for (int k = mink; k <= maxk; k++) {
-            if (solveSubtask(trees, k, TIME_LIMIT, new long[1])) {
-                return k;
-            }
-        }
-        return -1;
-    }
+//    private int solveSubtask(List<PhylogeneticTree> trees, int mink, int maxk) throws IOException {
+//        long TIME_LIMIT = 1000000;
+//        for (int k = mink; k <= maxk; k++) {
+//            if (solveSubtask(trees, k, TIME_LIMIT, new long[1])) {
+//                return k;
+//            }
+//        }
+//        return -1;
+//    }
 
     private boolean solveSubtask(List<PhylogeneticTree> trees, int k,
                                  long timeLimit, long[] time) throws IOException {
-        Map<String, Integer> m = new TreeMap<String, Integer>();
+        Map<String, Integer> m = new TreeMap<>();
         logger.info("Trying to solve problem with k = " + k + " reticulation nodes");
         FormulaBuilder builder = new FormulaBuilder(trees, k, m, enableReticulationEdges, disableComments);
         String cnf = builder.buildCNF();
+        String help = builder.getHelpMap();
         logger.info("CNF formula length is " + cnf.length() + " characters");
 
         try {
@@ -219,7 +221,24 @@ public class Main {
             logger.warning("File " + cnfFilePath + " not found: " + e.getMessage());
         }
 
+        try {
+            PrintWriter cnfPrintWriter = new PrintWriter(new File("help"));
+            cnfPrintWriter.print(help);
+            cnfPrintWriter.close();
+            logger.info("help file written to " + cnfFilePath);
+        } catch (FileNotFoundException e) {
+            logger.warning("File " + cnfFilePath + " not found: " + e.getMessage());
+        }
+
         boolean[] solution = CryptominisatPort.solve(cnf, null, null, timeLimit, time);
+
+        if(solution != null) {
+            StringBuilder hlpbld = new StringBuilder();
+            for (int i = 0; i < solution.length; ++i)
+                if (solution[i])
+                    hlpbld.append(i + 1).append(" ");
+            logger.info(hlpbld.toString());
+        }
 
         if (time[0] == -1) {
             logger.info("TIME LIMIT EXCEEDED (" + timeLimit + ")");
@@ -247,7 +266,7 @@ public class Main {
     }
 
     private List<List<PhylogeneticTree>> preprocessing(List<PhylogeneticTree> inputTrees) {
-        List<List<PhylogeneticTree>> ans = new ArrayList<List<PhylogeneticTree>>();
+        List<List<PhylogeneticTree>> ans = new ArrayList<>();
 
         List<PhylogeneticTree> currentTrees = collapseAll(inputTrees);
         if (!disableSplits) {
@@ -266,7 +285,7 @@ public class Main {
     }
 
     private List<PhylogeneticTree> collapseAll(List<PhylogeneticTree> inputTrees) {
-        ArrayList<PhylogeneticTree> ans = new ArrayList<PhylogeneticTree>();
+        ArrayList<PhylogeneticTree> ans = new ArrayList<>();
         for (PhylogeneticTree inputTree : inputTrees) {
             ans.add(new PhylogeneticTree(inputTree));
         }
@@ -284,8 +303,10 @@ public class Main {
 
     private boolean collapseEqualsSubtrees(List<PhylogeneticTree> trees) {
         PhylogeneticTree firstTree = trees.get(0);
+        // Почему не проверять на корень - непонятно
+        // Ведь круто же сколлапсить сразу все деревья если они равны
         for (int nodeNum = firstTree.size() - 2; nodeNum >= firstTree.getTaxaSize(); nodeNum--) {
-            List<Integer> equalsNodesNumbers = new ArrayList<Integer>();
+            List<Integer> equalsNodesNumbers = new ArrayList<>();
 
             for (PhylogeneticTree tree : trees) {
                 boolean hasEqualsSubtrees = false;
@@ -325,7 +346,7 @@ public class Main {
     private List<PhylogeneticTree> equalsTaxaSplit(List<PhylogeneticTree> trees) {
         PhylogeneticTree firstTree = trees.get(0);
         for (int nodeNum = firstTree.getTaxaSize(); nodeNum < firstTree.size() - 1; nodeNum++) {
-            List<Integer> equalsNodesNumbers = new ArrayList<Integer>();
+            List<Integer> equalsNodesNumbers = new ArrayList<>();
 
             for (PhylogeneticTree tree : trees) {
                 boolean hasEqualsTaxa = false;
@@ -350,7 +371,7 @@ public class Main {
                     label += firstTree.getLabel(leafNumber);
                 }
 
-                List<PhylogeneticTree> ans = new ArrayList<PhylogeneticTree>();
+                List<PhylogeneticTree> ans = new ArrayList<>();
                 for (int treeNum = 0; treeNum < trees.size(); treeNum++) {
                     PhylogeneticTree tree = trees.get(treeNum);
                     int collapsedNodeNum = equalsNodesNumbers.get(treeNum);
@@ -368,11 +389,11 @@ public class Main {
             throw new RuntimeException("There are less then 2 trees");
         }
 
-        Set<Taxon> taxa = new TreeSet<Taxon>(trees.get(0).getTaxa());
+        Set<Taxon> taxa = new TreeSet<>(trees.get(0).getTaxa());
         int taxaSize = taxa.size();
         for (int t = 1; t < trees.size(); t++) {
             SimpleRootedTree tree = trees.get(t);
-            Set<Taxon> treeTaxa = new TreeSet<Taxon>(tree.getTaxa());
+            Set<Taxon> treeTaxa = new TreeSet<>(tree.getTaxa());
             if (treeTaxa.size() != taxaSize) {
                 String msg = String.format("Tree %d has %d taxa, but tree 0 has %d", t, treeTaxa.size(), taxaSize);
                 throw new RuntimeException(msg);

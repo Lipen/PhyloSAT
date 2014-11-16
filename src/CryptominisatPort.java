@@ -54,7 +54,7 @@ public class CryptominisatPort {
             executionTime[0] = -1;
         }
 
-        String ansLine = null;
+        String ansLine = "";
         Scanner input = new Scanner(outputStream.toString());
         //System.out.println(outputStream.toString());
         //System.out.println(errStream.toString());
@@ -65,20 +65,20 @@ public class CryptominisatPort {
                 solverPrintWriter.println(line);
             }
             if (line.charAt(0) == 'v') {
-                ansLine = line;
+                ansLine += line.substring(2);
             }
         }
         input.close();
         tmpFile.delete();
 
-        if (ansLine == null) {
+        if (ansLine.isEmpty()) {
             return null;
         }
 
-        String[] splittedAns = ansLine.split(" ");
-        boolean[] ans = new boolean[splittedAns.length - 2];
+        String[] splitAns = ansLine.split(" ");
+        boolean[] ans = new boolean[splitAns.length - 1];
         for (int i = 0; i < ans.length; i++) {
-            ans[i] = !splittedAns[i + 1].contains("-");
+            ans[i] = !splitAns[i].contains("-");
         }
         return ans;
     }
