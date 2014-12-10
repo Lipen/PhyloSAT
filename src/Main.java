@@ -209,7 +209,7 @@ public class Main {
         logger.info("Trying to solve problem with k = " + k + " reticulation nodes");
         FormulaBuilder builder = new FormulaBuilder(trees, k, m, enableReticulationEdges, disableComments);
         String cnf = builder.buildCNF();
-        String help = builder.getHelpMap();
+        String help = builder.getHelpString();
         logger.info("CNF formula length is " + cnf.length() + " characters");
 
         try {
@@ -230,14 +230,21 @@ public class Main {
             logger.warning("File " + cnfFilePath + " not found: " + e.getMessage());
         }
 
+        Map<Integer, String> hlp_map = builder.getHelpMap();
+
         boolean[] solution = CryptominisatPort.solve(cnf, null, null, timeLimit, time);
 
         if(solution != null) {
             StringBuilder hlpbld = new StringBuilder();
-            for (int i = 0; i < solution.length; ++i)
-                if (solution[i])
-                    hlpbld.append(i + 1).append(" ");
+            StringBuilder hlpbld2 = new StringBuilder();
+            for (int i = 0; i < solution.length; ++i) {
+                if (solution[i]) {
+                    hlpbld.append(hlp_map.get(i + 1)).append("\n");
+                    hlpbld2.append(i + 1).append(" ");
+                }
+            }
             logger.info(hlpbld.toString());
+            logger.info(hlpbld2.toString());
         }
 
         if (time[0] == -1) {

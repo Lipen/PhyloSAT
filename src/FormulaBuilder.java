@@ -18,6 +18,8 @@ public class FormulaBuilder {
 
     private StringBuilder sb, hb;
 
+    private Map<Integer, String> hlp;
+
     private boolean enableReticulationConnection;
 
     private boolean disableComments;
@@ -45,8 +47,12 @@ public class FormulaBuilder {
         this.clausesCount = 0;
     }
 
-    public String getHelpMap() {
+    public String getHelpString() {
         return this.hb.toString();
+    }
+
+    public Map<Integer, String> getHelpMap() {
+        return this.hlp;
     }
 
     public String buildCNF() {
@@ -56,6 +62,7 @@ public class FormulaBuilder {
 
         this.sb = new StringBuilder();
         this.hb = new StringBuilder();
+        this.hlp = new HashMap<>();
         commentCNF("n = %d; k = %d; trees count = %d", n, k, phTrees.size());
 
         addParentConstraints();
@@ -69,7 +76,8 @@ public class FormulaBuilder {
             if (this.enableReticulationConnection) {
                 addRUsedConstraints(treeNumber);
             }
-            addUpConstraints(treeNumber);
+//            addUpConstraints(treeNumber);
+            addDownConstraints(treeNumber);
             addXConstraints(treeNumber);
             addDataConstraints(treeNumber);
         }
@@ -91,10 +99,11 @@ public class FormulaBuilder {
     private void addParentConstraints() {
         {
             int intervalStart = m.size() + 1;
-            for (int nodeNumber = 0; nodeNumber < treeNodesCount - 1; nodeNumber++) {
+            for (int nodeNumber = 0; nodeNumber < treeNodesCount; nodeNumber++) {
                 for (int parentNumber : possibleParents(nodeNumber)) {
                     createVar("parent", nodeNumber, parentNumber);
                     hb.append("p ").append(nodeNumber).append(" ").append(parentNumber).append(" ").append(m.size()).append("\n");
+                    hlp.put(m.size(), "p " + nodeNumber + " " + parentNumber);
                 }
             }
             commentCNF("Variables parent_v_u is in [%d, %d]", intervalStart, m.size());
@@ -129,6 +138,7 @@ public class FormulaBuilder {
                 for (int childNumber : possibleChildren(nodeNumber)) {
                     createVar("left", nodeNumber, childNumber);
                     hb.append("l ").append(nodeNumber).append(" ").append(childNumber).append(" ").append(m.size()).append("\n");
+                    hlp.put(m.size(), "l " + nodeNumber + " " + childNumber);
                 }
             }
             commentCNF("Variables left_v_u is in [%d, %d]", intervalStart, m.size());
@@ -138,6 +148,7 @@ public class FormulaBuilder {
                 for (int childNumber : possibleChildren(nodeNumber)) {
                     createVar("right", nodeNumber, childNumber);
                     hb.append("r ").append(nodeNumber).append(" ").append(childNumber).append(" ").append(m.size()).append("\n");
+                    hlp.put(m.size(), "r " + nodeNumber + " " + childNumber);
                 }
             }
             commentCNF("Variables right_v_u is in [%d, %d]", intervalStart, m.size());
@@ -181,7 +192,8 @@ public class FormulaBuilder {
             for (int nodeNumber : reticulationNodes()) {
                 for (int childNumber : possibleChildren(nodeNumber)) {
                     createVar("ch", nodeNumber, childNumber);
-                    hb.append("e ").append(nodeNumber).append(" ").append(childNumber).append(" ").append(m.size()).append("\n");
+                    hb.append("re ").append(nodeNumber).append(" ").append(childNumber).append(" ").append(m.size()).append("\n");
+                    hlp.put(m.size(), "re " + nodeNumber + " " + childNumber);
                 }
             }
             commentCNF("Variables ch_v_u is in [%d, %d]", intervalStart, m.size());
@@ -214,7 +226,8 @@ public class FormulaBuilder {
             for (int nodeNumber : reticulationNodes()) {
                 for (int parentNumber : possibleParents(nodeNumber)) {
                     createVar("lp", nodeNumber, parentNumber);
-                    hb.append("el ").append(nodeNumber).append(" ").append(parentNumber).append(" ").append(m.size()).append("\n");
+                    hb.append("rpl ").append(nodeNumber).append(" ").append(parentNumber).append(" ").append(m.size()).append("\n");
+                    hlp.put(m.size(), "rpl " + nodeNumber + " " + parentNumber);
                 }
             }
             commentCNF("Variables lp_v_u is in [%d, %d]", intervalStart, m.size());
@@ -223,7 +236,8 @@ public class FormulaBuilder {
             for (int nodeNumber : reticulationNodes()) {
                 for (int parentNumber : possibleParents(nodeNumber)) {
                     createVar("rp", nodeNumber, parentNumber);
-                    hb.append("er ").append(nodeNumber).append(" ").append(parentNumber).append(" ").append(m.size()).append("\n");
+                    hb.append("rpr ").append(nodeNumber).append(" ").append(parentNumber).append(" ").append(m.size()).append("\n");
+                    hlp.put(m.size(), "rpr " + nodeNumber + " " + parentNumber);
                 }
             }
             commentCNF("Variables rp_v_u is in [%d, %d]", intervalStart, m.size());
@@ -332,12 +346,16 @@ public class FormulaBuilder {
             int intervalStart = m.size() + 1;
             for (int nodeNumber : reticulationNodes()) {
                 createVar("dir", treeNumber, nodeNumber);
+                hb.append("dir ").append(treeNumber).append(" ").append(nodeNumber).append(" ").append(m.size()).append("\n");
+                hlp.put(m.size(), "dir " + treeNumber + " " + nodeNumber);
             }
             commentCNF("Variables dir_%d_v is in [%d, %d]", treeNumber, intervalStart, m.size());
 
             intervalStart = m.size() + 1;
             for (int nodeNumber : treeNodes()) {
                 createVar("used", treeNumber, nodeNumber);
+                hb.append("used ").append(treeNumber).append(" ").append(nodeNumber).append(" ").append(m.size()).append("\n");
+                hlp.put(m.size(), "used " + treeNumber + " " + nodeNumber);
             }
             commentCNF("Variables used_%d_v is in [%d, %d]", treeNumber, intervalStart, m.size());
         }
@@ -364,6 +382,8 @@ public class FormulaBuilder {
             int intervalStart = m.size() + 1;
             for (int nodeNumber : reticulationNodes()) {
                 createVar("rused", treeNumber, nodeNumber);
+                hb.append("rused ").append(treeNumber).append(" ").append(nodeNumber).append(" ").append(m.size()).append("\n");
+                hlp.put(m.size(), "rused " + treeNumber + " " + nodeNumber);
             }
             commentCNF("Variables rused_%d_v is in [%d, %d]", treeNumber, intervalStart, m.size());
         }
@@ -414,120 +434,181 @@ public class FormulaBuilder {
         }
     }
 
-    private void addUpConstraints(int treeNumber) {
+    private void addDownConstraints(int treeNumber) {
         {
             int intervalStart = m.size() + 1;
-            for (int nodeNumber : allNodes()) {
-                for (int up : possibleUp(nodeNumber)) {
-                    createVar("up", treeNumber, nodeNumber, up);
+            for (int nodeNumber = n; nodeNumber < treeNodesCount + k; ++nodeNumber) {
+                for (int down : possibleDown(nodeNumber)) {
+                    createVar("downl", treeNumber, nodeNumber, down);
+                    hb.append("downl ").append(treeNumber).append(" ").append(nodeNumber).append(" ").append(down).append(" ").append(m.size()).append("\n");
+                    hlp.put(m.size(), "downl " + treeNumber + " " + nodeNumber + " " + down);
                 }
             }
-            commentCNF("Variables up_%d_v_'u is in [%d, %d]", treeNumber, intervalStart, m.size());
-        }
+            commentCNF("Variables downl_%d_v_'u is in [%d, %d]", treeNumber, intervalStart, m.size());
 
-        commentCNF("At-least-one constraints for up_%d_v_u", treeNumber);
-        for (int nodeNumber : allNodes()) {
-            if (nodeNumber != treeNodesCount - 1) {
-                String atLeastOne = "";
-                for (int up : possibleUp(nodeNumber)) {
-                    atLeastOne += getVar("up", treeNumber, nodeNumber, up) + " ";
-                }
-                addClause(atLeastOne);
-            }
-        }
-
-        commentCNF("At-most-one constraints for up_%d_v_u", treeNumber);
-        for (int nodeNumber : allNodes()) {
-            for (int up : possibleUp(nodeNumber)) {
-                for (int otherUp : possibleUp(nodeNumber)) {
-                    if (up < otherUp) {
-                        addClause(-getVar("up", treeNumber, nodeNumber, up),
-                                -getVar("up", treeNumber, nodeNumber, otherUp));
-                    }
+            intervalStart = m.size() + 1;
+            for (int nodeNumber = n; nodeNumber < treeNodesCount + k; ++nodeNumber) {
+                for (int down : possibleDown(nodeNumber)) {
+                    createVar("downr", treeNumber, nodeNumber, down);
+                    hb.append("downr ").append(treeNumber).append(" ").append(nodeNumber).append(" ").append(down).append(" ").append(m.size()).append("\n");
+                    hlp.put(m.size(), "downr " + treeNumber + " " + nodeNumber + " " + down);
                 }
             }
+            commentCNF("Variables downr_%d_v_'u is in [%d, %d]", treeNumber, intervalStart, m.size());
         }
 
-        commentCNF("Connect up_%d_v_u with parent_v_u and used_%d_v (tree nodes)", treeNumber, treeNumber);
-        for (int nodeNumber = 0; nodeNumber < treeNodesCount; nodeNumber++) {
-            for (int parent : possibleParents(nodeNumber)) {
-                int parentVar = getVar("parent", nodeNumber, parent);
+        commentCNF("At-least-one constraints for downl_%d_v_u and downr_%d_v_u", treeNumber, treeNumber);
+        for (int node : allNodesExceptLeaves()) {
+            String atLeastOneLeft = "", atLeastOneRight = "";
+            for (int down : possibleDown(node)) {
+                atLeastOneLeft += getVar("downl", treeNumber, node, down) + " ";
+                atLeastOneRight += getVar("downr", treeNumber, node, down) + " ";
+            }
+            addClause(atLeastOneLeft);
+            addClause(atLeastOneRight);
+        }
 
-                if (parent < treeNodesCount) {
-                    int upVar = getVar("up", treeNumber, nodeNumber, parent);
-                    int usedVar = getVar("used", treeNumber, parent);
-
-                    // if parent is used
-                    {
-                        addClause(-parentVar, -usedVar, upVar); // if PARENT and USED then UP
-//                        addClause(-parentVar, -upVar, usedVar); // if PARENT and UP then USED
+        commentCNF("At-most-one constraints for downl_%d_v_u and downr_%d_v_u", treeNumber, treeNumber);
+        commentCNF("Also, constraints for downl_%d_v_u < downr_%d_v_u", treeNumber, treeNumber);
+        for (int node : allNodesExceptLeaves()) {
+            for (int down : possibleDown(node)) {
+                for (int otherDown : possibleDown(node)) {
+                    if (down < otherDown) {
+                        addClause(-getVar("downl", treeNumber, node, down),
+                                -getVar("downl", treeNumber, node, otherDown));
+                        addClause(-getVar("downr", treeNumber, node, down),
+                                -getVar("downr", treeNumber, node, otherDown));
                     }
-
-                    // if parent is not used
-                    for (int parentUp : possibleUp(parent)) {
-                        int nodeUpVar = getVar("up", treeNumber, nodeNumber, parentUp);
-                        int parentUpVar = getVar("up", treeNumber, parent, parentUp);
-
-                        addClause(-parentVar, usedVar, -parentUpVar, nodeUpVar); // if tree PARENT and ~USED
-                        addClause(-parentVar, usedVar, -nodeUpVar, parentUpVar); // set PARENT UP
-                    }
-                } else {
-                    for (int parentUp : possibleUp(parent)) {
-                        int parentUpVar = getVar("up", treeNumber, parent, parentUp);
-
-                        if (parentUp <= nodeNumber) {
-                            addClause(-parentVar, -parentUpVar);
-                        } else {
-                            int nodeUpVar = getVar("up", treeNumber, nodeNumber, parentUp);
-                            addClause(-parentVar, -parentUpVar, nodeUpVar);
-
-                            // здесь можно добавить еще ограничение
-                        }
-                    }
+//                    if (down <= otherDown) {
+//                        addClause(-getVar("downr", treeNumber, node, down),
+//                                -getVar("downl", treeNumber, node, otherDown));
+//                    }
                 }
             }
         }
 
-        commentCNF("Connect up_%d_v_u with parent_v_u and used_%d_v (network nodes)", treeNumber, treeNumber);
-        for (int nodeNumber : reticulationNodes()) {
-            int dirVar = getVar("dir", treeNumber, nodeNumber);
+        commentCNF("Connect downl_%d_v_u and downr_%d_v_u with left_v_u, right_v_u and used_%d_v (tree nodes)", treeNumber, treeNumber, treeNumber);
+//        for (int node : treeNodes()) {
+//            for (int child : possibleChildren(node)) {
+//                int leftChildVar = getVar("left", node, child);
+//                int rightChildVar = getVar("right", node, child);
+//
+//                if (child < n) {
+//                    continue;
+//                }
+//
+//                if (child < treeNodesCount) {
+//                    int downLeftVar = getVar("downl", treeNumber, node, child);
+//                    int downRightVar = getVar("downr", treeNumber, node, child);
+//                    int usedChildVar = getVar("used", treeNumber, child);
+//
+//                    // if left child is used
+//                    {
+//                        addClause(-leftChildVar, -usedChildVar, downLeftVar); // if LEFT and USED then DOWNLEFT
+//                        addClause(-leftChildVar, -downLeftVar, usedChildVar); // if LEFT and DOWNLEFT then USED
+//                    }
+//
+//                    // if right child is used
+//                    {
+//                        addClause(-rightChildVar, -usedChildVar, downRightVar); // if RIGHT and USED then DOWNRIGHT
+//                        addClause(-rightChildVar, -downRightVar, usedChildVar); // if RIGHT and DOWNRIGHT then USED
+//                    }
+//
+//                    // if left child is not used
+//                    for (int childDown : possibleDown(child)) {
+//                        int nextDownLeftVar = getVar("downl", treeNumber, node, childDown);
+//                        int childDownLeftVar = getVar("downl", treeNumber, child, childDown);
+//
+//                        addClause(-leftChildVar, usedChildVar, -childDownLeftVar, nextDownLeftVar);
+//                        addClause(-leftChildVar, usedChildVar, -nextDownLeftVar, childDownLeftVar);
+//
+////                        int nextDownRightVar = getVar("downr", treeNumber, node, childDown);
+////                        int childDownRightVar = getVar("downr", treeNumber, child, childDown);
+////
+////                        addClause(-leftChildVar, usedChildVar, -childDownRightVar, nextDownRightVar);
+////                        addClause(-leftChildVar, usedChildVar, -nextDownRightVar, childDownRightVar);
+//                    }
+//
+//                    // if right child is not used
+//                    for (int childDown : possibleDown(child)) {
+////                        int nextDownLeftVar = getVar("downl", treeNumber, node, childDown);
+////                        int childDownLeftVar = getVar("downl", treeNumber, child, childDown);
+////
+////                        addClause(-rightChildVar, usedChildVar, -childDownLeftVar, nextDownLeftVar);
+////                        addClause(-rightChildVar, usedChildVar, -nextDownLeftVar, childDownLeftVar);
+//
+//                        int nextDownRightVar = getVar("downr", treeNumber, node, childDown);
+//                        int childDownRightVar = getVar("downr", treeNumber, child, childDown);
+//
+//                        addClause(-rightChildVar, usedChildVar, -childDownRightVar, nextDownRightVar);
+//                        addClause(-rightChildVar, usedChildVar, -nextDownRightVar, childDownRightVar);
+//                    }
+//                } else {
+//                    for (int childDown : possibleDown(child)) {
+//                        int childDownLeftVar = getVar("downl", treeNumber, child, childDown);
+//                        int childDownRightVar = getVar("downr", treeNumber, child, childDown);
+//
+//                        if (childDown >= node) {
+//                            addClause(-leftChildVar, -childDownLeftVar);
+//                            addClause(-leftChildVar, -childDownRightVar);
+//                            addClause(-rightChildVar, -childDownLeftVar);
+//                            addClause(-rightChildVar, -childDownRightVar);
+//                        } else {
+//                            int downLeftVar = getVar("downl", treeNumber, node, childDown);
+//                            int downRightVar = getVar("downr", treeNumber, node, childDown);
+//
+//                            addClause(-leftChildVar, -childDownLeftVar, downLeftVar);
+////                            addClause(-leftChildVar, -childDownRightVar, downLeftVar);
+////                            addClause(-rightChildVar, -childDownLeftVar, downRightVar);
+//                            addClause(-rightChildVar, -childDownRightVar, downRightVar);
+//
+//                            // здесь можно добавить еще ограничение
+//                        }
+//                    }
+//                }
+//            }
+//        }
 
-            for (int parent : possibleParents(nodeNumber)) {
-                int lpVar = getVar("lp", nodeNumber, parent);
-                int rpVar = getVar("rp", nodeNumber, parent);
-
-                if (parent < treeNodesCount) {
-                    int parentUsedVar = getVar("used", treeNumber, parent);
-                    int upVar = getVar("up", treeNumber, nodeNumber, parent);
-                    // if parent is used and up
-                    {
-                        addClause(-lpVar, -dirVar, -parentUsedVar, upVar); // LP and USED then UP
-                        addClause(-rpVar, dirVar, -parentUsedVar, upVar); // RP and USED then UP
-                    }
-
-                    // if parent is not used
-                    for (int parentUp : possibleUp(parent)) {
-                        int parentUpVar = getVar("up", treeNumber, parent, parentUp);
-                        int nodeUpVar = getVar("up", treeNumber, nodeNumber, parentUp);
-
-                        // PARENT is LP and ~UP
-                        addClause(-lpVar, -dirVar, parentUsedVar, -parentUpVar, nodeUpVar);
-
-                        // PARENT is RP and ~UP
-                        addClause(-rpVar, dirVar, parentUsedVar, -parentUpVar, nodeUpVar);
-                    }
-                } else {
-                    for (int parentUp : possibleUp(parent)) {
-                        // parent is reticulation
-                        int parentUpVar = getVar("up", treeNumber, parent, parentUp);
-                        int nodeUpVar = getVar("up", treeNumber, nodeNumber, parentUp);
-
-                        addClause(-lpVar, -dirVar, -parentUpVar, nodeUpVar);
-                        addClause(-rpVar, dirVar, -parentUpVar, nodeUpVar);
-                    }
-                }
-            }
-        }
+//        commentCNF("Connect up_%d_v_u with parent_v_u and used_%d_v (network nodes)", treeNumber, treeNumber);
+//        for (int nodeNumber : reticulationNodes()) {
+//            int dirVar = getVar("dir", treeNumber, nodeNumber);
+//
+//            for (int parent : possibleParents(nodeNumber)) {
+//                int lpVar = getVar("lp", nodeNumber, parent);
+//                int rpVar = getVar("rp", nodeNumber, parent);
+//
+//                if (parent < treeNodesCount) {
+//                    int parentUsedVar = getVar("used", treeNumber, parent);
+//                    int upVar = getVar("up", treeNumber, nodeNumber, parent);
+//                    // if parent is used and up
+//                    {
+//                        addClause(-lpVar, -dirVar, -parentUsedVar, upVar); // LP and USED then UP
+//                        addClause(-rpVar, dirVar, -parentUsedVar, upVar); // RP and USED then UP
+//                    }
+//
+//                    // if parent is not used
+//                    for (int parentUp : possibleUp(parent)) {
+//                        int parentUpVar = getVar("up", treeNumber, parent, parentUp);
+//                        int nodeUpVar = getVar("up", treeNumber, nodeNumber, parentUp);
+//
+//                        // PARENT is LP and ~UP
+//                        addClause(-lpVar, -dirVar, parentUsedVar, -parentUpVar, nodeUpVar);
+//
+//                        // PARENT is RP and ~UP
+//                        addClause(-rpVar, dirVar, parentUsedVar, -parentUpVar, nodeUpVar);
+//                    }
+//                } else {
+//                    for (int parentUp : possibleUp(parent)) {
+//                        // parent is reticulation
+//                        int parentUpVar = getVar("up", treeNumber, parent, parentUp);
+//                        int nodeUpVar = getVar("up", treeNumber, nodeNumber, parentUp);
+//
+//                        addClause(-lpVar, -dirVar, -parentUpVar, nodeUpVar);
+//                        addClause(-rpVar, dirVar, -parentUpVar, nodeUpVar);
+//                    }
+//                }
+//            }
+//        }
     }
 
     private void addXConstraints(int treeNumber) {
@@ -538,11 +619,29 @@ public class FormulaBuilder {
                     createVar("x", treeNumber, treeNodeNumber, nodeNumber);
                     hb.append("x ").append(treeNumber).append(" ").append(treeNodeNumber).append(" ").
                             append(nodeNumber).append(" ").append(m.size()).append("\n");
+                    hlp.put(m.size(), "x " + treeNumber + " " + treeNodeNumber + " " + nodeNumber);
                 }
+            }
+            for (int childNumber = 0; childNumber < n; childNumber++) {
+                createVar("x", treeNumber, childNumber, childNumber);
+                hb.append("x ").append(treeNumber).append(" ").append(childNumber).append(" ").
+                        append(childNumber).append(" ").append(m.size()).append("\n");
+                hlp.put(m.size(), "x " + treeNumber + " " + childNumber + " " + childNumber);
             }
             commentCNF("Variables x_%d_tv_v is in [%d, %d]", treeNumber, intervalStart, m.size());
         }
 
+        if(treeNumber == 1) {
+            addClause(-(getVar("x", treeNumber, 5, 5)));
+            addClause(-(getVar("x", treeNumber, 4, 4)));
+            addClause(getVar("downr", 1, 7, 3));
+            addClause(getVar("downl", 1, 7, 6));
+            addClause(getVar("downr", 1, 6, 5));
+            addClause(getVar("downr", 1, 8, 3));
+            addClause(getVar("downl", 1, 4, 2));
+            addClause(getVar("downl", 1, 5, 1));
+            addClause(getVar("downl", 1, 6, 0));
+        }
         commentCNF("At-least-one constraints for x_%d_tv_v", treeNumber);
         for (int treeNodeNumber = n; treeNodeNumber < 2 * n - 1; treeNodeNumber++) {
             String atLeastOne = "";
@@ -562,6 +661,11 @@ public class FormulaBuilder {
                     }
                 }
             }
+        }
+
+        commentCNF("Only-one constraints for x_" + treeNumber + "_tv_v for leaves");
+        for (int childNodeNumber = 0; childNodeNumber < n; childNodeNumber++) {
+            addClause(getVar("x", treeNumber, childNodeNumber, childNodeNumber));
         }
 
         commentCNF("At-most-one x_%d_tv_v points to v", treeNumber);
@@ -587,44 +691,71 @@ public class FormulaBuilder {
     private void addDataConstraints(int treeNumber) {
         PhylogeneticTree phTree = this.phTrees.get(treeNumber);
 
-        commentCNF("Data constraints for tree %d: connect X and UP variables", treeNumber);
-        for (int treeNodeNumber = 0; treeNodeNumber < phTree.size(); treeNodeNumber++) {
-            int treeParentNumber = phTree.getParent(treeNodeNumber);
-            if (treeParentNumber == -1) {
-//                addClause(getVar("x", treeNumber, treeNodeNumber, treeNodesCount - 1)); // root to root
+        commentCNF("Data constraints for tree %d: connect X and DOWN variables", treeNumber);
+        for (int treeNodeNumber = n; treeNodeNumber < phTree.size(); treeNodeNumber++) {
+            List<Integer> children = phTree.getChildren(treeNodeNumber);
+            if (children.isEmpty()) {
                 continue;
             }
 
-            if (treeNodeNumber < n) {
-                for (int parentNodeNumber : treeNodes()) {
-                    int parentXVar = getVar("x", treeNumber, treeParentNumber, parentNodeNumber);
-                    int taxonUpVar = getVar("up", treeNumber, treeNodeNumber, parentNodeNumber);
-                    addClause(-parentXVar, taxonUpVar);
-                }
-            } else {
-                for (int nodeNumber : treeNodes()) {
-                    int xVar = getVar("x", treeNumber, treeNodeNumber, nodeNumber);
+            int treeLeftChildNumber = children.get(0);
+            int treeRightChildNumber = children.get(1);
 
-                    for (int parentNodeNumber : possibleUp(nodeNumber)) {
-                        int parentXVar = getVar("x", treeNumber, treeParentNumber, parentNodeNumber);
-                        int upVar = getVar("up", treeNumber, nodeNumber, parentNodeNumber);
+            for (int node : treeNodes()) {
+                int xVar = getVar("x", treeNumber, treeNodeNumber, node);
 
-                        addClause(-xVar, -parentXVar, upVar);
-                        addClause(-xVar, -upVar, parentXVar);
-
-                        // This constraint is wrong, because there can be two such nodes in the tree
-                        //String parentXAndUpThenX = "-" + upVar + " -" + parentXVar + " " + xVar + " 0\n";
-                        //sb.append(parentXAndUpThenX);
-
+                for (int child : possibleDown(node)) {
+                    if (child >= n) {
+//                        if (treeLeftChildNumber >= n) {
+//                            int leftChildXVar = getVar("x", treeNumber, treeLeftChildNumber, child);
+//                            int downLeftVar = getVar("downl", treeNumber, node, child);
+//                            addClause(-xVar, -leftChildXVar, downLeftVar);
+//                        } else {
+//                            int downLeftVar = getVar("downl", treeNumber, node, child);
+//                            addClause(-xVar, -downLeftVar);
+//                        }
+////
+//                        if (treeRightChildNumber >= n) {
+//                            int rightChildXVar = getVar("x", treeNumber, treeRightChildNumber, child);
+//                            int downRightVar = getVar("downr", treeNumber, node, child);
+//                            addClause(-xVar, -rightChildXVar, downRightVar);
+//                        } else {
+//                            int downRightVar = getVar("downr", treeNumber, node, child);
+//                            addClause(-xVar, -downRightVar);
+//                        }
+                    } else {
+//                        if (treeLeftChildNumber == child) {
+//                            int leftChildXVar = getVar("x", treeNumber, treeLeftChildNumber, child);
+//                            int downLeftVar = getVar("downl", treeNumber, node, child);
+//                            addClause(-xVar, -leftChildXVar, downLeftVar);
+//                        } else {
+//                            int downLeftVar = getVar("downl", treeNumber, node, child);
+//                            addClause(-xVar, -downLeftVar);
+//                        }
+//
+//                        if (treeRightChildNumber == child) {
+//                            int rightChildXVar = getVar("x", treeNumber, treeRightChildNumber, child);
+//                            int downRightVar = getVar("downr", treeNumber, node, child);
+//                            addClause(-xVar, -rightChildXVar, downRightVar);
+//                        } else {
+//                            int downRightVar = getVar("downr", treeNumber, node, child);
+//                            addClause(-xVar, -downRightVar);
+//                        }
                     }
-
-                    for (int parentNodeNumber : treeNodes()) {
-                        int parentXVar = m.get("x_" + treeNumber + "_" + treeParentNumber + "_" + parentNodeNumber);
-                        if (parentNodeNumber <= nodeNumber) {
-                            addClause(-xVar, -parentXVar);
-                        }
-                    }
                 }
+
+//                for (int childNodeNumber : treeNodes()) {
+//                    if (childNodeNumber >= node) {
+//                        if (treeLeftChildNumber >= n) {
+//                            int leftChildXVar = getVar("x", treeNumber, treeLeftChildNumber, childNodeNumber);
+//                            addClause(-xVar, -leftChildXVar);
+//                        }
+//                        if (treeRightChildNumber >= n) {
+//                            int rightChildXVar = getVar("x", treeNumber, treeRightChildNumber, childNodeNumber);
+//                            addClause(-xVar, -rightChildXVar);
+//                        }
+//                    }
+//                }
             }
         }
 
@@ -634,8 +765,7 @@ public class FormulaBuilder {
             for (int nodeNumber = n; nodeNumber < n + subtreeNonLeafCount; nodeNumber++) {
                 addClause(-getVar("x", treeNumber, treeNodeNumber, nodeNumber));
             }
-            for (int nodeNumber = treeNodesCount - phTree.getDepth(treeNodeNumber);
-                 nodeNumber < treeNodesCount; nodeNumber++) {
+            for (int nodeNumber = treeNodesCount - phTree.getDepth(treeNodeNumber); nodeNumber < treeNodesCount; nodeNumber++) {
                 addClause(-getVar("x", treeNumber, treeNodeNumber, nodeNumber));
             }
         }
@@ -727,7 +857,7 @@ public class FormulaBuilder {
                 if (childNumber < nodeNumber || childNumber >= treeNodesCount) {
                     ans.add(childNumber);
                 }
-            } else if (childNumber < treeNodesCount - 1 || (enableReticulationConnection && childNumber < nodeNumber)) {
+            } else if (childNumber < treeNodesCount || (enableReticulationConnection && childNumber < nodeNumber)) {
                 ans.add(childNumber);
             }
         }
@@ -741,9 +871,9 @@ public class FormulaBuilder {
         }
 
         List<Integer> ans = new ArrayList<>();
-        if (nodeNumber == treeNodesCount - 1) {
-            return ans;
-        }
+//        if (nodeNumber == treeNodesCount - 1) {
+//            return ans;
+//        }
         for (int parentNumber = n; parentNumber < treeNodesCount + k; parentNumber++) {
             if (nodeNumber < n) {
                 ans.add(parentNumber);
@@ -759,11 +889,11 @@ public class FormulaBuilder {
         return ans;
     }
 
-    private List<Integer> possibleUp(int nodeNumber) {
+    private List<Integer> possibleDown(int nodeNumber) {
         List<Integer> ans = new ArrayList<>();
-        for (int up : possibleParents(nodeNumber)) {
-            if (up < treeNodesCount) {
-                ans.add(up);
+        for (int down : possibleChildren(nodeNumber)) {
+            if (down < treeNodesCount) {
+                ans.add(down);
             }
         }
         return ans;
@@ -788,6 +918,14 @@ public class FormulaBuilder {
     private List<Integer> reticulationNodes() {
         List<Integer> ans = new ArrayList<>();
         for (int nodeNumber = this.treeNodesCount; nodeNumber < this.treeNodesCount + k; nodeNumber++) {
+            ans.add(nodeNumber);
+        }
+        return ans;
+    }
+
+    private List<Integer> allNodesExceptLeaves() {
+        List<Integer> ans = new ArrayList<>();
+        for (int nodeNumber = n; nodeNumber < this.treeNodesCount + k; nodeNumber++) {
             ans.add(nodeNumber);
         }
         return ans;
