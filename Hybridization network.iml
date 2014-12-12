@@ -7,12 +7,14 @@
       <sourceFolder url="file://$MODULE_DIR$/data" type="java-resource" />
       <sourceFolder url="file://$MODULE_DIR$/docs" type="java-resource" />
       <sourceFolder url="file://$MODULE_DIR$/soft" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/tests" isTestSource="true" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" exported="" name="args4j-2.0.12" level="project" />
     <orderEntry type="library" exported="" name="jebl" level="project" />
-    <orderEntry type="library" name="org.apache.commons:commons-exec:1.1" level="project" />
+    <orderEntry type="library" exported="" name="junit:junit:4.11" level="project" />
+    <orderEntry type="library" exported="" name="org.apache.commons:commons-exec:1.1" level="project" />
   </component>
 </module>
 
