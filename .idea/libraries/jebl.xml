@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="jebl">
-    <CLASSES>
-      <root url="jar://$PROJECT_DIR$/lib/jebl.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>
