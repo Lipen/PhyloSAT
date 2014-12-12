@@ -20,7 +20,7 @@ public class PhylogeneticTree {
         PhylogeneticNode(PhylogeneticNode other) {
             this.parent = other.parent;
             this.label = other.label;
-            this.children = new ArrayList<Integer>(other.children);
+            this.children = new ArrayList<>(other.children);
         }
 
         PhylogeneticNode(int parent, List<Integer> children, String label) {
@@ -32,8 +32,11 @@ public class PhylogeneticTree {
 
     private List<PhylogeneticNode> nodes;
 
+    private boolean hasFictitiousRoot;
+
     private PhylogeneticTree() {
-        this.nodes = new ArrayList<PhylogeneticNode>();
+        this.nodes = new ArrayList<>(); 
+        hasFictitiousRoot = false;
     }
 
     public PhylogeneticTree(PhylogeneticTree other) {
@@ -41,15 +44,16 @@ public class PhylogeneticTree {
         for (PhylogeneticNode node : other.nodes) {
             this.nodes.add(new PhylogeneticNode(node));
         }
+        hasFictitiousRoot = other.hasFictitiousRoot;
     }
 
     public PhylogeneticTree(SimpleRootedTree tree) {
         this();
         int treeSize = tree.getNodes().size();
 
-        Map<Node, Integer> m = new HashMap<Node, Integer>();
+        Map<Node, Integer> m = new HashMap<>();
 
-        List<Taxon> taxa = new ArrayList<Taxon>(tree.getTaxa());
+        List<Taxon> taxa = new ArrayList<>(tree.getTaxa());
         Collections.sort(taxa, new Comparator<Taxon>() {
             @Override
             public int compare(Taxon o1, Taxon o2) {
@@ -58,7 +62,7 @@ public class PhylogeneticTree {
         });
 
         for (Taxon taxon : taxa) {
-            PhylogeneticNode newNode = new PhylogeneticNode(-1, new ArrayList<Integer>(), taxon.getName());
+            PhylogeneticNode newNode = new PhylogeneticNode(-1, new ArrayList<>(), taxon.getName());
             m.put(tree.getNode(taxon), nodes.size());
             nodes.add(newNode);
         }
@@ -68,7 +72,7 @@ public class PhylogeneticTree {
                 if (m.containsKey(node)) {
                     continue;
                 }
-                PhylogeneticNode newNode = new PhylogeneticNode(-1, new ArrayList<Integer>(), null);
+                PhylogeneticNode newNode = new PhylogeneticNode(-1, new ArrayList<>(), null);
 
                 boolean canAddToNodes = true;
                 for (Node child : tree.getChildren(node)) {
@@ -94,13 +98,69 @@ public class PhylogeneticTree {
         }
     }
 
+    public void addFictitiousRoot() {
+        if(hasFictitiousRoot) {
+            throw new RuntimeException("It is bad idea to add the second fictitious root!");
+        }
+
+        hasFictitiousRoot = true;
+
+        int taxaSize = getTaxaSize();
+        for(PhylogeneticNode node : nodes) {
+            if(node.parent == -1) {
+                node.parent = nodes.size() + 1;
+            } else {
+                node.parent++;
+            }
+
+            for(int i = 0; i < node.children.size(); ++i) {
+                int child = node.children.get(i);
+                if(child >= taxaSize) {
+                    node.children.set(i, child + 1);
+                }
+            }
+        }
+        nodes.add(taxaSize, new PhylogeneticNode(nodes.size() + 1, new ArrayList<>(), ""));
+        PhylogeneticNode newRoot = new PhylogeneticNode(-1, new ArrayList<>(), null);
+        newRoot.children.add(taxaSize);
+        newRoot.children.add(nodes.size() - 1);
+        nodes.add(newRoot);
+    }
+
+    public void removeFictitiousRoot() {
+        if(!hasFictitiousRoot) {
+            throw new RuntimeException("Tree does not have any fictitious root!");
+        }
+
+        hasFictitiousRoot = false;
+
+        int fictitiousTaxaNum = getTaxaSize() - 1;
+        nodes.remove(fictitiousTaxaNum);
+        nodes.remove(nodes.size() - 1);
+
+        for(PhylogeneticNode node : nodes) {
+            if(node.parent == nodes.size() + 1) {
+                node.parent = -1;
+            } else {
+                node.parent--;
+            }
+
+            for(int i = 0; i < node.children.size(); ++i) {
+                int child = node.children.get(i);
+                if(child >= fictitiousTaxaNum) {
+                    node.children.set(i, child - 1);
+                }
+            }
+        }
+    }
+
     public PhylogeneticTree buildSubtree(int nodeNum) {
         PhylogeneticTree ans = new PhylogeneticTree();
-        Map<Integer, Integer> oldToNew = new HashMap<Integer, Integer>();
+        Map<Integer, Integer> oldToNew = new HashMap<>();
 
         for (int oldNodeNum : this.getSubtreeNodes(nodeNum)) {
             PhylogeneticNode oldNode = this.nodes.get(oldNodeNum);
-            PhylogeneticNode newNode = new PhylogeneticNode(-1, new ArrayList<Integer>(), oldNode.label);
+            PhylogeneticNode newNode = new PhylogeneticNode(-1, new ArrayList<>(), oldNode.label);
             int newNodeNumber = oldToNew.size();
             oldToNew.put(oldNodeNum, newNodeNumber);
 
@@ -123,17 +183,17 @@ public class PhylogeneticTree {
         int minLeafNumber = subtree.get(0);
 
         PhylogeneticTree ans = new PhylogeneticTree();
-        Map<Integer, Integer> oldToNew = new HashMap<Integer, Integer>();
+        Map<Integer, Integer> oldToNew = new HashMap<>();
 
         for (int oldNodeNum = 0; oldNodeNum < this.size(); oldNodeNum++) {
             if (oldNodeNum == minLeafNumber) {
-                PhylogeneticNode newNode = new PhylogeneticNode(-1, new ArrayList<Integer>(), label);
+                PhylogeneticNode newNode = new PhylogeneticNode(-1, new ArrayList<>(), label);
                 ans.nodes.add(newNode);
                 continue;
             }
             if (!subtree.contains(oldNodeNum)) {
                 PhylogeneticNode oldNode = this.nodes.get(oldNodeNum);
-                PhylogeneticNode newNode = new PhylogeneticNode(-1, new ArrayList<Integer>(), oldNode.label);
+                PhylogeneticNode newNode = new PhylogeneticNode(-1, new ArrayList<>(), oldNode.label);
                 int newNodeNumber = ans.nodes.size();
                 oldToNew.put(oldNodeNum, newNodeNumber);
 
@@ -172,7 +232,7 @@ public class PhylogeneticTree {
     }
 
     public List<Integer> getSubtreeNodes(int nodeNum) {
-        List<Integer> ans = new ArrayList<Integer>();
+        List<Integer> ans = new ArrayList<>();
         ans.add(nodeNum);
         for (int childNum : this.getChildren(nodeNum)) {
             ans.addAll(this.getSubtreeNodes(childNum));
@@ -193,7 +253,7 @@ public class PhylogeneticTree {
     }
 
     public List<Integer> getTaxa(int nodeNum) {
-        List<Integer> ans = new ArrayList<Integer>();
+        List<Integer> ans = new ArrayList<>();
         for (int node : this.getSubtreeNodes(nodeNum)) {
             if (isLeaf(node)) {
                 ans.add(node);

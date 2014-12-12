@@ -127,6 +127,13 @@ public class Main {
             }
             logger.info(loggerStr);
 
+            subtaskTrees = normalize(subtaskTrees);
+            loggerStr = "Normalized trees:";
+            for (PhylogeneticTree subtaskTree : subtaskTrees) {
+                loggerStr += "\n" + subtaskTree;
+            }
+            logger.info(loggerStr);
+
             int k;
             if (hn >= 0) {
                 k = solveSubtask(subtaskTrees, hn, 1000000, new long[1]) ? hn : -1;
@@ -265,6 +272,49 @@ public class Main {
         return false;
     }
 
+    private List<PhylogeneticTree> normalize(List<PhylogeneticTree> inputTrees) {
+        boolean normalized = true;
+        PhylogeneticTree firstTree = inputTrees.get(0);
+        List<Integer> children = firstTree.getChildren(firstTree.size() - 1);
+        String label = null;
+        if (firstTree.isLeaf(children.get(0))) {
+            label = firstTree.getLabel(children.get(0));
+        } else if (firstTree.isLeaf(children.get(1))) {
+            label = firstTree.getLabel(children.get(1));
+        }
+
+        if(label == null) {
+            normalized = false;
+        } else {
+            for (PhylogeneticTree tree : inputTrees) {
+                if (!isNormalized(tree, label)) {
+                    normalized = false;
+                    break;
+                }
+            }
+        }
+        if(normalized) {
+            return inputTrees;
+        } else {
+            List<PhylogeneticTree> ans = new ArrayList<>();
+            for (PhylogeneticTree tree : inputTrees) {
+                tree.addFictitiousRoot();
+                ans.add(tree);
+            }
+            return ans;
+        }
+    }
+
+    private boolean isNormalized(PhylogeneticTree tree, String childLabel) {
+        if(tree.size() < 3)
+            return false;
+
+        List<Integer> children = tree.getChildren(tree.size() - 1);
+
+        return (tree.isLeaf(children.get(0)) && tree.getLabel(children.get(0)).equals(childLabel))
+            || (tree.isLeaf(children.get(1)) && tree.getLabel(children.get(1)).equals(childLabel));
+        }
+
     private List<List<PhylogeneticTree>> preprocessing(List<PhylogeneticTree> inputTrees) {
         List<List<PhylogeneticTree>> ans = new ArrayList<>();
 
@@ -290,12 +340,12 @@ public class Main {
             ans.add(new PhylogeneticTree(inputTree));
         }
 
-        int collapsionsCount = 0;
+        int collapsedCount = 0;
         while (collapseEqualsSubtrees(ans)) {
-            collapsionsCount++;
+            collapsedCount++;
         }
-        if (collapsionsCount > 0) {
-            logger.info(collapsionsCount + " subtrees collapsed in each phylogenetic tree");
+        if (collapsedCount > 0) {
+            logger.info(collapsedCount + " subtrees collapsed in each phylogenetic tree");
             logger.info("There were " + inputTrees.get(0).getTaxaSize() + " taxons, now it is " + ans.get(0).getTaxaSize());
         }
         return ans;
