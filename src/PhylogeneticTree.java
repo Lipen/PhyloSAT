@@ -54,12 +54,7 @@ public class PhylogeneticTree {
         Map<Node, Integer> m = new HashMap<>();
 
         List<Taxon> taxa = new ArrayList<>(tree.getTaxa());
-        Collections.sort(taxa, new Comparator<Taxon>() {
-            @Override
-            public int compare(Taxon o1, Taxon o2) {
-                return o1.getName().compareTo(o2.getName());
-            }
-        });
+        Collections.sort(taxa, (o1, o2) -> o1.getName().compareTo(o2.getName()));
 
         for (Taxon taxon : taxa) {
             PhylogeneticNode newNode = new PhylogeneticNode(-1, new ArrayList<>(), taxon.getName());

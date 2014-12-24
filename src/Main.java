@@ -51,7 +51,7 @@ public class Main {
 
     Logger logger;
 
-    private void launcher(String[] args) throws IOException, ImportException {
+    private int launcher(String[] args) throws IOException, ImportException {
         Locale.setDefault(Locale.US);
 
         CmdLineParser parser = new CmdLineParser(this);
@@ -64,12 +64,12 @@ public class Main {
             parser.printSingleLineUsage(System.out);
             System.out.println();
             parser.printUsage(System.out);
-            return;
+            return -1;
         }
 
         if (!disableSplits && hn >= 0) {
             System.out.println("Hybridization number can be set only in -dp mode");
-            return;
+            return -1;
         }
 
         logger = Logger.getLogger("Logger");
@@ -84,7 +84,7 @@ public class Main {
                 System.out.println("Log redirected to " + logFilePath);
             } catch (Exception e) {
                 System.err.println("Can't work with log file " + logFilePath + ": " + e.getMessage());
-                return;
+                return -1;
             }
         }
 
@@ -105,7 +105,7 @@ public class Main {
             } catch (Exception e) {
                 logger.warning("Can't load trees from file " + filePath);
                 e.printStackTrace();
-                return;
+                return -1;
             }
         }
         checkTrees(trees);
@@ -143,13 +143,14 @@ public class Main {
 
             if (k == -1) {
                 logger.info("NO SOLUTION FOR SUBPROBLEM");
-                return;
+                return -1;
             } else {
                 finalK += k;
             }
         }
 
         logger.info("Finally, there is a network with " + finalK + " reticulation nodes");
+        return finalK;
     }
 
     private int solveSubtaskWithoutUNSAT(List<PhylogeneticTree> trees) throws IOException {
@@ -182,17 +183,27 @@ public class Main {
             logger.info("There is no solution with max bound k = " + k);
             return -1;
         }
-        k--;
 
-        while (k >= mink) {
-            boolean res = solveSubtask(trees, k, time[0] * TL_COEF, time);
+        int l = mink, r = k;
+        while (l < r) {
+            int m = (l + r) / 2;
+            boolean res = solveSubtask(trees, m, time[0] * TL_COEF, time);
             if (!res) {
-                return k + 1;
+                l = m + 1;
+            } else {
+                r = m;
             }
-            k--;
         }
-
-        return k + 1;
+        return l;
+//        while (k >= mink) {
+//            boolean res = solveSubtask(trees, k, time[0] * TL_COEF, time);
+//            if (!res) {
+//                return k + 1;
+//            }
+//            k--;
+//        }
+//
+//        return k + 1;
     }
 
     private int calcUpperBound(List<PhylogeneticTree> trees) {
@@ -455,13 +466,14 @@ public class Main {
         }
     }
 
-    public void run(String[] args) {
+    public int run(String[] args) {
         try {
-            launcher(args);
+            return launcher(args);
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(1);
         }
+        return -1;
     }
 
     public static void main(String[] args) {
