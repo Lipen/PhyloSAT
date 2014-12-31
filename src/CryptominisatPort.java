@@ -26,7 +26,7 @@ public class CryptominisatPort {
 
         //Process p = Runtime.getRuntime().exec("cryptominisat --threads=4 tmp.cnf");
 
-        String command = "cryptominisat --threads=4 tmp.cnf";
+        String command = "soft/cryptominisat --threads=4 tmp.cnf";
         CommandLine cmdLine = CommandLine.parse(command);
 
         DefaultExecutor executor = new DefaultExecutor();
