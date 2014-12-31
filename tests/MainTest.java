@@ -46,7 +46,8 @@ public class MainTest extends TestCase {
         while (input.hasNextLine()) {
             line = input.nextLine();
             System.out.println(line);
-            if (line.contains("The lowest number of hybridization events found so far is")) {
+            if (line.contains("The lowest number of hybridization events found so far is")
+                    || line.contains("The minimum number of hybridization events")) {
                 String[] tokens = line.split(" ");
                 int pirnResult = Integer.parseInt(tokens[tokens.length - 1]);
                 line = input.nextLine();
@@ -90,7 +91,7 @@ public class MainTest extends TestCase {
         runDirectory(testsPath + "small/Others");
     }
 
-//    public void testLarge() throws IOException {
-//        runDirectory(new File(testsPath + "large"));
-//    }
+    public void testLarge() throws IOException {
+        runDirectory(testsPath + "large");
+    }
 }
