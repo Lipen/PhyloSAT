@@ -187,7 +187,7 @@ public class Main {
         int l = mink, r = k;
         while (l < r) {
             int m = (l + r) / 2;
-            boolean res = solveSubtask(trees, m, time[0] * TL_COEF, time);
+            boolean res = solveSubtask(trees, m, MAX_TL * TL_COEF, time);
             if (!res) {
                 l = m + 1;
             } else {
