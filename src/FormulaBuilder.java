@@ -181,7 +181,7 @@ public class FormulaBuilder {
             for (int nodeNumber : reticulationNodes()) {
                 for (int childNumber : possibleChildren(nodeNumber)) {
                     createVar("ch", nodeNumber, childNumber);
-                    hb.append("e ").append(nodeNumber).append(" ").append(childNumber).append(" ").append(m.size()).append("\n");
+                    hb.append("ch ").append(nodeNumber).append(" ").append(childNumber).append(" ").append(m.size()).append("\n");
                 }
             }
             commentCNF("Variables ch_v_u is in [%d, %d]", intervalStart, m.size());
@@ -214,7 +214,7 @@ public class FormulaBuilder {
             for (int nodeNumber : reticulationNodes()) {
                 for (int parentNumber : possibleParents(nodeNumber)) {
                     createVar("lp", nodeNumber, parentNumber);
-                    hb.append("el ").append(nodeNumber).append(" ").append(parentNumber).append(" ").append(m.size()).append("\n");
+                    hb.append("lp ").append(nodeNumber).append(" ").append(parentNumber).append(" ").append(m.size()).append("\n");
                 }
             }
             commentCNF("Variables lp_v_u is in [%d, %d]", intervalStart, m.size());
@@ -223,7 +223,7 @@ public class FormulaBuilder {
             for (int nodeNumber : reticulationNodes()) {
                 for (int parentNumber : possibleParents(nodeNumber)) {
                     createVar("rp", nodeNumber, parentNumber);
-                    hb.append("er ").append(nodeNumber).append(" ").append(parentNumber).append(" ").append(m.size()).append("\n");
+                    hb.append("rp ").append(nodeNumber).append(" ").append(parentNumber).append(" ").append(m.size()).append("\n");
                 }
             }
             commentCNF("Variables rp_v_u is in [%d, %d]", intervalStart, m.size());
@@ -332,12 +332,14 @@ public class FormulaBuilder {
             int intervalStart = m.size() + 1;
             for (int nodeNumber : reticulationNodes()) {
                 createVar("dir", treeNumber, nodeNumber);
+                hb.append("dir ").append(treeNumber).append(" ").append(nodeNumber).append(" ").append(m.size()).append("\n");
             }
             commentCNF("Variables dir_%d_v is in [%d, %d]", treeNumber, intervalStart, m.size());
 
             intervalStart = m.size() + 1;
             for (int nodeNumber : treeNodes()) {
                 createVar("used", treeNumber, nodeNumber);
+                hb.append("used ").append(treeNumber).append(" ").append(nodeNumber).append(" ").append(m.size()).append("\n");
             }
             commentCNF("Variables used_%d_v is in [%d, %d]", treeNumber, intervalStart, m.size());
         }
@@ -364,6 +366,7 @@ public class FormulaBuilder {
             int intervalStart = m.size() + 1;
             for (int nodeNumber : reticulationNodes()) {
                 createVar("rused", treeNumber, nodeNumber);
+                hb.append("rused ").append(treeNumber).append(" ").append(nodeNumber).append(" ").append(m.size()).append("\n");
             }
             commentCNF("Variables rused_%d_v is in [%d, %d]", treeNumber, intervalStart, m.size());
         }
@@ -420,6 +423,7 @@ public class FormulaBuilder {
             for (int nodeNumber : allNodes()) {
                 for (int up : possibleUp(nodeNumber)) {
                     createVar("up", treeNumber, nodeNumber, up);
+                    hb.append("up ").append(treeNumber).append(" ").append(nodeNumber).append(" ").append(up).append(" ").append(m.size()).append("\n");
                 }
             }
             commentCNF("Variables up_%d_v_'u is in [%d, %d]", treeNumber, intervalStart, m.size());
@@ -460,7 +464,7 @@ public class FormulaBuilder {
                     // if parent is used
                     {
                         addClause(-parentVar, -usedVar, upVar); // if PARENT and USED then UP
-//                        addClause(-parentVar, -upVar, usedVar); // if PARENT and UP then USED
+                        addClause(-parentVar, -upVar, usedVar); // if PARENT and UP then USED
                     }
 
                     // if parent is not used
@@ -591,7 +595,7 @@ public class FormulaBuilder {
         for (int treeNodeNumber = 0; treeNodeNumber < phTree.size(); treeNodeNumber++) {
             int treeParentNumber = phTree.getParent(treeNodeNumber);
             if (treeParentNumber == -1) {
-//                addClause(getVar("x", treeNumber, treeNodeNumber, treeNodesCount - 1)); // root to root
+                addClause(getVar("x", treeNumber, treeNodeNumber, treeNodesCount - 1)); // root to root
                 continue;
             }
 
@@ -646,18 +650,11 @@ public class FormulaBuilder {
         PhylogeneticTree phTree1 = this.phTrees.get(t1);
         PhylogeneticTree phTree2 = this.phTrees.get(t2);
 
-        int totalEquals = 0, totalDifferent = 0;
+        int totalDifferent = 0;
         for (int node1 = n; node1 < 2 * n - 2; node1++) {
             List<Integer> taxa1 = phTree1.getTaxa(node1);
             for (int node2 = n; node2 < 2 * n - 2; node2++) {
                 List<Integer> taxa2 = phTree2.getTaxa(node2);
-
-                boolean isEquals = taxa1.size() == taxa2.size() && taxa1.containsAll(taxa2);
-                if (isEquals) {
-                    addEqualsNodesConstraints(t1, node1, t2, node2);
-                    totalEquals++;
-                }
-
                 boolean allDifferent = Collections.disjoint(taxa1, taxa2);
                 if (allDifferent && t1 < t2) {
                     addDifferentTaxaNodesConstraints(t1, node1, t2, node2);
@@ -665,37 +662,37 @@ public class FormulaBuilder {
                 }
             }
         }
-        commentCNF("In trees %d and %d there are %d pairs of equal nodes and %d pairs of different nodes",
-                t1, t2, totalEquals, totalDifferent);
+        commentCNF("In trees %d and %d there are %d pairs of different nodes",
+                t1, t2, totalDifferent);
     }
 
-    private void addEqualsNodesConstraints(int t1, int n1, int t2, int n2) {
-        PhylogeneticTree phTree1 = this.phTrees.get(t1);
-        PhylogeneticTree phTree2 = this.phTrees.get(t2);
-        commentCNF("Node %d in tree %d have the same %d taxons (out of %d) in subtree as node %d in tree %d",
-                n1, t1, phTree1.getTaxa(n1).size(), this.n, n2, t2);
-
-
-        for (int nodeNumber : treeNodes()) {
-            int x1Var = getVar("x", t1, n1, nodeNumber);
-            int x2Var = getVar("x", t2, n2, nodeNumber);
-            addClause(-x1Var, x2Var); // x1 then x2
-        }
-
-        for (int subtreeNode : phTree1.getSubtreeNodes(n1)) {
-            if (subtreeNode >= n) {
-                for (int nonSubtreeNode = n; nonSubtreeNode < 2 * n - 1; nonSubtreeNode++) {
-                    if (!phTree2.getSubtreeNodes(n2).contains(nonSubtreeNode)) {
-                        for (int nodeNumber : treeNodes()) {
-                            int x1Var = getVar("x", t1, subtreeNode, nodeNumber);
-                            int x2Var = getVar("x", t2, nonSubtreeNode, nodeNumber);
-                            addClause(-x1Var, -x2Var); // x1 then ~x2
-                        }
-                    }
-                }
-            }
-        }
-    }
+//    private void addEqualsNodesConstraints(int t1, int n1, int t2, int n2) {
+//        PhylogeneticTree phTree1 = this.phTrees.get(t1);
+//        PhylogeneticTree phTree2 = this.phTrees.get(t2);
+//        commentCNF("Node %d in tree %d have the same %d taxons (out of %d) in subtree as node %d in tree %d",
+//                n1, t1, phTree1.getTaxa(n1).size(), this.n, n2, t2);
+//
+//
+//        for (int nodeNumber : treeNodes()) {
+//            int x1Var = getVar("x", t1, n1, nodeNumber);
+//            int x2Var = getVar("x", t2, n2, nodeNumber);
+//            addClause(-x1Var, x2Var); // x1 then x2
+//        }
+//
+//        for (int subtreeNode : phTree1.getSubtreeNodes(n1)) {
+//            if (subtreeNode >= n) {
+//                for (int nonSubtreeNode = n; nonSubtreeNode < 2 * n - 1; nonSubtreeNode++) {
+//                    if (!phTree2.getSubtreeNodes(n2).contains(nonSubtreeNode)) {
+//                        for (int nodeNumber : treeNodes()) {
+//                            int x1Var = getVar("x", t1, subtreeNode, nodeNumber);
+//                            int x2Var = getVar("x", t2, nonSubtreeNode, nodeNumber);
+//                            addClause(-x1Var, -x2Var); // x1 then ~x2
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
 
     /*
     Adding this constraints is a little bit risky

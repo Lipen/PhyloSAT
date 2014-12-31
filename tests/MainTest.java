@@ -13,7 +13,7 @@ public class MainTest extends TestCase {
     private void runTest(String testName) {
         int myResult = new Main().run(new String[]{testName});
         assertNotEquals(myResult, -1);
-        String pirnCommand = "soft/pirn-linux-v201-64 " + testName;
+        String pirnCommand = "soft/pirn-v201 " + testName;
         CommandLine cmdLine = CommandLine.parse(pirnCommand);
 
         DefaultExecutor executor = new DefaultExecutor();
@@ -50,14 +50,16 @@ public class MainTest extends TestCase {
                 String[] tokens = line.split(" ");
                 int pirnResult = Integer.parseInt(tokens[tokens.length - 1]);
                 line = input.nextLine();
+                System.out.println(line);
                 if (line.contains("This may not be the optimal solution")) {
-//                    assertTrue(myResult <= pirnResult);
+                    assertTrue(myResult <= pirnResult);
                 } else {
-//                    assertEquals(myResult, pirnResult);
+                    assertEquals(myResult, pirnResult);
                 }
-                break;
+                return;
             }
         }
+        assertTrue("Not enough output from pirn", false);
     }
 
     public void runDirectory(String dirName){
@@ -72,8 +74,20 @@ public class MainTest extends TestCase {
         }
     }
 
-    public void testSmall() {
-        runDirectory(testsPath + "small");
+    public void testSmallGrass2() {
+        runDirectory(testsPath + "small/Grass2");
+    }
+
+    public void testSmallGrass3() {
+        runDirectory(testsPath + "small/Grass3");
+    }
+
+    public void testSmallGrass4() {
+        runDirectory(testsPath + "small/Grass4");
+    }
+
+    public void testSmallOthers() {
+        runDirectory(testsPath + "small/Others");
     }
 
 //    public void testLarge() throws IOException {

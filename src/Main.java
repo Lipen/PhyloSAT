@@ -157,7 +157,7 @@ public class Main {
         int CHECK_FIRST = 3;
         long FIRST_TIME_LIMIT = 1000;
         long MAX_TL = 1000000;
-        int TL_COEF = 50;
+        long TL_COEF = 50;
 
         int mink = 0;
         while (mink <= CHECK_FIRST) {
