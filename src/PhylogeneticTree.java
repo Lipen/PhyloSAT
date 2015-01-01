@@ -54,10 +54,15 @@ public class PhylogeneticTree {
         Map<Node, Integer> m = new HashMap<>();
 
         List<Taxon> taxa = new ArrayList<>(tree.getTaxa());
-        Collections.sort(taxa, (o1, o2) -> o1.getName().compareTo(o2.getName()));
+        Collections.sort(taxa, new Comparator<Taxon>() {
+            @Override
+            public int compare(Taxon o1, Taxon o2) {
+                return o1.getName().compareTo(o2.getName());
+            }
+        });
 
         for (Taxon taxon : taxa) {
-            PhylogeneticNode newNode = new PhylogeneticNode(-1, new ArrayList<>(), taxon.getName());
+            PhylogeneticNode newNode = new PhylogeneticNode(-1, new ArrayList<Integer>(), taxon.getName());
             m.put(tree.getNode(taxon), nodes.size());
             nodes.add(newNode);
         }
@@ -67,7 +72,7 @@ public class PhylogeneticTree {
                 if (m.containsKey(node)) {
                     continue;
                 }
-                PhylogeneticNode newNode = new PhylogeneticNode(-1, new ArrayList<>(), null);
+                PhylogeneticNode newNode = new PhylogeneticNode(-1, new ArrayList<Integer>(), null);
 
                 boolean canAddToNodes = true;
                 for (Node child : tree.getChildren(node)) {
@@ -115,8 +120,8 @@ public class PhylogeneticTree {
                 }
             }
         }
-        nodes.add(taxaSize, new PhylogeneticNode(nodes.size() + 1, new ArrayList<>(), ""));
-        PhylogeneticNode newRoot = new PhylogeneticNode(-1, new ArrayList<>(), null);
+        nodes.add(taxaSize, new PhylogeneticNode(nodes.size() + 1, new ArrayList<Integer>(), ""));
+        PhylogeneticNode newRoot = new PhylogeneticNode(-1, new ArrayList<Integer>(), null);
         newRoot.children.add(taxaSize);
         newRoot.children.add(nodes.size() - 1);
         nodes.add(newRoot);
@@ -155,7 +160,7 @@ public class PhylogeneticTree {
 
         for (int oldNodeNum : this.getSubtreeNodes(nodeNum)) {
             PhylogeneticNode oldNode = this.nodes.get(oldNodeNum);
-            PhylogeneticNode newNode = new PhylogeneticNode(-1, new ArrayList<>(), oldNode.label);
+            PhylogeneticNode newNode = new PhylogeneticNode(-1, new ArrayList<Integer>(), oldNode.label);
             int newNodeNumber = oldToNew.size();
             oldToNew.put(oldNodeNum, newNodeNumber);
 
@@ -182,13 +187,13 @@ public class PhylogeneticTree {
 
         for (int oldNodeNum = 0; oldNodeNum < this.size(); oldNodeNum++) {
             if (oldNodeNum == minLeafNumber) {
-                PhylogeneticNode newNode = new PhylogeneticNode(-1, new ArrayList<>(), label);
+                PhylogeneticNode newNode = new PhylogeneticNode(-1, new ArrayList<Integer>(), label);
                 ans.nodes.add(newNode);
                 continue;
             }
             if (!subtree.contains(oldNodeNum)) {
                 PhylogeneticNode oldNode = this.nodes.get(oldNodeNum);
-                PhylogeneticNode newNode = new PhylogeneticNode(-1, new ArrayList<>(), oldNode.label);
+                PhylogeneticNode newNode = new PhylogeneticNode(-1, new ArrayList<Integer>(), oldNode.label);
                 int newNodeNumber = ans.nodes.size();
                 oldToNew.put(oldNodeNum, newNodeNumber);
 
