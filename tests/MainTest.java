@@ -47,21 +47,22 @@ public class MainTest extends TestCase {
         String line;
         while (input.hasNextLine()) {
             line = input.nextLine();
-            System.out.println(line);
             if (line.contains("The lowest number of hybridization events found so far is")
                     || line.contains("The minimum number of hybridization events")) {
                 String[] tokens = line.split(" ");
                 int pirnResult = Integer.parseInt(tokens[tokens.length - 1]);
                 line = input.nextLine();
-                System.out.println(line);
                 if (line.contains("This may not be the optimal solution")) {
-                    assertTrue(myResult <= pirnResult);
+                    assertTrue("My result (" + myResult+ ") is worse than pirn result (" + pirnResult + ")",
+                            myResult <= pirnResult);
                 } else {
-                    assertEquals(myResult, pirnResult);
+                    assertEquals("My result (" + myResult + ") is not equals to pirn exact result (" + pirnResult + ")",
+                            myResult, pirnResult);
                 }
                 return;
             }
         }
+        System.out.println(outputStream.toString());
         assertTrue("Not enough output from pirn", false);
     }
 
