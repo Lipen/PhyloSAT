@@ -4,6 +4,8 @@ import org.apache.commons.exec.*;
 import java.io.*;
 import java.util.Scanner;
 
+import static org.junit.Assert.assertNotEquals;
+
 public class MainTest extends TestCase {
     private static String testsPath = "data/tests/";
 
@@ -13,7 +15,7 @@ public class MainTest extends TestCase {
         int myResult = new Main().run(new String[]{"-l", "test.log", testName});
         long myTime = System.currentTimeMillis() - curTime;
         try {
-            assertEquals(myResult, -1);
+            assertNotEquals(myResult, -1);
         } catch (Throwable t) {
             t.printStackTrace();
             return;
