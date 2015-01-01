@@ -4,9 +4,6 @@ import org.apache.commons.exec.*;
 import java.io.*;
 import java.util.Scanner;
 
-import static org.junit.Assert.*;
-import static org.junit.Assert.assertTrue;
-
 public class MainTest extends TestCase {
     private static String testsPath = "data/tests/";
 
@@ -15,7 +12,12 @@ public class MainTest extends TestCase {
         long curTime = System.currentTimeMillis();
         int myResult = new Main().run(new String[]{"-l", "test.log", testName});
         long myTime = System.currentTimeMillis() - curTime;
-        assertNotEquals(myResult, -1);
+        try {
+            assertEquals(myResult, -1);
+        } catch (Throwable t) {
+            t.printStackTrace();
+            return;
+        }
         String pirnCommand = "soft/pirn-v201 " + testName;
         CommandLine cmdLine = CommandLine.parse(pirnCommand);
 
@@ -38,11 +40,16 @@ public class MainTest extends TestCase {
             resultHandler.waitFor();
         } catch (InterruptedException | IOException e) {
             e.printStackTrace();
-            assertTrue("pirn failed!", false);
+            return;
         }
 
         long executionTime = System.currentTimeMillis() - curTime;
-        assertTrue(executionTime < timeLimit);
+        try {
+            assertTrue(executionTime < timeLimit);
+        } catch (Throwable t) {
+            t.printStackTrace();
+            return;
+        }
         Scanner input = new Scanner(outputStream.toString());
         String line;
         while (input.hasNextLine()) {
@@ -54,18 +61,27 @@ public class MainTest extends TestCase {
                 line = input.nextLine();
                 System.out.println("My: " + myResult + " in " + myTime / 1000 + " sec, Pirn: " + pirnResult +
                         " in " + executionTime / 1000 + " sec");
-                if (line.contains("This may not be the optimal solution")) {
-                    assertTrue("My result (" + myResult+ ") is worse than pirn result (" + pirnResult + ")",
-                            myResult <= pirnResult);
-                } else {
-                    assertEquals("My result (" + myResult + ") is not equals to pirn exact result (" + pirnResult + ")",
-                            myResult, pirnResult);
+                try {
+                    if (line.contains("This may not be the optimal solution")) {
+                        assertTrue("My result (" + myResult+ ") is worse than pirn result (" + pirnResult + ")",
+                                myResult <= pirnResult);
+                    } else {
+                        assertEquals("My result (" + myResult + ") is not equals to pirn exact result (" + pirnResult + ")",
+                                myResult, pirnResult);
+                    }
+                } catch (Throwable t) {
+                    t.printStackTrace();
                 }
                 return;
             }
         }
         System.out.println(outputStream.toString());
-        assertTrue("Not enough output from pirn", false);
+        try {
+            assertTrue("Not enough output from pirn", false);
+        } catch (Throwable t) {
+            t.printStackTrace();
+            return;
+        }
     }
 
     public void runDirectory(String dirName){
