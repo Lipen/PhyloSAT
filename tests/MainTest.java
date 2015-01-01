@@ -11,7 +11,9 @@ public class MainTest extends TestCase {
     private static String testsPath = "data/tests/";
 
     private void runTest(String testName) {
-        int myResult = new Main().run(new String[]{testName});
+        long curTime = System.currentTimeMillis();
+        int myResult = new Main().run(new String[]{"-l", "test.log", testName});
+        long myTime = System.currentTimeMillis() - curTime;
         assertNotEquals(myResult, -1);
         String pirnCommand = "soft/pirn-v201 " + testName;
         CommandLine cmdLine = CommandLine.parse(pirnCommand);
@@ -29,7 +31,7 @@ public class MainTest extends TestCase {
         PumpStreamHandler streamHandler = new PumpStreamHandler(outputStream, errStream);
         executor.setStreamHandler(streamHandler);
 
-        long curTime = System.currentTimeMillis();
+        curTime = System.currentTimeMillis();
         try {
             executor.execute(cmdLine, resultHandler);
             resultHandler.waitFor();
@@ -40,7 +42,7 @@ public class MainTest extends TestCase {
 
         long executionTime = System.currentTimeMillis() - curTime;
         assertTrue(executionTime < timeLimit);
-
+        System.out.println("My: " + myTime + ", Pirn: " + executionTime);
         Scanner input = new Scanner(outputStream.toString());
         String line;
         while (input.hasNextLine()) {
