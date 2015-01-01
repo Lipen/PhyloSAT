@@ -11,6 +11,7 @@ public class MainTest extends TestCase {
     private static String testsPath = "data/tests/";
 
     private void runTest(String testName) {
+        System.out.println(testName);
         long curTime = System.currentTimeMillis();
         int myResult = new Main().run(new String[]{"-l", "test.log", testName});
         long myTime = System.currentTimeMillis() - curTime;
