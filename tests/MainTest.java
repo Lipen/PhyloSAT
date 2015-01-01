@@ -42,7 +42,6 @@ public class MainTest extends TestCase {
 
         long executionTime = System.currentTimeMillis() - curTime;
         assertTrue(executionTime < timeLimit);
-        System.out.println("My: " + myTime + ", Pirn: " + executionTime);
         Scanner input = new Scanner(outputStream.toString());
         String line;
         while (input.hasNextLine()) {
@@ -52,6 +51,8 @@ public class MainTest extends TestCase {
                 String[] tokens = line.split(" ");
                 int pirnResult = Integer.parseInt(tokens[tokens.length - 1]);
                 line = input.nextLine();
+                System.out.println("My: " + myResult + " in " + myTime / 1000 + " sec, Pirn: " + pirnResult +
+                        " in " + executionTime / 1000 + " sec");
                 if (line.contains("This may not be the optimal solution")) {
                     assertTrue("My result (" + myResult+ ") is worse than pirn result (" + pirnResult + ")",
                             myResult <= pirnResult);
