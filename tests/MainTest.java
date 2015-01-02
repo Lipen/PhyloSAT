@@ -32,10 +32,12 @@ public class MainTest extends TestCase {
             logfh.close();
         }
         try {
-            assertNotEquals(myResult, -1);
+            assertNotEquals(logFileName + "\nmy did not do it in time", myResult, -1);
         } catch (Throwable t) {
+            System.out.print("my can't do it in time");
             t.printStackTrace();
-            return;
+//            return;
+            // need to continue to look if pirn can do it
         }
         String pirnCommand = "soft/pirn-v201 -a " + testName;
         CommandLine cmdLine = CommandLine.parse(pirnCommand);
@@ -64,9 +66,12 @@ public class MainTest extends TestCase {
 
         long executionTime = System.currentTimeMillis() - curTime;
         try {
-            assertTrue(executionTime < timeLimit);
+            assertTrue(logFileName + "\npirn did not do it in time", executionTime < timeLimit);
         } catch (Throwable t) {
             t.printStackTrace();
+            System.out.print("pirn can't do it in time");
+            System.out.println("My: " + myResult + " in " + myTime / 1000 + " sec, Pirn: -1 in "
+                    + executionTime / 1000 + " sec");
             return;
         }
         Scanner input = new Scanner(outputStream.toString());
@@ -82,10 +87,10 @@ public class MainTest extends TestCase {
                         " in " + executionTime / 1000 + " sec");
                 try {
                     if (line.contains("This may not be the optimal solution")) {
-                        assertTrue("My result (" + myResult+ ") is worse than pirn result (" + pirnResult + ")",
+                        assertTrue(logFileName + "\nMy result (" + myResult+ ") is worse than pirn result (" + pirnResult + ")",
                                 myResult <= pirnResult);
                     } else {
-                        assertEquals("My result (" + myResult + ") is not equals to pirn exact result (" + pirnResult + ")",
+                        assertEquals(logFileName + "\nMy result (" + myResult + ") is not equals to pirn exact result (" + pirnResult + ")",
                                 myResult, pirnResult);
                     }
                 } catch (Throwable t) {
@@ -96,10 +101,9 @@ public class MainTest extends TestCase {
         }
         System.out.println(outputStream.toString());
         try {
-            assertTrue("Not enough output from pirn", false);
+            assertTrue(logFileName + "\nNot enough output from pirn", false);
         } catch (Throwable t) {
             t.printStackTrace();
-            return;
         }
     }
 
