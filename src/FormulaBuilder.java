@@ -49,6 +49,14 @@ public class FormulaBuilder {
         return this.hb.toString();
     }
 
+    public int getClausesCount() {
+        return this.clausesCount;
+    }
+
+    public int getVariablesCount() {
+        return this.m.size();
+    }
+
     public String buildCNF() {
         if (this.m.size() > 0) {
             throw new RuntimeException("Given translation map (variable -> int) is not empty");

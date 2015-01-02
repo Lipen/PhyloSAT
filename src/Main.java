@@ -49,7 +49,24 @@ public class Main {
             usage = "disables splits, so it is possible to set hybridization number")
     private boolean disableSplits = false;
 
-    Logger logger;
+    private FileHandler loggerHandler  = null;
+
+    Logger logger = Logger.getLogger("Logger");
+
+    public FileHandler addLoggerHandler(String logFilePath) throws IOException {
+        FileHandler fh = new FileHandler(logFilePath, false);
+        logger.addHandler(fh);
+        SimpleFormatter formatter = new SimpleFormatter();
+        fh.setFormatter(formatter);
+
+        logger.setUseParentHandlers(false);
+        System.out.println("Log redirected to " + logFilePath);
+        return fh;
+    }
+
+    public void removeLoggerHandler(FileHandler fh) {
+        logger.removeHandler(fh);
+    }
 
     private int launcher(String[] args) throws IOException, ImportException {
         Locale.setDefault(Locale.US);
@@ -72,16 +89,9 @@ public class Main {
             return -1;
         }
 
-        logger = Logger.getLogger("Logger");
         if (logFilePath != null) {
             try {
-                FileHandler fh = new FileHandler(logFilePath, false);
-                logger.addHandler(fh);
-                SimpleFormatter formatter = new SimpleFormatter();
-                fh.setFormatter(formatter);
-
-                logger.setUseParentHandlers(false);
-                System.out.println("Log redirected to " + logFilePath);
+                this.loggerHandler = addLoggerHandler(logFilePath);
             } catch (Exception e) {
                 System.err.println("Can't work with log file " + logFilePath + ": " + e.getMessage());
                 return -1;
@@ -157,7 +167,7 @@ public class Main {
         int CHECK_FIRST = 3;
         long FIRST_TIME_LIMIT = 1000;
         long MAX_TL = 1000000;
-        long TL_COEF = 50;
+//        long TL_COEF = 50;
 
         int mink = 0;
         while (mink <= CHECK_FIRST) {
@@ -187,7 +197,7 @@ public class Main {
         int l = mink, r = k;
         while (l < r) {
             int m = (l + r) / 2;
-            boolean res = solveSubtask(trees, m, MAX_TL * TL_COEF, time);
+            boolean res = solveSubtask(trees, m, MAX_TL, time);
             if (!res) {
                 l = m + 1;
             } else {
@@ -224,11 +234,12 @@ public class Main {
     private boolean solveSubtask(List<PhylogeneticTree> trees, int k,
                                  long timeLimit, long[] time) throws IOException {
         Map<String, Integer> m = new TreeMap<>();
-        logger.info("Trying to solve problem with k = " + k + " reticulation nodes");
+        logger.info("Trying to solve problem of size " + trees.get(0).size() + " with " + k + " reticulation nodes");
         FormulaBuilder builder = new FormulaBuilder(trees, k, m, enableReticulationEdges, disableComments);
         String cnf = builder.buildCNF();
         String help = builder.getHelpMap();
-        logger.info("CNF formula length is " + cnf.length() + " characters");
+        logger.info("CNF formula has " + builder.getVariablesCount() + " variables, "
+                + builder.getClausesCount() + " clauses and its length is " + cnf.length() + " characters");
 
         try {
             PrintWriter cnfPrintWriter = new PrintWriter(new File(cnfFilePath));
@@ -267,16 +278,16 @@ public class Main {
             logger.info("NO SOLUTION with k = " + k);
         } else {
             logger.info("SOLUTION FOUND with k = " + k);
-            if (resultFilePath != null) {
-                try {
-                    // Сейчас это имеет мало смысла
-                    PrintWriter gvPrintWriter = new PrintWriter(new File(resultFilePath));
-                    gvPrintWriter.print(NetworkBuilder.gvNetwork(m, solution, trees, k));
-                    gvPrintWriter.close();
-                } catch (FileNotFoundException e) {
-                    logger.warning("File " + resultFilePath + " not found: " + e.getMessage());
-                }
-            }
+//            if (resultFilePath != null) {
+//                try {
+//                    // Сейчас это имеет мало смысла
+//                    PrintWriter gvPrintWriter = new PrintWriter(new File(resultFilePath));
+//                    gvPrintWriter.print(NetworkBuilder.gvNetwork(m, solution, trees, k));
+//                    gvPrintWriter.close();
+//                } catch (FileNotFoundException e) {
+//                    logger.warning("File " + resultFilePath + " not found: " + e.getMessage());
+//                }
+//            }
             return true;
         }
 
@@ -472,6 +483,11 @@ public class Main {
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(1);
+        } finally {
+            if(this.loggerHandler != null) {
+                this.logger.removeHandler(loggerHandler);
+                loggerHandler.close();
+            }
         }
         return -1;
     }

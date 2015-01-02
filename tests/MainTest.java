@@ -3,6 +3,7 @@ import org.apache.commons.exec.*;
 
 import java.io.*;
 import java.util.Scanner;
+import java.util.logging.FileHandler;
 
 import static org.junit.Assert.assertNotEquals;
 
@@ -11,16 +12,32 @@ public class MainTest extends TestCase {
 
     private void runTest(String testName) {
         System.out.println(testName);
+        String[] tokens = testName.split("/");
+        String logFileName = "logs/" + tokens[tokens.length - 1] + ".log";
+        boolean usingLogFile = false;
+        FileHandler logfh = null;
+        Main mainInstance = new Main();
+        try {
+            logfh = mainInstance.addLoggerHandler(logFileName);
+            usingLogFile = true;
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.out.print("Can't use logfile");
+        }
         long curTime = System.currentTimeMillis();
-        int myResult = new Main().run(new String[]{"-l", "test.log", testName});
+        int myResult = mainInstance.run(new String[]{testName});
         long myTime = System.currentTimeMillis() - curTime;
+        if(usingLogFile) {
+            mainInstance.removeLoggerHandler(logfh);
+            logfh.close();
+        }
         try {
             assertNotEquals(myResult, -1);
         } catch (Throwable t) {
             t.printStackTrace();
             return;
         }
-        String pirnCommand = "soft/pirn-v201 " + testName;
+        String pirnCommand = "soft/pirn-v201 -a " + testName;
         CommandLine cmdLine = CommandLine.parse(pirnCommand);
 
         DefaultExecutor executor = new DefaultExecutor();
@@ -58,7 +75,7 @@ public class MainTest extends TestCase {
             line = input.nextLine();
             if (line.contains("The lowest number of hybridization events found so far is")
                     || line.contains("The minimum number of hybridization events")) {
-                String[] tokens = line.split(" ");
+                tokens = line.split(" ");
                 int pirnResult = Integer.parseInt(tokens[tokens.length - 1]);
                 line = input.nextLine();
                 System.out.println("My: " + myResult + " in " + myTime / 1000 + " sec, Pirn: " + pirnResult +
