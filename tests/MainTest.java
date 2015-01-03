@@ -22,7 +22,7 @@ public class MainTest extends TestCase {
             usingLogFile = true;
         } catch (IOException e) {
             e.printStackTrace();
-            System.out.print("Can't use logfile");
+            System.out.println("Can't use logfile");
         }
         long curTime = System.currentTimeMillis();
         int myResult = mainInstance.run(new String[]{testName});
@@ -34,7 +34,7 @@ public class MainTest extends TestCase {
         try {
             assertNotEquals(logFileName + "\nmy did not do it in time", myResult, -1);
         } catch (Throwable t) {
-            System.out.print("my can't do it in time");
+            System.out.println("my can't do it in time");
             t.printStackTrace();
 //            return;
             // need to continue to look if pirn can do it
@@ -69,7 +69,7 @@ public class MainTest extends TestCase {
             assertTrue(logFileName + "\npirn did not do it in time", executionTime < timeLimit);
         } catch (Throwable t) {
             t.printStackTrace();
-            System.out.print("pirn can't do it in time");
+            System.out.println("pirn can't do it in time");
             System.out.println("My: " + myResult + " in " + myTime / 1000 + " sec, Pirn: -1 in "
                     + executionTime / 1000 + " sec");
             return;
