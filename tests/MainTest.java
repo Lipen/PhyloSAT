@@ -5,6 +5,7 @@ import java.io.*;
 import java.util.Scanner;
 import java.util.logging.FileHandler;
 
+import static java.lang.Math.max;
 import static org.junit.Assert.assertNotEquals;
 
 public class MainTest extends TestCase {
@@ -46,7 +47,7 @@ public class MainTest extends TestCase {
         DefaultExecuteResultHandler resultHandler = new DefaultExecuteResultHandler();
 
         executor.setExitValue(0);
-        long timeLimit = 1000000;
+        long timeLimit = max(1000000, myTime * 2);
         ExecuteWatchdog watchdog = new ExecuteWatchdog(timeLimit);
         executor.setWatchdog(watchdog);
 
