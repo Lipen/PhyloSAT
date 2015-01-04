@@ -75,6 +75,18 @@ public class MainTest extends TestCase {
                     + executionTime / 1000 + " sec");
             return;
         }
+
+        if (usingLogFile) {
+            try(PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(logFileName, true)))) {
+                out.println(outputStream.toString());
+            } catch (IOException e) {
+                e.printStackTrace();
+                System.out.println(outputStream.toString());
+            }
+        } else {
+            System.out.println(outputStream.toString());
+        }
+
         Scanner input = new Scanner(outputStream.toString());
         String line;
         while (input.hasNextLine()) {
