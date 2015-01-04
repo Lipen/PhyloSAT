@@ -280,7 +280,7 @@ public class Main {
                 try {
                     // Сейчас это имеет мало смысла
                     PrintWriter gvPrintWriter = new PrintWriter(new File(resultFilePath));
-                    gvPrintWriter.print(NetworkBuilder.gvNetwork(m, solution));
+                    gvPrintWriter.print(NetworkBuilder.gvNetwork(m, solution, trees, k));
                     gvPrintWriter.close();
                 } catch (FileNotFoundException e) {
                     logger.warning("Can not open " + resultFilePath + " :\n" + e.getMessage());

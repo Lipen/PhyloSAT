@@ -1,3 +1,4 @@
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -6,18 +7,32 @@ import java.util.Map;
  * Time: 17:09
  */
 public class NetworkBuilder {
-    public static String gvNetwork(Map<String, Integer> m, boolean[] solution) {
+    public static String gvNetwork(Map<String, Integer> m, boolean[] solution, List<PhylogeneticTree> trees, int k) {
         String ans = "digraph G {\n";
-        ans += "  node [shape = point]\n";
+//        ans += "  node [shape = point]\n";
+        ans += "  {rank = same;";
+        for (int i = 0; i < trees.get(0).getTaxaSize() - 1; i++) {
+            ans += " " + i;
+        }
+        ans += "}\n";
+        ans += "  node [shape = box];\n ";
+        for (int i = trees.get(0).size() + k; i < trees.get(0).size() + 2 * k; i++) {
+            ans += " " + i;
+        }
+        ans += ";\n";
+        ans += "  node [shape = ellipse];\n";
 
         for (String s : m.keySet()) {
             int var = m.get(s);
 
             if (solution[var - 1]) {
-                String[] split = s.split("_");
-                if (split[0].equals("left") || split[0].equals("right") || split[0].equals("ch")) {
-                    int src = Integer.parseInt(split[1]);
-                    int dst = Integer.parseInt(split[2]);
+                String[] splitted = s.split("_");
+                if (Integer.parseInt(splitted[1]) == trees.get(0).size() + k - 1 ||
+                        Integer.parseInt(splitted[2]) == trees.get(0).getTaxaSize() - 1)
+                    continue;
+                if (splitted[0].equals("left") || splitted[0].equals("right") || splitted[0].equals("ch")) {
+                    int src = Integer.parseInt(splitted[1]);
+                    int dst = Integer.parseInt(splitted[2]);
                     ans += String.format("  %d -> %d;\n", src, dst);
                 }
             }
