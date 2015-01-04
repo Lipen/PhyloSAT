@@ -283,7 +283,7 @@ public class Main {
                     gvPrintWriter.print(NetworkBuilder.gvNetwork(m, solution));
                     gvPrintWriter.close();
                 } catch (FileNotFoundException e) {
-                    logger.warning("File " + resultFilePath + " not found: " + e.getMessage());
+                    logger.warning("Can not open " + resultFilePath + " :\n" + e.getMessage());
                 }
             }
             return true;
