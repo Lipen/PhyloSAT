@@ -217,7 +217,6 @@ public class Main {
     }
 
     private int calcUpperBound(List<PhylogeneticTree> trees) {
-        //return Math.min(10, trees.get(0).getTaxaSize());
         return trees.get(0).getTaxaSize();
     }
 
@@ -233,7 +232,7 @@ public class Main {
 
     private boolean solveSubtask(List<PhylogeneticTree> trees, int k,
                                  long timeLimit, long[] time) throws IOException {
-        Map<String, Integer> m = new TreeMap<>();
+        Map<String, Integer> m = new HashMap<>();
         logger.info("Trying to solve problem of size " + trees.get(0).size() + " with " + k + " reticulation nodes");
         FormulaBuilder builder = new FormulaBuilder(trees, k, m, enableReticulationEdges, disableComments);
         String cnf = builder.buildCNF();
@@ -261,14 +260,6 @@ public class Main {
 
         boolean[] solution = CryptominisatPort.solve(cnf, null, null, timeLimit, time);
 
-        if(solution != null) {
-            StringBuilder hlpbld = new StringBuilder();
-            for (int i = 0; i < solution.length; ++i)
-                if (solution[i])
-                    hlpbld.append(i + 1).append(" ");
-            logger.info(hlpbld.toString());
-        }
-
         if (time[0] == -1) {
             logger.info("TIME LIMIT EXCEEDED (" + timeLimit + ")");
             return false;
@@ -277,17 +268,24 @@ public class Main {
         if (solution == null) {
             logger.info("NO SOLUTION with k = " + k);
         } else {
+            StringBuilder hlpbld = new StringBuilder();
+            for (int i = 0; i < solution.length; ++i)
+                if (solution[i])
+                    hlpbld.append(i + 1).append(" ");
+            logger.info(hlpbld.toString());
+
             logger.info("SOLUTION FOUND with k = " + k);
-//            if (resultFilePath != null) {
-//                try {
-//                    // Сейчас это имеет мало смысла
-//                    PrintWriter gvPrintWriter = new PrintWriter(new File(resultFilePath));
-//                    gvPrintWriter.print(NetworkBuilder.gvNetwork(m, solution, trees, k));
-//                    gvPrintWriter.close();
-//                } catch (FileNotFoundException e) {
-//                    logger.warning("File " + resultFilePath + " not found: " + e.getMessage());
-//                }
-//            }
+
+            if (resultFilePath != null) {
+                try {
+                    // Сейчас это имеет мало смысла
+                    PrintWriter gvPrintWriter = new PrintWriter(new File(resultFilePath));
+                    gvPrintWriter.print(NetworkBuilder.gvNetwork(m, solution));
+                    gvPrintWriter.close();
+                } catch (FileNotFoundException e) {
+                    logger.warning("File " + resultFilePath + " not found: " + e.getMessage());
+                }
+            }
             return true;
         }
 
