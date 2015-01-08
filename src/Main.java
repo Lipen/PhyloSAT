@@ -144,18 +144,18 @@ public class Main {
             }
             logger.info(loggerStr);
 
-            int k;
+            PhylogeneticNetwork res;
             if (hn >= 0) {
-                k = solveSubtask(subtaskTrees, hn, 1000000, new long[1]) ? hn : -1;
+                res = solveSubtask(subtaskTrees, hn, 1000000, new long[1]);
             } else {
-                k = solveSubtaskWithoutUNSAT(subtaskTrees);
+                res = solveSubtaskWithoutUNSAT(subtaskTrees);
             }
 
-            if (k == -1) {
+            if (res == null) {
                 logger.info("NO SOLUTION FOR SUBPROBLEM");
                 return -1;
             } else {
-                finalK += k;
+                finalK += res.getK();
             }
         }
 
@@ -163,7 +163,7 @@ public class Main {
         return finalK;
     }
 
-    private int solveSubtaskWithoutUNSAT(List<PhylogeneticTree> trees) throws IOException {
+    private PhylogeneticNetwork solveSubtaskWithoutUNSAT(List<PhylogeneticTree> trees) throws IOException {
         int CHECK_FIRST = 3;
         long FIRST_TIME_LIMIT = 1000;
         long MAX_TL = 1000000;
@@ -172,39 +172,39 @@ public class Main {
         int mink = 0;
         while (mink <= CHECK_FIRST) {
             long[] time = new long[1];
-            boolean res = solveSubtask(trees, mink, FIRST_TIME_LIMIT, time);
+            PhylogeneticNetwork res = solveSubtask(trees, mink, FIRST_TIME_LIMIT, time);
             if (time[0] == -1) {
                 break;
             }
-            if (res) {
-                return mink;
+            if (res != null) {
+                return res;
             }
             mink++;
         }
 
         int k = calcUpperBound(trees);
         long[] time = new long[1];
-        boolean maxRes = solveSubtask(trees, k, MAX_TL, time);
+        PhylogeneticNetwork res = solveSubtask(trees, k, MAX_TL, time);
         if (time[0] == -1) {
             logger.info("There is no solution found in MAX_TL time");
-            return -1;
+            return res;
         }
-        if (!maxRes) {
+        if (res == null) {
             logger.info("There is no solution with max bound k = " + k);
-            return -1;
+            return res;
         }
 
         int l = mink, r = k;
         while (l < r) {
             int m = (l + r) / 2;
-            boolean res = solveSubtask(trees, m, MAX_TL, time);
-            if (!res) {
+            res = solveSubtask(trees, m, MAX_TL, time);
+            if (res == null) {
                 l = m + 1;
             } else {
                 r = m;
             }
         }
-        return l;
+        return res;
 //        while (k >= mink) {
 //            boolean res = solveSubtask(trees, k, time[0] * TL_COEF, time);
 //            if (!res) {
@@ -230,7 +230,7 @@ public class Main {
 //        return -1;
 //    }
 
-    private boolean solveSubtask(List<PhylogeneticTree> trees, int k,
+    private PhylogeneticNetwork solveSubtask(List<PhylogeneticTree> trees, int k,
                                  long timeLimit, long[] time) throws IOException {
         Map<String, Integer> m = new HashMap<>();
         logger.info("Trying to solve problem of size " + trees.get(0).size() + " with " + k + " reticulation nodes");
@@ -262,7 +262,7 @@ public class Main {
 
         if (time[0] == -1) {
             logger.info("TIME LIMIT EXCEEDED (" + timeLimit + ")");
-            return false;
+            return null;
         }
         logger.info("Execution time : " + time[0] + " / " + timeLimit);
         if (solution == null) {
@@ -276,20 +276,20 @@ public class Main {
 
             logger.info("SOLUTION FOUND with k = " + k);
 
-            if (resultFilePath != null) {
-                try {
-                    // Сейчас это имеет мало смысла
-                    PrintWriter gvPrintWriter = new PrintWriter(new File(resultFilePath));
-                    gvPrintWriter.print(NetworkBuilder.gvNetwork(m, solution, trees, k));
-                    gvPrintWriter.close();
-                } catch (FileNotFoundException e) {
-                    logger.warning("Can not open " + resultFilePath + " :\n" + e.getMessage());
-                }
-            }
-            return true;
+//            if (resultFilePath != null) {
+//                try {
+//                    // Сейчас это имеет мало смысла
+//                    PrintWriter gvPrintWriter = new PrintWriter(new File(resultFilePath));
+//                    gvPrintWriter.print(NetworkBuilder.gvNetwork(m, solution, trees, k));
+//                    gvPrintWriter.close();
+//                } catch (FileNotFoundException e) {
+//                    logger.warning("Can not open " + resultFilePath + " :\n" + e.getMessage());
+//                }
+//            }
+            return NetworkBuilder.gvNetwork(m, solution, trees, k);
         }
 
-        return false;
+        return null;
     }
 
     private List<PhylogeneticTree> normalize(List<PhylogeneticTree> inputTrees) {
