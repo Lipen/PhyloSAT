@@ -61,13 +61,18 @@ public class PhylogeneticNetwork {
             if(node.getTaxaSet().equals(otherTaxaSet)) {
                 for(PhylogeneticNode otherNode : other.nodes) {
                     for(int i = 0; i < otherNode.children.size(); ++i) {
-                        otherNode.children.set(i, otherNode.children.get(i) + nodes.size());
+                        int child = otherNode.children.get(i);
+                        if (child > other.root) {
+                            child -= 1;
+                        }
+                        otherNode.children.set(i, child + nodes.size());
                     }
                 }
-                node.children = other.nodes.get(root).children;
+                node.children = other.nodes.get(other.root).children;
                 node.label = null;
                 other.nodes.remove(other.root);
-                nodes.addAll(other.nodes);
+                this.nodes.addAll(other.nodes);
+                this.k += other.k;
                 other.nodes = null;
                 other.root = -1;
                 return true;
@@ -80,22 +85,24 @@ public class PhylogeneticNetwork {
         String ans = "digraph G {\n";
         ans += "  node [shape = ellipse]\n";
         ans += "  {rank = same;";
-        int taxaSize = (nodes.size() - 2 * k) / 2 + 1;
-        for (int i = 0; i < taxaSize; i++) {
-            ans += " " + nodes.get(i).label;
+        for (PhylogeneticNode node : nodes) {
+            if (node.label != null) {
+                ans += " " + node.label;
+            }
         }
         ans += "}\n";
-        ans += "  node [shape = box];\n ";
-        for (int i = nodes.size() - k; i < nodes.size(); i++) {
-            ans += " " + i;
+        ans += "  node [shape = point];\n ";
+        for (int i = 0; i < nodes.size(); i++) {
+            if(nodes.get(i).children.size() == 1) {
+                ans += " _" + i;
+            }
         }
         ans += ";\n";
-        ans += "  node [shape = ellipse];\n";
         for (int i = 0; i < nodes.size(); i++) {
-            String src = (nodes.get(i).label == null) ? Integer.toString(i) : nodes.get(i).label;
+            String src = (nodes.get(i).label == null) ? '_' + Integer.toString(i) : nodes.get(i).label;
             for (int j = 0; j < nodes.get(i).children.size(); ++j) {
                 int child = nodes.get(i).children.get(j);
-                String dst = (nodes.get(child).label == null) ? Integer.toString(child) : nodes.get(child).label;
+                String dst = (nodes.get(child).label == null) ? '_' + Integer.toString(child) : nodes.get(child).label;
                 ans += "  " + src + " -> " + dst + ";\n";
             }
         }
