@@ -9,9 +9,9 @@ import java.util.Map;
  */
 public class NetworkBuilder {
     public static PhylogeneticNetwork gvNetwork(Map<String, Integer> m, boolean[] solution, List<PhylogeneticTree> trees, int k) {
-        List< List<Integer> > graph = new ArrayList<>(trees.get(0).size() + 2 * k - 2);
+        List< List<Integer> > graph = new ArrayList<>();
         for(int i = 0; i < trees.get(0).size() + 2 * k - 2; ++i) {
-            graph.set(i, new ArrayList<Integer>());
+            graph.add(i, new ArrayList<Integer>());
         }
 
         for (String s : m.keySet()) {
@@ -23,12 +23,12 @@ public class NetworkBuilder {
                 if (splitted[0].equals("left") || splitted[0].equals("right") || splitted[0].equals("ch")) {
                     int src = Integer.parseInt(splitted[1]);
                     int dst = Integer.parseInt(splitted[2]);
-                    if(src >= trees.get(0).size()) {
+                    if(src > trees.get(0).size()) {
                         src -= 2;
                     } else if(src >= trees.get(0).getTaxaSize()) {
                         src -= 1;
                     }
-                    if(dst >= trees.get(0).size()) {
+                    if(dst > trees.get(0).size()) {
                         dst -= 2;
                     } else if(dst >= trees.get(0).getTaxaSize()) {
                         dst -= 1;
