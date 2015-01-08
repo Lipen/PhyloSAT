@@ -32,19 +32,21 @@ public class PhylogeneticTree {
 
     private List<PhylogeneticNode> nodes;
 
-    private boolean hasFictitiousRoot;
+    private boolean fictitiousRoot;
 
     private PhylogeneticTree() {
         this.nodes = new ArrayList<>(); 
-        hasFictitiousRoot = false;
+        fictitiousRoot = false;
     }
+
+    public boolean hasFictitiousRoot() { return fictitiousRoot; }
 
     public PhylogeneticTree(PhylogeneticTree other) {
         this();
         for (PhylogeneticNode node : other.nodes) {
             this.nodes.add(new PhylogeneticNode(node));
         }
-        hasFictitiousRoot = other.hasFictitiousRoot;
+        fictitiousRoot = other.fictitiousRoot;
     }
 
     public PhylogeneticTree(SimpleRootedTree tree) {
@@ -99,11 +101,11 @@ public class PhylogeneticTree {
     }
 
     public void addFictitiousRoot() {
-        if(hasFictitiousRoot) {
+        if(fictitiousRoot) {
             throw new RuntimeException("It is bad idea to add the second fictitious root!");
         }
 
-        hasFictitiousRoot = true;
+        fictitiousRoot = true;
 
         int taxaSize = getTaxaSize();
         for(PhylogeneticNode node : nodes) {
@@ -128,11 +130,11 @@ public class PhylogeneticTree {
     }
 
     public void removeFictitiousRoot() {
-        if(!hasFictitiousRoot) {
+        if(!fictitiousRoot) {
             throw new RuntimeException("Tree does not have any fictitious root!");
         }
 
-        hasFictitiousRoot = false;
+        fictitiousRoot = false;
 
         int fictitiousTaxaNum = getTaxaSize() - 1;
         nodes.remove(fictitiousTaxaNum);
