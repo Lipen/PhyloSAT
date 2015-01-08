@@ -19,16 +19,22 @@ public class PhylogeneticNetwork {
 
     private List <PhylogeneticNode> nodes = new ArrayList<>();
     private int root;
+    private int k;
 
     public PhylogeneticNetwork(List< List<Integer> > graph, List<String> labels, int k) {
-        nodes = new ArrayList<>(graph.size());
+        this.nodes = new ArrayList<>(graph.size());
         for(int i = 0; i < graph.size(); ++i) {
-            nodes.get(i).children = graph.get(i);
+            this.nodes.get(i).children = graph.get(i);
         }
         for(int i = 0; i < labels.size(); ++i) {
-            nodes.get(i).label = labels.get(i);
+            this.nodes.get(i).label = labels.get(i);
         }
-        root = graph.size() - k - 1;
+        this.root = graph.size() - k - 1;
+        this.k = k;
+    }
+
+    public int getK() {
+        return k;
     }
 
     public Set <String> getTaxaSet() {
