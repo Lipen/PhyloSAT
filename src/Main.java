@@ -167,13 +167,15 @@ public class Main {
                     Set<String> first = res.get(i).getTaxaSet();
                     Set<String> second = res.get(j).getTaxaSet();
                     if(first.containsAll(second)) {
-                        res.get(i).substituteSubtask(res.get(j));
-                        res.remove(j);
-                        break outer;
+                        if(res.get(i).substituteSubtask(res.get(j))) {
+                            res.remove(j);
+                            break outer;
+                        }
                     } else if(second.containsAll(first)) {
-                        res.get(j).substituteSubtask(res.get(i));
-                        res.remove(i);
-                        break outer;
+                        if(res.get(j).substituteSubtask(res.get(i))) {
+                            res.remove(i);
+                            break outer;
+                        }
                     }
                 }
             }
@@ -358,7 +360,7 @@ public class Main {
     private List<List<PhylogeneticTree>> preprocessing(List<PhylogeneticTree> inputTrees) {
         List<List<PhylogeneticTree>> ans = new ArrayList<>();
 
-        List<PhylogeneticTree> currentTrees = collapseAll(inputTrees);
+        List<PhylogeneticTree> currentTrees = collapseAll(inputTrees, ans);
         if (!disableSplits) {
             while (true) {
                 List<PhylogeneticTree> newTask = equalsTaxaSplit(currentTrees);
@@ -366,7 +368,7 @@ public class Main {
                     break;
                 }
                 ans.add(newTask);
-                currentTrees = collapseAll(currentTrees);
+                currentTrees = collapseAll(currentTrees, ans);
             }
         }
         ans.add(currentTrees);
@@ -374,14 +376,15 @@ public class Main {
         return ans;
     }
 
-    private List<PhylogeneticTree> collapseAll(List<PhylogeneticTree> inputTrees) {
+    private List<PhylogeneticTree> collapseAll(List<PhylogeneticTree> inputTrees,
+                                               List<List<PhylogeneticTree>> splitTrees) {
         ArrayList<PhylogeneticTree> ans = new ArrayList<>();
         for (PhylogeneticTree inputTree : inputTrees) {
             ans.add(new PhylogeneticTree(inputTree));
         }
 
         int collapsedCount = 0;
-        while (collapseEqualsSubtrees(ans)) {
+        while (collapseEqualsSubtrees(ans, splitTrees)) {
             collapsedCount++;
         }
         if (collapsedCount > 0) {
@@ -391,7 +394,7 @@ public class Main {
         return ans;
     }
 
-    private boolean collapseEqualsSubtrees(List<PhylogeneticTree> trees) {
+    private boolean collapseEqualsSubtrees(List<PhylogeneticTree> trees, List<List<PhylogeneticTree>> splitTrees) {
         PhylogeneticTree firstTree = trees.get(0);
         // Почему не проверять на корень - непонятно
         // Ведь круто же сколлапсить сразу все деревья если они равны
@@ -420,12 +423,15 @@ public class Main {
                     }
                     label += firstTree.getLabel(leafNumber);
                 }
+                List<PhylogeneticTree> currentEqual = new ArrayList<>();
 
                 for (int treeNum = 0; treeNum < trees.size(); treeNum++) {
                     PhylogeneticTree tree = trees.get(treeNum);
                     int collapsedNodeNum = equalsNodesNumbers.get(treeNum);
+                    currentEqual.add(tree.buildSubtree(collapsedNodeNum));
                     trees.set(treeNum, tree.compressedTree(collapsedNodeNum, label));
                 }
+                splitTrees.add(currentEqual);
                 return true;
             }
         }
