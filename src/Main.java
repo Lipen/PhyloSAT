@@ -130,6 +130,7 @@ public class Main {
         logger.info(loggerString);
 
         int finalK = 0;
+        List<PhylogeneticNetwork> res = new ArrayList<>();
         for (List<PhylogeneticTree> subtaskTrees : preprocessing(inputTrees)) {
             String loggerStr = "Subtask trees:";
             for (PhylogeneticTree subtaskTree : subtaskTrees) {
@@ -144,18 +145,47 @@ public class Main {
             }
             logger.info(loggerStr);
 
-            PhylogeneticNetwork res;
+            PhylogeneticNetwork cur;
             if (hn >= 0) {
-                res = solveSubtask(subtaskTrees, hn, 1000000, new long[1]);
+                cur = solveSubtask(subtaskTrees, hn, 1000000, new long[1]);
             } else {
-                res = solveSubtaskWithoutUNSAT(subtaskTrees);
+                cur = solveSubtaskWithoutUNSAT(subtaskTrees);
             }
 
-            if (res == null) {
+            if (cur == null) {
                 logger.info("NO SOLUTION FOR SUBPROBLEM");
                 return -1;
             } else {
-                finalK += res.getK();
+                finalK += cur.getK();
+                res.add(cur);
+            }
+        }
+
+        while(res.size() > 1) {
+            outer: for(int i = 0; i < res.size(); ++i) {
+                for(int j = i + 1; j < res.size(); ++j) {
+                    Set<String> first = res.get(i).getTaxaSet();
+                    Set<String> second = res.get(j).getTaxaSet();
+                    if(first.containsAll(second)) {
+                        res.get(i).substituteSubtask(res.get(j));
+                        res.remove(j);
+                        break outer;
+                    } else if(second.containsAll(first)) {
+                        res.get(j).substituteSubtask(res.get(i));
+                        res.remove(i);
+                        break outer;
+                    }
+                }
+            }
+        }
+
+        if (resultFilePath != null) {
+            try {
+                PrintWriter gvPrintWriter = new PrintWriter(new File(resultFilePath));
+                gvPrintWriter.print(res.get(0).toGVString());
+                gvPrintWriter.close();
+            } catch (FileNotFoundException e) {
+                logger.warning("Can not open " + resultFilePath + " :\n" + e.getMessage());
             }
         }
 
@@ -276,16 +306,6 @@ public class Main {
 
             logger.info("SOLUTION FOUND with k = " + k);
 
-//            if (resultFilePath != null) {
-//                try {
-//                    // Сейчас это имеет мало смысла
-//                    PrintWriter gvPrintWriter = new PrintWriter(new File(resultFilePath));
-//                    gvPrintWriter.print(NetworkBuilder.gvNetwork(m, solution, trees, k));
-//                    gvPrintWriter.close();
-//                } catch (FileNotFoundException e) {
-//                    logger.warning("Can not open " + resultFilePath + " :\n" + e.getMessage());
-//                }
-//            }
             return NetworkBuilder.gvNetwork(m, solution, trees, k);
         }
 

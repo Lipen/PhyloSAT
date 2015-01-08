@@ -12,8 +12,16 @@ public class PhylogeneticNetwork {
 
         String label;
 
+        PhylogeneticNode(List<Integer> children) {
+            this.children = children;
+        }
+
         Set <String> getTaxaSet() {
-            return new HashSet<>(Arrays.asList(label.split("+")));
+            if(label != null) {
+                return new HashSet<>(Arrays.asList(label.split("\\+")));
+            } else {
+                return new HashSet<>();
+            }
         }
     }
 
@@ -22,9 +30,9 @@ public class PhylogeneticNetwork {
     private int k;
 
     public PhylogeneticNetwork(List< List<Integer> > graph, List<String> labels, int k) {
-        this.nodes = new ArrayList<>(graph.size());
-        for(int i = 0; i < graph.size(); ++i) {
-            this.nodes.get(i).children = graph.get(i);
+        this.nodes = new ArrayList<>();
+        for (List<Integer> children : graph) {
+            this.nodes.add(new PhylogeneticNode(children));
         }
         for(int i = 0; i < labels.size(); ++i) {
             this.nodes.get(i).label = labels.get(i);
@@ -40,7 +48,9 @@ public class PhylogeneticNetwork {
     public Set <String> getTaxaSet() {
         Set <String> ans = new HashSet<>();
         for(PhylogeneticNode node : nodes) {
-            ans.addAll(Arrays.asList(node.label.split("+")));
+            if(node.label != null) {
+                ans.addAll(Arrays.asList(node.label.split("\\+")));
+            }
         }
         return ans;
     }
@@ -55,7 +65,7 @@ public class PhylogeneticNetwork {
                     }
                 }
                 node.children = other.nodes.get(root).children;
-                node.label = "";
+                node.label = null;
                 other.nodes.remove(other.root);
                 nodes.addAll(other.nodes);
                 other.nodes = null;
@@ -64,5 +74,33 @@ public class PhylogeneticNetwork {
             }
         }
         return false;
+    }
+
+    public String toGVString() {
+        String ans = "digraph G {\n";
+        ans += "  node [shape = ellipse]\n";
+        ans += "  {rank = same;";
+        int taxaSize = (nodes.size() - 2 * k) / 2 + 1;
+        for (int i = 0; i < taxaSize; i++) {
+            ans += " " + nodes.get(i).label;
+        }
+        ans += "}\n";
+        ans += "  node [shape = box];\n ";
+        for (int i = nodes.size() - k; i < nodes.size(); i++) {
+            ans += " " + i;
+        }
+        ans += ";\n";
+        ans += "  node [shape = ellipse];\n";
+        for (int i = 0; i < nodes.size(); i++) {
+            String src = (nodes.get(i).label == null) ? Integer.toString(i) : nodes.get(i).label;
+            for (int j = 0; j < nodes.get(i).children.size(); ++j) {
+                int child = nodes.get(i).children.get(j);
+                String dst = (nodes.get(child).label == null) ? Integer.toString(child) : nodes.get(child).label;
+                ans += "  " + src + " -> " + dst + ";\n";
+            }
+        }
+
+        ans += "}\n";
+        return ans;
     }
 }
