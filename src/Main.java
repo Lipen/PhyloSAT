@@ -216,17 +216,18 @@ public class Main {
 
         int k = calcUpperBound(trees);
         long[] time = new long[1];
-        PhylogeneticNetwork res = solveSubtask(trees, k, MAX_TL, time);
-        if (time[0] == -1) {
-            logger.info("There is no solution found in MAX_TL time");
-            return res;
-        }
-        if (res == null) {
-            logger.info("There is no solution with max bound k = " + k);
-            return res;
-        }
+        PhylogeneticNetwork res = null;
+//        PhylogeneticNetwork res = solveSubtask(trees, k, MAX_TL, time);
+//        if (time[0] == -1) {
+//            logger.info("There is no solution found in MAX_TL time");
+//            return res;
+//        }
+//        if (res == null) {
+//            logger.info("There is no solution with max bound k = " + k);
+//            return res;
+//        }
 
-        int l = mink, r = k;
+        int l = mink, r = k+1;
         while (l < r) {
             int m = (l + r) / 2;
             res = solveSubtask(trees, m, MAX_TL, time);
