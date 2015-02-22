@@ -492,8 +492,7 @@ public class FormulaBuilder {
                         } else {
                             int nodeUpVar = getVar("up", treeNumber, nodeNumber, parentUp);
                             addClause(-parentVar, -parentUpVar, nodeUpVar);
-
-                            // здесь можно добавить еще ограничение
+                            addClause(-parentVar, -nodeUpVar, parentUpVar);
                         }
                     }
                 }
@@ -524,9 +523,11 @@ public class FormulaBuilder {
 
                         // PARENT is LP and ~UP
                         addClause(-lpVar, -dirVar, parentUsedVar, -parentUpVar, nodeUpVar);
+                        addClause(-lpVar, -dirVar, parentUsedVar, -nodeUpVar, parentUpVar);
 
                         // PARENT is RP and ~UP
                         addClause(-rpVar, dirVar, parentUsedVar, -parentUpVar, nodeUpVar);
+                        addClause(-rpVar, dirVar, parentUsedVar, -nodeUpVar, parentUpVar);
                     }
                 } else {
                     for (int parentUp : possibleUp(parent)) {
@@ -623,11 +624,6 @@ public class FormulaBuilder {
 
                         addClause(-xVar, -parentXVar, upVar);
                         addClause(-xVar, -upVar, parentXVar);
-
-                        // This constraint is wrong, because there can be two such nodes in the tree
-                        //String parentXAndUpThenX = "-" + upVar + " -" + parentXVar + " " + xVar + " 0\n";
-                        //sb.append(parentXAndUpThenX);
-
                     }
 
                     for (int parentNodeNumber : treeNodes()) {
