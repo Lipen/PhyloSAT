@@ -1,4 +1,5 @@
 import java.util.*;
+import java.util.concurrent.Callable;
 
 /**
  * Vladimir Ulyantsev
@@ -96,6 +97,80 @@ public class FormulaBuilder {
         return this.sb.toString();
     }
 
+    private interface Getter {
+        public List<Integer> get(int i);
+    }
+
+    private void addPairwiseAtMostOne(String varName, List<Integer> varFirst, Getter secondGetter) {
+        commentCNF("At-most-one constraints for " + varName + "_v_u");
+        for(int nodeNumber : varFirst) {
+            for(int firstNumber : secondGetter.get(nodeNumber)) {
+                for(int secondNumber : secondGetter.get(nodeNumber)) {
+                    if(firstNumber < secondNumber) {
+                        addClause(-getVar(varName, nodeNumber, firstNumber),
+                                -getVar(varName, nodeNumber, secondNumber));
+                    }
+                }
+            }
+        }
+    }
+
+    static int log(int x, int base)
+    {
+        return (int) Math.ceil(Math.log(x) / Math.log(base));
+    }
+
+
+    private void addBimanderAtMostOne(String varName, List<Integer> varFirst, Getter secondGetter) {
+        {
+            int intervalStart = m.size() + 1;
+            for (int nodeNumber : varFirst) {
+                int n = secondGetter.get(nodeNumber).size();
+                int k = n / 2 + n % 2;
+                for (int bit = 0; bit < log(k, 2); ++bit) {
+                    createVar("cmd" + varName, nodeNumber, bit);
+                    hb.append("cmd" + varName).append(nodeNumber).append(" ").append(bit).append(" ").append(m.size()).append("\n");
+                }
+            }
+            commentCNF("Variables " + "cmd" + varName + " are in [%d, %d]", intervalStart, m.size());
+        }
+
+        commentCNF("At-most-one constraints for " + varName + "_v_u");
+        for(int nodeNumber : varFirst) {
+            int g = 2;
+            List<List<Integer>> group = new ArrayList<>();
+            int count = 0, grSize = 0;
+            for(int p : secondGetter.get(nodeNumber)) {
+                if(count == 0) {
+                    group.add(new ArrayList<Integer>());
+                    grSize++;
+                }
+                group.get(grSize - 1).add(p);
+                count = (count + 1) % g;
+            }
+
+            for(int grNum = 0; grNum < grSize; ++grNum) {
+                for(int varNumber : group.get(grNum)) {
+                    for(int bit = 0; bit < log(grSize, 2); ++bit) {
+                        if((grNum & (1 << bit)) != 0) {
+                            addClause(-getVar(varName, nodeNumber, varNumber),
+                                    getVar("cmd" + varName, nodeNumber, bit));
+                        } else {
+                            addClause(-getVar(varName, nodeNumber, varNumber),
+                                    -getVar("cmd" + varName, nodeNumber, bit));
+                        }
+                    }
+                    for(int secondVarNumber : group.get(grNum)) {
+                        if(varNumber < secondVarNumber) {
+                            addClause(-getVar(varName, nodeNumber, varNumber),
+                                    -getVar(varName, nodeNumber, secondVarNumber));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     private void addParentConstraints() {
         {
             int intervalStart = m.size() + 1;
@@ -117,17 +192,34 @@ public class FormulaBuilder {
             addClause(atLeastOneParent);
         }
 
-        commentCNF("At-most-one constraints for parent_v_u");
+        ArrayList<Integer> first = new ArrayList<>();
         for (int nodeNumber = 0; nodeNumber < treeNodesCount - 1; nodeNumber++) {
-            for (int parentNumber : possibleParents(nodeNumber)) {
-                for (int otherParentNumber : possibleParents(nodeNumber)) {
-                    if (otherParentNumber > parentNumber) {
-                        addClause(-getVar("parent", nodeNumber, parentNumber),
-                                -getVar("parent", nodeNumber, otherParentNumber));
-                    }
-                }
-            }
+            first.add(nodeNumber);
         }
+//        addPairwiseAtMostOne("parent", first, new Getter() {
+//            @Override
+//            public List<Integer> get(int i) {
+//                return possibleParents(i);
+//            }
+//        });
+        addBimanderAtMostOne("parent", first, new Getter() {
+            @Override
+            public List<Integer> get(int i) {
+                return possibleParents(i);
+            }
+        });
+
+//        commentCNF("At-most-one constraints for parent_v_u");
+//        for (int nodeNumber = 0; nodeNumber < treeNodesCount - 1; nodeNumber++) {
+//            for (int parentNumber : possibleParents(nodeNumber)) {
+//                for (int otherParentNumber : possibleParents(nodeNumber)) {
+//                    if (otherParentNumber > parentNumber) {
+//                        addClause(-getVar("parent", nodeNumber, parentNumber),
+//                                -getVar("parent", nodeNumber, otherParentNumber));
+//                    }
+//                }
+//            }
+//        }
     }
 
     private void addLeftRightConstraints() {
@@ -162,17 +254,47 @@ public class FormulaBuilder {
             addClause(atLeastOneRight);
         }
 
-        commentCNF("At-most-one constraints for left_v_u and right_v_u");
+        ArrayList<Integer> first = new ArrayList<>();
+        for (int nodeNumber = n; nodeNumber < treeNodesCount; nodeNumber++) {
+            first.add(nodeNumber);
+        }
+//        addPairwiseAtMostOne("left", first, new Getter() {
+//            @Override
+//            public List<Integer> get(int i) {
+//                return possibleChildren(i);
+//            }
+//        });
+//        addPairwiseAtMostOne("right", first, new Getter() {
+//            @Override
+//            public List<Integer> get(int i) {
+//                return possibleChildren(i);
+//            }
+//        });
+
+        addBimanderAtMostOne("left", first, new Getter() {
+            @Override
+            public List<Integer> get(int i) {
+                return possibleChildren(i);
+            }
+        });
+        addBimanderAtMostOne("right", first, new Getter() {
+            @Override
+            public List<Integer> get(int i) {
+                return possibleChildren(i);
+            }
+        });
+
+//        commentCNF("At-most-one constraints for left_v_u and right_v_u");
         commentCNF("Also, constraints for left_v_u < right_v_u");
         for (int nodeNumber = n; nodeNumber < treeNodesCount; nodeNumber++) {
             for (int childNumber : possibleChildren(nodeNumber)) {
                 for (int otherNumber : possibleChildren(nodeNumber)) {
-                    if (childNumber < otherNumber) {
-                        addClause(-getVar("left", nodeNumber, childNumber),
-                                -getVar("left", nodeNumber, otherNumber));
-                        addClause(-getVar("right", nodeNumber, childNumber),
-                                -getVar("right", nodeNumber, otherNumber));
-                    }
+//                    if (childNumber < otherNumber) {
+//                        addClause(-getVar("left", nodeNumber, childNumber),
+//                                -getVar("left", nodeNumber, otherNumber));
+//                        addClause(-getVar("right", nodeNumber, childNumber),
+//                                -getVar("right", nodeNumber, otherNumber));
+//                    }
 
                     if (childNumber <= otherNumber) {
                         addClause(-getVar("right", nodeNumber, childNumber),
@@ -204,16 +326,29 @@ public class FormulaBuilder {
             addClause(atLeastOne);
         }
 
-        commentCNF("At-most-one constraints for ch_v_u");
-        for (int nodeNumber : reticulationNodes()) {
-            for (int childNumber : possibleChildren(nodeNumber)) {
-                for (int otherNumber : possibleChildren(nodeNumber)) {
-                    if (childNumber < otherNumber) {
-                        addClause(-getVar("ch", nodeNumber, childNumber), -getVar("ch", nodeNumber, otherNumber));
-                    }
-                }
+//        addPairwiseAtMostOne("ch", reticulationNodes(), new Getter() {
+//            @Override
+//            public List<Integer> get(int i) {
+//                return possibleChildren(i);
+//            }
+//        });
+        addBimanderAtMostOne("ch", reticulationNodes(), new Getter() {
+            @Override
+            public List<Integer> get(int i) {
+                return possibleChildren(i);
             }
-        }
+        });
+
+//        commentCNF("At-most-one constraints for ch_v_u");
+//        for (int nodeNumber : reticulationNodes()) {
+//            for (int childNumber : possibleChildren(nodeNumber)) {
+//                for (int otherNumber : possibleChildren(nodeNumber)) {
+//                    if (childNumber < otherNumber) {
+//                        addClause(-getVar("ch", nodeNumber, childNumber), -getVar("ch", nodeNumber, otherNumber));
+//                    }
+//                }
+//            }
+//        }
     }
 
     private void addReticulationParentConstraints() {
@@ -248,20 +383,46 @@ public class FormulaBuilder {
             addClause(atLeastOneRight);
         }
 
+//        addPairwiseAtMostOne("lp", reticulationNodes(), new Getter() {
+//            @Override
+//            public List<Integer> get(int i) {
+//                return possibleParents(i);
+//            }
+//        });
+//        addPairwiseAtMostOne("rp", reticulationNodes(), new Getter() {
+//            @Override
+//            public List<Integer> get(int i) {
+//                return possibleParents(i);
+//            }
+//        });
+        addBimanderAtMostOne("lp", reticulationNodes(), new Getter() {
+            @Override
+            public List<Integer> get(int i) {
+                return possibleParents(i);
+            }
+        });
+        addBimanderAtMostOne("rp", reticulationNodes(), new Getter() {
+            @Override
+            public List<Integer> get(int i) {
+                return possibleParents(i);
+            }
+        });
+
+
         commentCNF("At-most-one constraints for lp_v_u and rp_v_u");
         commentCNF("Also, constraints for lp_v_u < rp_v_u");
         for (int nodeNumber : reticulationNodes()) {
             for (int parent : possibleParents(nodeNumber)) {
                 for (int otherParent : possibleParents(nodeNumber)) {
-                    int lpVar = getVar("lp", nodeNumber, parent);
+//                    int lpVar = getVar("lp", nodeNumber, parent);
                     int otherLpVar = getVar("lp", nodeNumber, otherParent);
                     int rpVar = getVar("rp", nodeNumber, parent);
-                    int otherRpVar = getVar("rp", nodeNumber, otherParent);
+//                    int otherRpVar = getVar("rp", nodeNumber, otherParent);
 
-                    if (parent < otherParent) {
-                        addClause(-lpVar, -otherLpVar);
-                        addClause(-rpVar, -otherRpVar);
-                    }
+//                    if (parent < otherParent) {
+//                        addClause(-lpVar, -otherLpVar);
+//                        addClause(-rpVar, -otherRpVar);
+//                    }
 
                     if (parent <= otherParent) {
                         addClause(-rpVar, -otherLpVar);
@@ -448,17 +609,30 @@ public class FormulaBuilder {
             }
         }
 
-        commentCNF("At-most-one constraints for up_%d_v_u", treeNumber);
-        for (int nodeNumber : allNodes()) {
-            for (int up : possibleUp(nodeNumber)) {
-                for (int otherUp : possibleUp(nodeNumber)) {
-                    if (up < otherUp) {
-                        addClause(-getVar("up", treeNumber, nodeNumber, up),
-                                -getVar("up", treeNumber, nodeNumber, otherUp));
-                    }
-                }
+//        addPairwiseAtMostOne("up_" + treeNumber, allNodes(), new Getter() {
+//            @Override
+//            public List<Integer> get(int i) {
+//                return possibleUp(i);
+//            }
+//        });
+        addBimanderAtMostOne("up_" + treeNumber, allNodes(), new Getter() {
+            @Override
+            public List<Integer> get(int i) {
+                return possibleUp(i);
             }
-        }
+        });
+
+//        commentCNF("At-most-one constraints for up_%d_v_u", treeNumber);
+//        for (int nodeNumber : allNodes()) {
+//            for (int up : possibleUp(nodeNumber)) {
+//                for (int otherUp : possibleUp(nodeNumber)) {
+//                    if (up < otherUp) {
+//                        addClause(-getVar("up", treeNumber, nodeNumber, up),
+//                                -getVar("up", treeNumber, nodeNumber, otherUp));
+//                    }
+//                }
+//            }
+//        }
 
         commentCNF("Connect up_%d_v_u with parent_v_u and used_%d_v (tree nodes)", treeNumber, treeNumber);
         for (int nodeNumber = 0; nodeNumber < treeNodesCount; nodeNumber++) {
@@ -565,17 +739,42 @@ public class FormulaBuilder {
             addClause(atLeastOne);
         }
 
-        commentCNF("At-most-one constraints for x_" + treeNumber + "_tv_v");
-        for (int treeNodeNumber = n; treeNodeNumber < 2 * n - 1; treeNodeNumber++) {
-            for (int nodeNumber : treeNodes()) {
-                for (int otherNode : treeNodes()) {
-                    if (nodeNumber < otherNode) {
-                        addClause(-getVar("x", treeNumber, treeNodeNumber, nodeNumber),
-                                -getVar("x", treeNumber, treeNodeNumber, otherNode));
-                    }
-                }
-            }
+        ArrayList<Integer> first = new ArrayList<>();
+        for (int nodeNumber = n; nodeNumber < 2 * n - 1; nodeNumber++) {
+            first.add(nodeNumber);
         }
+
+//        addPairwiseAtMostOne("x_" + treeNumber, first, new Getter() {
+//            @Override
+//            public List<Integer> get(int i) {
+//                return treeNodes();
+//            }
+//        });
+        addBimanderAtMostOne("x_" + treeNumber, first, new Getter() {
+            @Override
+            public List<Integer> get(int i) {
+                return treeNodes();
+            }
+        });
+
+//        commentCNF("At-most-one constraints for x_" + treeNumber + "_tv_v");
+//        for (int treeNodeNumber = n; treeNodeNumber < 2 * n - 1; treeNodeNumber++) {
+//            for (int nodeNumber : treeNodes()) {
+//                for (int otherNode : treeNodes()) {
+//                    if (nodeNumber < otherNode) {
+//                        addClause(-getVar("x", treeNumber, treeNodeNumber, nodeNumber),
+//                                -getVar("x", treeNumber, treeNodeNumber, otherNode));
+//                    }
+//                }
+//            }
+//        }
+
+//        addPairwiseAtMostOne("x_" + treeNumber, first, new Getter() {
+//            @Override
+//            public List<Integer> get(int i) {
+//                return treeNodes();
+//            }
+//        });
 
         commentCNF("At-most-one x_%d_tv_v points to v", treeNumber);
         for (int treeNodeNumber = n; treeNodeNumber < 2 * n - 1; treeNodeNumber++) {
