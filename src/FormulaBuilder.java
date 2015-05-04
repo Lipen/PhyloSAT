@@ -1,5 +1,4 @@
 import java.util.*;
-import java.util.concurrent.Callable;
 
 /**
  * Vladimir Ulyantsev
@@ -24,10 +23,6 @@ public class FormulaBuilder {
     private boolean disableComments;
 
     private int clausesCount;
-
-//    public FormulaBuilder(List<PhylogeneticTree> trees, int hybridisationNumber, Map<String, Integer> translationMap) {
-//        this(trees, hybridisationNumber, translationMap, false, false);
-//    }
 
     public FormulaBuilder(List<PhylogeneticTree> trees,
                           int hybridisationNumber,
@@ -66,6 +61,8 @@ public class FormulaBuilder {
         this.sb = new StringBuilder();
         this.hb = new StringBuilder();
         commentCNF("n = %d; k = %d; trees count = %d", n, k, phTrees.size());
+
+        addExtensionConstraints();
 
         addParentConstraints();
         addLeftRightConstraints();
@@ -120,7 +117,6 @@ public class FormulaBuilder {
         return (int) Math.ceil(Math.log(x) / Math.log(base));
     }
 
-
     private void addBimanderAtMostOne(String varName, List<Integer> varFirst, Getter secondGetter) {
         {
             int intervalStart = m.size() + 1;
@@ -171,10 +167,135 @@ public class FormulaBuilder {
         }
     }
 
+    private void addExtensionConstraints() {
+        {
+            int intervalStart = m.size() + 1;
+            for (int i = 0; i < k; i++) {
+                int nodeNumber = treeNodesCount + i;
+                for (int edgeNumber = 0; edgeNumber < rootNumber(); ++edgeNumber) {
+                    createVar("h", nodeNumber, edgeNumber);
+                    hb.append("h ").append(nodeNumber).append(" ").append(edgeNumber).append(" ").append(m.size()).append("\n");
+                }
+                for (int edgeNumber = 2 * n - 1; edgeNumber < 2 * n - 1 + i; ++edgeNumber) {
+                    createVar("h", nodeNumber, edgeNumber);
+                    hb.append("h ").append(nodeNumber).append(" ").append(edgeNumber).append(" ").append(m.size()).append("\n");
+                }
+                if (enableReticulationConnection) {
+                    for (int reticNodeNumber = 2 * n - 1 + k; reticNodeNumber < 2 * n - 1 + k + i; ++reticNodeNumber) {
+                        int edgeNumber = getEdgeByNode(reticNodeNumber);
+                        createVar("h", nodeNumber, edgeNumber);
+                        hb.append("h ").append(nodeNumber).append(" ").append(edgeNumber).append(" ").append(m.size()).append("\n");
+                        edgeNumber++;
+                        createVar("h", nodeNumber, edgeNumber);
+                        hb.append("h ").append(nodeNumber).append(" ").append(edgeNumber).append(" ").append(m.size()).append("\n");
+                    }
+                }
+            }
+            commentCNF("Variables h_v_e are in [%d, %d]", intervalStart, m.size());
+
+            intervalStart = m.size() + 1;
+            for (int i = 0; i < k; i++) {
+                int nodeNumber = treeNodesCount - k + i;
+                for (int edgeNumber = 0; edgeNumber < rootNumber(); ++edgeNumber) {
+                    createVar("r", nodeNumber, edgeNumber);
+                    hb.append("r ").append(nodeNumber).append(" ").append(edgeNumber).append(" ").append(m.size()).append("\n");
+                }
+                for (int edgeNumber = 2 * n - 1; edgeNumber < 2 * n - 1 + i; ++edgeNumber) {
+                    createVar("r", nodeNumber, edgeNumber);
+                    hb.append("r ").append(nodeNumber).append(" ").append(edgeNumber).append(" ").append(m.size()).append("\n");
+                }
+                for (int reticNodeNumber = 2 * n - 1 + k; reticNodeNumber < 2 * n - 1 + k + i; ++reticNodeNumber) {
+                    int edgeNumber = getEdgeByNode(reticNodeNumber);
+                    createVar("r", nodeNumber, edgeNumber);
+                    hb.append("r ").append(nodeNumber).append(" ").append(edgeNumber).append(" ").append(m.size()).append("\n");
+                    edgeNumber++;
+                    createVar("r", nodeNumber, edgeNumber);
+                    hb.append("r ").append(nodeNumber).append(" ").append(edgeNumber).append(" ").append(m.size()).append("\n");
+                }
+            }
+            commentCNF("Variables r_v_e are in [%d, %d]", intervalStart, m.size());
+        }
+
+        commentCNF("It is not possible to split one edge with both h_v_e and r_v_e at one step");
+        for (int i = 0; i < k; i++) {
+            int rNodeNumber = treeNodesCount - k + i;
+            int hNodeNumber = treeNodesCount + i;
+            for (int edgeNumber = 0; edgeNumber < rootNumber(); ++edgeNumber) {
+                addClause(-getVar("h", hNodeNumber, edgeNumber), -getVar("r", rNodeNumber, edgeNumber));
+            }
+            for (int edgeNumber = 2 * n - 1; edgeNumber < 2 * n - 1 + i; ++edgeNumber) {
+                addClause(-getVar("h", hNodeNumber, edgeNumber), -getVar("r", rNodeNumber, edgeNumber));
+            }
+            if (enableReticulationConnection) {
+                for (int reticNodeNumber = 2 * n - 1 + k; reticNodeNumber < 2 * n - 1 + k + i; ++reticNodeNumber) {
+                    int edgeNumber = getEdgeByNode(reticNodeNumber);
+                    addClause(-getVar("h", hNodeNumber, edgeNumber), -getVar("r", rNodeNumber, edgeNumber));
+                    addClause(-getVar("h", hNodeNumber, edgeNumber), -getVar("r", rNodeNumber, edgeNumber + 1));
+                    addClause(-getVar("h", hNodeNumber, edgeNumber + 1), -getVar("r", rNodeNumber, edgeNumber));
+                    addClause(-getVar("h", hNodeNumber, edgeNumber + 1), -getVar("r", rNodeNumber, edgeNumber + 1));
+                }
+            }
+        }
+
+        ArrayList<Integer> h_first = new ArrayList<>();
+        for (int i = 0; i < k; i++) {
+            h_first.add(treeNodesCount + i);
+        }
+
+        ArrayList<Integer> r_first = new ArrayList<>();
+        for (int i = 0; i < k; i++) {
+            r_first.add(treeNodesCount - k + i);
+        }
+
+        addPairwiseAtMostOne("h", h_first, new Getter() {
+            @Override
+            public List<Integer> get(int i) {
+                return possibleEdges(i);
+            }
+        });
+        addPairwiseAtMostOne("r", r_first, new Getter() {
+            @Override
+            public List<Integer> get(int i) {
+                return possibleEdges(i);
+            }
+        });
+
+        commentCNF("At-least-one constraints for h");
+        for (int i = 0; i < k; i++) {
+            int hNodeNumber = treeNodesCount + i;
+            String atLeastOneEdge = "";
+            for (int edgeNumber : possibleEdges(treeNodesCount + i)) {
+                atLeastOneEdge += getVar("h", hNodeNumber, edgeNumber) + " ";
+            }
+            addClause(atLeastOneEdge);
+        }
+
+        commentCNF("At-least-one constraints for r");
+        for (int i = 0; i < k; i++) {
+            int rNodeNumber = treeNodesCount - k + i;
+            String atLeastOneEdge = "";
+            for (int edgeNumber : possibleEdges(treeNodesCount - k + i)) {
+                atLeastOneEdge += getVar("r", rNodeNumber, edgeNumber) + " ";
+            }
+            addClause(atLeastOneEdge);
+        }
+    }
+
+    private String buildOthersHelper(int i, int edgeNumber) {
+        String others = "";
+        for (int j = i; j < k; j++) {
+            others += getVar("h", treeNodesCount + j, edgeNumber) + " " + getVar("r", treeNodesCount - k + j, edgeNumber) + " ";
+        }
+        return others;
+    }
+
     private void addParentConstraints() {
         {
             int intervalStart = m.size() + 1;
-            for (int nodeNumber = 0; nodeNumber < treeNodesCount - 1; nodeNumber++) {
+            for (int nodeNumber = 0; nodeNumber < treeNodesCount; nodeNumber++) {
+                if(nodeNumber == rootNumber()) {
+                    continue;
+                }
                 for (int parentNumber : possibleParents(nodeNumber)) {
                     createVar("parent", nodeNumber, parentNumber);
                     hb.append("p ").append(nodeNumber).append(" ").append(parentNumber).append(" ").append(m.size()).append("\n");
@@ -183,8 +304,59 @@ public class FormulaBuilder {
             commentCNF("Variables parent_v_u is in [%d, %d]", intervalStart, m.size());
         }
 
+        commentCNF("parent is max from original parent and new nodes");
+        for (int nodeNumber = 0; nodeNumber < rootNumber(); nodeNumber++) {
+            int edgeNumber = getEdgeByNode(nodeNumber);
+            String others;
+
+            // for nodes from the tree
+
+            // if no nodes were added above nodeNumber
+            others = buildOthersHelper(0, edgeNumber);
+            addClause(others + getVar("parent", nodeNumber, phTrees.get(0).getParent(nodeNumber)));
+
+            // if node i was the last added above the nodeNumber
+            for (int i = 0; i < k; i++) {
+                others = buildOthersHelper(i + 1, edgeNumber);
+
+                // for underlying node
+                addClause(-getVar("h", treeNodesCount + i, edgeNumber) + " " + others + getVar("parent", nodeNumber, treeNodesCount + i));
+                addClause(-getVar("r", treeNodesCount - k + i, edgeNumber) + " " + others + getVar("parent", nodeNumber, treeNodesCount - k + i));
+            }
+
+            // for new nodes
+
+            for (int i = 0; i < k; i++) {
+                int rNodeNumber = treeNodesCount - k + i;
+                int aboveEdgeNumber = getEdgeByNode(rNodeNumber);
+
+                // if no nodes were added above rNodeNumber
+                others = buildOthersHelper(i + 1, aboveEdgeNumber);
+                addClause(-getVar("r", rNodeNumber, edgeNumber) + " " + others + getVar("parent", rNodeNumber, phTrees.get(0).getParent(nodeNumber)));
+            }
+        }
+
+        // for new nodes
+
+        for (int i = 0; i < k; i++) {
+            String others;
+            int rNodeNumber = treeNodesCount - k + i;
+            int aboveEdgeNumber = getEdgeByNode(rNodeNumber);
+
+            // if node i1 was the last added above the i
+            for (int i1 = i + 1; i1 < k; i1++) {
+                others = buildOthersHelper(i1 + 1, aboveEdgeNumber);
+
+                addClause(-getVar("h", treeNodesCount + i1, aboveEdgeNumber) + " " + others + getVar("parent", rNodeNumber, treeNodesCount + i1));
+                addClause(-getVar("r", treeNodesCount - k + i1, aboveEdgeNumber) + " " + others + getVar("parent", rNodeNumber, treeNodesCount - k + i1));
+            }
+        }
+
         commentCNF("At-least-one constraints for parent_v_u");
-        for (int nodeNumber = 0; nodeNumber < treeNodesCount - 1; nodeNumber++) {
+        for (int nodeNumber = 0; nodeNumber < treeNodesCount; nodeNumber++) {
+            if(nodeNumber == rootNumber()) {
+                continue;
+            }
             String atLeastOneParent = "";
             for (int parentNumber : possibleParents(nodeNumber)) {
                 atLeastOneParent += getVar("parent", nodeNumber, parentNumber) + " ";
@@ -193,33 +365,19 @@ public class FormulaBuilder {
         }
 
         ArrayList<Integer> first = new ArrayList<>();
-        for (int nodeNumber = 0; nodeNumber < treeNodesCount - 1; nodeNumber++) {
+        for (int nodeNumber = 0; nodeNumber < treeNodesCount; nodeNumber++) {
+            if(nodeNumber == rootNumber()) {
+                continue;
+            }
             first.add(nodeNumber);
         }
-//        addPairwiseAtMostOne("parent", first, new Getter() {
-//            @Override
-//            public List<Integer> get(int i) {
-//                return possibleParents(i);
-//            }
-//        });
+
         addBimanderAtMostOne("parent", first, new Getter() {
             @Override
             public List<Integer> get(int i) {
                 return possibleParents(i);
             }
         });
-
-//        commentCNF("At-most-one constraints for parent_v_u");
-//        for (int nodeNumber = 0; nodeNumber < treeNodesCount - 1; nodeNumber++) {
-//            for (int parentNumber : possibleParents(nodeNumber)) {
-//                for (int otherParentNumber : possibleParents(nodeNumber)) {
-//                    if (otherParentNumber > parentNumber) {
-//                        addClause(-getVar("parent", nodeNumber, parentNumber),
-//                                -getVar("parent", nodeNumber, otherParentNumber));
-//                    }
-//                }
-//            }
-//        }
     }
 
     private void addLeftRightConstraints() {
@@ -258,18 +416,6 @@ public class FormulaBuilder {
         for (int nodeNumber = n; nodeNumber < treeNodesCount; nodeNumber++) {
             first.add(nodeNumber);
         }
-//        addPairwiseAtMostOne("left", first, new Getter() {
-//            @Override
-//            public List<Integer> get(int i) {
-//                return possibleChildren(i);
-//            }
-//        });
-//        addPairwiseAtMostOne("right", first, new Getter() {
-//            @Override
-//            public List<Integer> get(int i) {
-//                return possibleChildren(i);
-//            }
-//        });
 
         addBimanderAtMostOne("left", first, new Getter() {
             @Override
@@ -284,18 +430,10 @@ public class FormulaBuilder {
             }
         });
 
-//        commentCNF("At-most-one constraints for left_v_u and right_v_u");
         commentCNF("Also, constraints for left_v_u < right_v_u");
         for (int nodeNumber = n; nodeNumber < treeNodesCount; nodeNumber++) {
             for (int childNumber : possibleChildren(nodeNumber)) {
                 for (int otherNumber : possibleChildren(nodeNumber)) {
-//                    if (childNumber < otherNumber) {
-//                        addClause(-getVar("left", nodeNumber, childNumber),
-//                                -getVar("left", nodeNumber, otherNumber));
-//                        addClause(-getVar("right", nodeNumber, childNumber),
-//                                -getVar("right", nodeNumber, otherNumber));
-//                    }
-
                     if (childNumber <= otherNumber) {
                         addClause(-getVar("right", nodeNumber, childNumber),
                                 -getVar("left", nodeNumber, otherNumber));
@@ -326,29 +464,24 @@ public class FormulaBuilder {
             addClause(atLeastOne);
         }
 
-//        addPairwiseAtMostOne("ch", reticulationNodes(), new Getter() {
-//            @Override
-//            public List<Integer> get(int i) {
-//                return possibleChildren(i);
-//            }
-//        });
         addBimanderAtMostOne("ch", reticulationNodes(), new Getter() {
             @Override
             public List<Integer> get(int i) {
                 return possibleChildren(i);
             }
         });
+    }
 
-//        commentCNF("At-most-one constraints for ch_v_u");
-//        for (int nodeNumber : reticulationNodes()) {
-//            for (int childNumber : possibleChildren(nodeNumber)) {
-//                for (int otherNumber : possibleChildren(nodeNumber)) {
-//                    if (childNumber < otherNumber) {
-//                        addClause(-getVar("ch", nodeNumber, childNumber), -getVar("ch", nodeNumber, otherNumber));
-//                    }
-//                }
-//            }
-//        }
+    private String buildOthersNewNodeHelper(int i, int edgeNumber) {
+        String others = "";
+        for (int j = i; j < k; j++) {
+            others += getVar("r", treeNodesCount - k + j, edgeNumber) + " ";
+            if (enableReticulationConnection) {
+                others += getVar("h", treeNodesCount + j, edgeNumber) + " ";
+            }
+        }
+
+        return others;
     }
 
     private void addReticulationParentConstraints() {
@@ -372,6 +505,53 @@ public class FormulaBuilder {
             commentCNF("Variables rp_v_u is in [%d, %d]", intervalStart, m.size());
         }
 
+        // parents of hybridization nodes
+
+        commentCNF("lp and rp are max from original parent and new nodes");
+        for (int nodeNumber = 0; nodeNumber < rootNumber(); nodeNumber++) {
+            int edgeNumber = getEdgeByNode(nodeNumber);
+
+            for (int i = 0; i < k; i++) {
+                int hNodeNumber = treeNodesCount + i, rNodeNumber = treeNodesCount - k + i;
+                int aboveEdgeNumber1 = getEdgeByNode(hNodeNumber);
+                int aboveEdgeNumber2 = aboveEdgeNumber1 + 1;
+                String others;
+
+                // if no nodes were added above hNodeNumber
+                // parent is either another node added at the current step
+                // or original parent
+
+                others = buildOthersNewNodeHelper(i + 1, aboveEdgeNumber1);
+                addClause(-getVar("h", hNodeNumber, edgeNumber) + " " + others + getVar("lp", hNodeNumber, phTrees.get(0).getParent(nodeNumber)) + " " + getVar("lp", hNodeNumber, rNodeNumber));
+
+                others = buildOthersNewNodeHelper(i + 1, aboveEdgeNumber2);
+                addClause(-getVar("h", hNodeNumber, edgeNumber) + " " + others + getVar("rp", hNodeNumber, phTrees.get(0).getParent(nodeNumber)) + " " + getVar("rp", hNodeNumber, rNodeNumber));
+            }
+        }
+
+        for (int i = 0; i < k; i++) {
+            int hNodeNumber = treeNodesCount + i;
+            int aboveEdgeNumber1 = getEdgeByNode(hNodeNumber);
+            int aboveEdgeNumber2 = aboveEdgeNumber1 + 1;
+            String others;
+
+            // if node i1 was the last added above the i
+
+            for (int i1 = i + 1; i1 < k; i1++) {
+                others = buildOthersNewNodeHelper(i1 + 1, aboveEdgeNumber1);
+                if (enableReticulationConnection) {
+                    addClause(-getVar("h", treeNodesCount + i1, aboveEdgeNumber1) + " " + others + getVar("lp", hNodeNumber, treeNodesCount + i1));
+                }
+                addClause(-getVar("r", treeNodesCount - k + i1, aboveEdgeNumber1) + " " + others + getVar("lp", hNodeNumber, treeNodesCount - k + i1));
+
+                others = buildOthersNewNodeHelper(i1 + 1, aboveEdgeNumber2);
+                if (enableReticulationConnection) {
+                    addClause(-getVar("h", treeNodesCount + i1, aboveEdgeNumber2) + " " + others + getVar("rp", hNodeNumber, treeNodesCount + i1));
+                }
+                addClause(-getVar("r", treeNodesCount - k + i1, aboveEdgeNumber2) + " " + others + getVar("rp", hNodeNumber, treeNodesCount - k + i1));
+            }
+        }
+
         commentCNF("At-least-one constraints for lp_v_u and rp_v_u");
         for (int nodeNumber : reticulationNodes()) {
             String atLeastOneLeft = "", atLeastOneRight = "";
@@ -383,18 +563,6 @@ public class FormulaBuilder {
             addClause(atLeastOneRight);
         }
 
-//        addPairwiseAtMostOne("lp", reticulationNodes(), new Getter() {
-//            @Override
-//            public List<Integer> get(int i) {
-//                return possibleParents(i);
-//            }
-//        });
-//        addPairwiseAtMostOne("rp", reticulationNodes(), new Getter() {
-//            @Override
-//            public List<Integer> get(int i) {
-//                return possibleParents(i);
-//            }
-//        });
         addBimanderAtMostOne("lp", reticulationNodes(), new Getter() {
             @Override
             public List<Integer> get(int i) {
@@ -414,15 +582,8 @@ public class FormulaBuilder {
         for (int nodeNumber : reticulationNodes()) {
             for (int parent : possibleParents(nodeNumber)) {
                 for (int otherParent : possibleParents(nodeNumber)) {
-//                    int lpVar = getVar("lp", nodeNumber, parent);
                     int otherLpVar = getVar("lp", nodeNumber, otherParent);
                     int rpVar = getVar("rp", nodeNumber, parent);
-//                    int otherRpVar = getVar("rp", nodeNumber, otherParent);
-
-//                    if (parent < otherParent) {
-//                        addClause(-lpVar, -otherLpVar);
-//                        addClause(-rpVar, -otherRpVar);
-//                    }
 
                     if (parent <= otherParent) {
                         addClause(-rpVar, -otherLpVar);
@@ -474,23 +635,6 @@ public class FormulaBuilder {
                     addClause(-lpVar, chVar); // if LP then CH
                     addClause(-rpVar, chVar); // if RP then CH
                     addClause(-chVar, lpVar, rpVar); // if CH then LP or RP
-                }
-            }
-        }
-
-        commentCNF("Constraints for ordering ch_v_u and lp_v_u, rp_v_u, connected with reticulation nodes");
-        for (int nodeNumber : reticulationNodes()) {
-            for (int childNumber : possibleChildren(nodeNumber)) {
-                if (childNumber < treeNodesCount) {
-                    int chVar = getVar("ch", nodeNumber, childNumber);
-
-                    for (int parentNumber = n; parentNumber <= childNumber; parentNumber++) {
-                        int lpVar = getVar("lp", nodeNumber, parentNumber);
-                        int rpVar = getVar("rp", nodeNumber, parentNumber);
-
-                        addClause(-chVar, -lpVar); // CHILD less then LP
-                        addClause(-chVar, -rpVar); // CHILD less then RP
-                    }
                 }
             }
         }
@@ -600,7 +744,7 @@ public class FormulaBuilder {
 
         commentCNF("At-least-one constraints for up_%d_v_u", treeNumber);
         for (int nodeNumber : allNodes()) {
-            if (nodeNumber != treeNodesCount - 1) {
+            if (nodeNumber != rootNumber()) {
                 String atLeastOne = "";
                 for (int up : possibleUp(nodeNumber)) {
                     atLeastOne += getVar("up", treeNumber, nodeNumber, up) + " ";
@@ -609,30 +753,12 @@ public class FormulaBuilder {
             }
         }
 
-//        addPairwiseAtMostOne("up_" + treeNumber, allNodes(), new Getter() {
-//            @Override
-//            public List<Integer> get(int i) {
-//                return possibleUp(i);
-//            }
-//        });
         addBimanderAtMostOne("up_" + treeNumber, allNodes(), new Getter() {
             @Override
             public List<Integer> get(int i) {
                 return possibleUp(i);
             }
         });
-
-//        commentCNF("At-most-one constraints for up_%d_v_u", treeNumber);
-//        for (int nodeNumber : allNodes()) {
-//            for (int up : possibleUp(nodeNumber)) {
-//                for (int otherUp : possibleUp(nodeNumber)) {
-//                    if (up < otherUp) {
-//                        addClause(-getVar("up", treeNumber, nodeNumber, up),
-//                                -getVar("up", treeNumber, nodeNumber, otherUp));
-//                    }
-//                }
-//            }
-//        }
 
         commentCNF("Connect up_%d_v_u with parent_v_u and used_%d_v (tree nodes)", treeNumber, treeNumber);
         for (int nodeNumber = 0; nodeNumber < treeNodesCount; nodeNumber++) {
@@ -651,6 +777,8 @@ public class FormulaBuilder {
 
                     // if parent is not used
                     for (int parentUp : possibleUp(parent)) {
+                        if(nodeNumber < 2 * n - 1 && parentUp <= nodeNumber || parentUp == nodeNumber)
+                            continue;
                         int nodeUpVar = getVar("up", treeNumber, nodeNumber, parentUp);
                         int parentUpVar = getVar("up", treeNumber, parent, parentUp);
 
@@ -744,37 +872,12 @@ public class FormulaBuilder {
             first.add(nodeNumber);
         }
 
-//        addPairwiseAtMostOne("x_" + treeNumber, first, new Getter() {
-//            @Override
-//            public List<Integer> get(int i) {
-//                return treeNodes();
-//            }
-//        });
         addBimanderAtMostOne("x_" + treeNumber, first, new Getter() {
             @Override
             public List<Integer> get(int i) {
                 return treeNodes();
             }
         });
-
-//        commentCNF("At-most-one constraints for x_" + treeNumber + "_tv_v");
-//        for (int treeNodeNumber = n; treeNodeNumber < 2 * n - 1; treeNodeNumber++) {
-//            for (int nodeNumber : treeNodes()) {
-//                for (int otherNode : treeNodes()) {
-//                    if (nodeNumber < otherNode) {
-//                        addClause(-getVar("x", treeNumber, treeNodeNumber, nodeNumber),
-//                                -getVar("x", treeNumber, treeNodeNumber, otherNode));
-//                    }
-//                }
-//            }
-//        }
-
-//        addPairwiseAtMostOne("x_" + treeNumber, first, new Getter() {
-//            @Override
-//            public List<Integer> get(int i) {
-//                return treeNodes();
-//            }
-//        });
 
         commentCNF("At-most-one x_%d_tv_v points to v", treeNumber);
         for (int treeNodeNumber = n; treeNodeNumber < 2 * n - 1; treeNodeNumber++) {
@@ -803,7 +906,7 @@ public class FormulaBuilder {
         for (int treeNodeNumber = 0; treeNodeNumber < phTree.size(); treeNodeNumber++) {
             int treeParentNumber = phTree.getParent(treeNodeNumber);
             if (treeParentNumber == -1) {
-                addClause(getVar("x", treeNumber, treeNodeNumber, treeNodesCount - 1)); // root to root
+                addClause(getVar("x", treeNumber, treeNodeNumber, rootNumber())); // root to root
                 continue;
             }
 
@@ -824,29 +927,16 @@ public class FormulaBuilder {
                         addClause(-xVar, -parentXVar, upVar);
                         addClause(-xVar, -upVar, parentXVar);
                     }
-
-                    for (int parentNodeNumber : treeNodes()) {
-                        int parentXVar = m.get("x_" + treeNumber + "_" + treeParentNumber + "_" + parentNodeNumber);
-                        if (parentNodeNumber <= nodeNumber) {
-                            addClause(-xVar, -parentXVar);
-                        }
-                    }
+                    // TODO: add X constraints for nodes [n .. 2 * n - 2]
+//                    for (int parentNodeNumber : treeNodes()) {
+//                        int parentXVar = m.get("x_" + treeNumber + "_" + treeParentNumber + "_" + parentNodeNumber);
+//                        if (parentNodeNumber <= nodeNumber) {
+//                            addClause(-xVar, -parentXVar);
+//                        }
+//                    }
                 }
             }
         }
-
-        commentCNF("Constraints connected with tree nodes depth and subtree sizes (heap structure)");
-        for (int treeNodeNumber = n; treeNodeNumber < phTree.size() - 1; treeNodeNumber++) {
-            int subtreeNonLeafCount = phTree.getSubtreeSize(treeNodeNumber) / 2 - 1;
-            for (int nodeNumber = n; nodeNumber < n + subtreeNonLeafCount; nodeNumber++) {
-                addClause(-getVar("x", treeNumber, treeNodeNumber, nodeNumber));
-            }
-            for (int nodeNumber = treeNodesCount - phTree.getDepth(treeNodeNumber);
-                 nodeNumber < treeNodesCount; nodeNumber++) {
-                addClause(-getVar("x", treeNumber, treeNodeNumber, nodeNumber));
-            }
-        }
-
     }
 
     private void addConstraintsForPairOfTrees(int t1, int t2) {
@@ -854,9 +944,9 @@ public class FormulaBuilder {
         PhylogeneticTree phTree2 = this.phTrees.get(t2);
 
         int totalDifferent = 0;
-        for (int node1 = n; node1 < 2 * n - 2; node1++) {
+        for (int node1 = n; node1 < rootNumber(); node1++) {
             List<Integer> taxa1 = phTree1.getTaxa(node1);
-            for (int node2 = n; node2 < 2 * n - 2; node2++) {
+            for (int node2 = n; node2 < rootNumber(); node2++) {
                 List<Integer> taxa2 = phTree2.getTaxa(node2);
                 boolean allDifferent = Collections.disjoint(taxa1, taxa2);
                 if (allDifferent && t1 < t2) {
@@ -868,34 +958,6 @@ public class FormulaBuilder {
         commentCNF("In trees %d and %d there are %d pairs of different nodes",
                 t1, t2, totalDifferent);
     }
-
-//    private void addEqualsNodesConstraints(int t1, int n1, int t2, int n2) {
-//        PhylogeneticTree phTree1 = this.phTrees.get(t1);
-//        PhylogeneticTree phTree2 = this.phTrees.get(t2);
-//        commentCNF("Node %d in tree %d have the same %d taxons (out of %d) in subtree as node %d in tree %d",
-//                n1, t1, phTree1.getTaxa(n1).size(), this.n, n2, t2);
-//
-//
-//        for (int nodeNumber : treeNodes()) {
-//            int x1Var = getVar("x", t1, n1, nodeNumber);
-//            int x2Var = getVar("x", t2, n2, nodeNumber);
-//            addClause(-x1Var, x2Var); // x1 then x2
-//        }
-//
-//        for (int subtreeNode : phTree1.getSubtreeNodes(n1)) {
-//            if (subtreeNode >= n) {
-//                for (int nonSubtreeNode = n; nonSubtreeNode < 2 * n - 1; nonSubtreeNode++) {
-//                    if (!phTree2.getSubtreeNodes(n2).contains(nonSubtreeNode)) {
-//                        for (int nodeNumber : treeNodes()) {
-//                            int x1Var = getVar("x", t1, subtreeNode, nodeNumber);
-//                            int x2Var = getVar("x", t2, nonSubtreeNode, nodeNumber);
-//                            addClause(-x1Var, -x2Var); // x1 then ~x2
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//    }
 
     /*
     Adding this constraints is a little bit risky
@@ -913,6 +975,10 @@ public class FormulaBuilder {
         }
     }
 
+    private int rootNumber() {
+        return 2 * n - 2;
+    }
+
     private List<Integer> possibleChildren(int nodeNumber) {
         if (nodeNumber < 0 || nodeNumber >= treeNodesCount + k) {
             throw new RuntimeException("Node number out of bounds");
@@ -923,12 +989,14 @@ public class FormulaBuilder {
             return ans;
         }
         for (int childNumber : allNodes()) {
-            if (nodeNumber < treeNodesCount) {
-                if (childNumber < nodeNumber || childNumber >= treeNodesCount) {
+            if (childNumber != rootNumber() && childNumber != nodeNumber) {
+                if (nodeNumber < treeNodesCount) {
+                    if (childNumber < nodeNumber || childNumber >= treeNodesCount - k) {
+                        ans.add(childNumber);
+                    }
+                } else if (childNumber < treeNodesCount || (enableReticulationConnection && childNumber >= treeNodesCount)) {
                     ans.add(childNumber);
                 }
-            } else if (childNumber < treeNodesCount - 1 || (enableReticulationConnection && childNumber < nodeNumber)) {
-                ans.add(childNumber);
             }
         }
 
@@ -941,17 +1009,23 @@ public class FormulaBuilder {
         }
 
         List<Integer> ans = new ArrayList<>();
-        if (nodeNumber == treeNodesCount - 1) {
+        if (nodeNumber == rootNumber()) {
             return ans;
         }
         for (int parentNumber = n; parentNumber < treeNodesCount + k; parentNumber++) {
+            if (parentNumber == nodeNumber) {
+                continue;
+            }
             if (nodeNumber < n) {
                 ans.add(parentNumber);
-            } else if (nodeNumber < treeNodesCount) {
+            } else if (nodeNumber < treeNodesCount - k) {
                 if (nodeNumber < parentNumber) {
                     ans.add(parentNumber);
                 }
-            } else if (parentNumber < treeNodesCount || (enableReticulationConnection && nodeNumber < parentNumber)) {
+            } else if (nodeNumber < treeNodesCount) {
+                ans.add(parentNumber);
+            }
+            else if (parentNumber < treeNodesCount || (enableReticulationConnection)) {
                 ans.add(parentNumber);
             }
         }
@@ -967,6 +1041,69 @@ public class FormulaBuilder {
             }
         }
         return ans;
+    }
+
+    private List<Integer> possibleEdges(int nodeNumber) {
+        if (nodeNumber < treeNodesCount - k || nodeNumber >= treeNodesCount + k) {
+            throw new RuntimeException("Node number out of bounds");
+        }
+
+        final ArrayList<Integer> ans = new ArrayList<>();
+        if (nodeNumber < treeNodesCount) {
+            int i = nodeNumber - treeNodesCount + k;
+            for (int edgeNumber = 0; edgeNumber < rootNumber(); ++edgeNumber) {
+                ans.add(edgeNumber);
+            }
+            for (int edgeNumber = 2 * n - 1; edgeNumber < 2 * n - 1 + i; ++edgeNumber) {
+                ans.add(edgeNumber);
+            }
+            for (int reticNodeNumber = 2 * n - 1 + k; reticNodeNumber < 2 * n - 1 + k + i; ++reticNodeNumber) {
+                ans.add(getEdgeByNode(reticNodeNumber));
+                ans.add(getEdgeByNode(reticNodeNumber) + 1);
+            }
+        } else {
+            int i = nodeNumber - treeNodesCount;
+            for (int edgeNumber = 0; edgeNumber < rootNumber(); ++edgeNumber) {
+                ans.add(edgeNumber);
+            }
+            for (int edgeNumber = 2 * n - 1; edgeNumber < 2 * n - 1 + i; ++edgeNumber) {
+                ans.add(edgeNumber);
+            }
+            if(enableReticulationConnection) {
+                for (int reticNodeNumber = 2 * n - 1 + k; reticNodeNumber < 2 * n - 1 + k + i; ++reticNodeNumber) {
+                    ans.add(getEdgeByNode(reticNodeNumber));
+                    ans.add(getEdgeByNode(reticNodeNumber) + 1);
+                }
+            }
+        }
+
+        return ans;
+    }
+
+    private int getEdgeByNode(int nodeNumber) {
+        if(nodeNumber < rootNumber()) {
+            return nodeNumber;
+        }
+        else if(nodeNumber == rootNumber()) {
+            return -1;
+        } else if(nodeNumber < 2 * n - 1 + k) {
+            return nodeNumber;
+        } else {
+            return 2 * nodeNumber - 2 * n + 1 - k;
+        }
+    }
+
+    private int getNodeByEdge(int edgeNumber) {
+        if(edgeNumber < rootNumber()) {
+            return edgeNumber;
+        }
+        else if(edgeNumber == -1) {
+            return rootNumber();
+        } else if(edgeNumber < 2 * n - 1 + k) {
+            return edgeNumber;
+        } else {
+            return (edgeNumber - 2 * n + 1 - k) / 2 + 2 * n - 1 + k;
+        }
     }
 
     private List<Integer> allNodes() {
