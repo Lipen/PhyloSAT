@@ -83,7 +83,6 @@ public class PhylogeneticNetwork {
 
     public String toGVString() {
         String ans = "graph G {\n";
-//        ans += "  node [shape = ellipse]\n";
         ans += "  node [shape=circle width=0.3 fixedsize=true height=0.3];\n";
         ans += "  {rank = same ranksep=0.75 nodesep=0.75;";
         for (PhylogeneticNode node : nodes) {
@@ -92,7 +91,6 @@ public class PhylogeneticNetwork {
             }
         }
         ans += "}\n";
-//        ans += "  node [shape = point];\n ";
         ans += "  node [shape = square label = \"\" width=0.15 fixedsize=true height=0.15];\n ";
         boolean hasReticulationNodes = false;
         for (int i = 0; i < nodes.size(); i++) {

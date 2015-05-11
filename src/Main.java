@@ -189,6 +189,16 @@ public class Main {
             } catch (FileNotFoundException e) {
                 logger.warning("Can not open " + resultFilePath + " :\n" + e.getMessage());
             }
+            for(int i = 0; i < inputTrees.size(); ++i) {
+                try {
+                    String treeFilePath = resultFilePath.substring(0, resultFilePath.lastIndexOf(".")) + ".tree" + i + ".gv";
+                    PrintWriter gvPrintWriter = new PrintWriter(new File(treeFilePath));
+                    gvPrintWriter.print(inputTrees.get(i).toGVString());
+                    gvPrintWriter.close();
+                } catch (FileNotFoundException e) {
+                    logger.warning("Can not open " + resultFilePath + " :\n" + e.getMessage());
+                }
+            }
         }
 
         logger.info("Finally, there is a network with " + finalK + " reticulation nodes");

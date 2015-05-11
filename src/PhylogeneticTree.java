@@ -321,6 +321,30 @@ public class PhylogeneticTree {
         return ans + ")";
     }
 
+    public String toGVString() {
+        String ans = "graph G {\n";
+        ans += "  node [shape=circle width=0.3 fixedsize=true height=0.3];\n";
+        ans += "  {rank = same ranksep=0.75 nodesep=0.75;";
+        for (PhylogeneticNode node : nodes) {
+            if (node.label != null) {
+                ans += " " + node.label;
+            }
+        }
+        ans += "}\n";
+        ans += "  node [shape = point width=default height=default];\n";
+        for (int i = 0; i < nodes.size(); i++) {
+            String src = (nodes.get(i).label == null) ? '_' + Integer.toString(i) : nodes.get(i).label;
+            for (int j = 0; j < nodes.get(i).children.size(); ++j) {
+                int child = nodes.get(i).children.get(j);
+                String dst = (nodes.get(child).label == null) ? '_' + Integer.toString(child) : nodes.get(child).label;
+                ans += "  " + src + " -- " + dst + ";\n";
+            }
+        }
+
+        ans += "}\n";
+        return ans;
+    }
+
     public String toString() {
         return repr(size() - 1);
     }
