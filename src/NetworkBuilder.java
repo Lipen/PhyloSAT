@@ -31,12 +31,12 @@ public class NetworkBuilder {
                     int src = Integer.parseInt(splitted[1]);
                     int dst = Integer.parseInt(splitted[2]);
                     if(hasFictitiousRoot) {
-                        if (src > trees.get(0).size()) {
+                        if (src > trees.get(0).size() + k - 1) {
                             src -= 2;
                         } else if (src >= trees.get(0).getTaxaSize()) {
                             src -= 1;
                         }
-                        if (dst > trees.get(0).size()) {
+                        if (dst > trees.get(0).size() + k - 1) {
                             dst -= 2;
                         } else if (dst >= trees.get(0).getTaxaSize()) {
                             dst -= 1;
