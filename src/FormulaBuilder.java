@@ -812,6 +812,7 @@ public class FormulaBuilder {
                     int parentXVar = getVar("x", treeNumber, treeParentNumber, parentNodeNumber);
                     int taxonUpVar = getVar("up", treeNumber, treeNodeNumber, parentNodeNumber);
                     addClause(-parentXVar, taxonUpVar);
+                    addClause(-taxonUpVar, parentXVar);
                 }
             } else {
                 for (int nodeNumber : treeNodes()) {
