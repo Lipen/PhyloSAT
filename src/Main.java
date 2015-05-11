@@ -27,7 +27,7 @@ public class Main {
 
     @Option(name = "--result", aliases = {"-r"}, usage = "write result network in GV format to this file",
             metaVar = "<GV file>")
-    private String resultFilePath;
+    private String resultFilePath = null;
 
     @Option(name = "--cnf", usage = "write CNF formula to this file", metaVar = "<file>")
     private String cnfFilePath = "cnf";
@@ -38,7 +38,7 @@ public class Main {
 
     @Option(name = "--enableReticulationEdges", aliases = {"-e"},
             handler = BooleanOptionHandler.class, usage = "does reticulation-reticulation connection enabled")
-    private boolean enableReticulationEdges;
+    private boolean enableReticulationEdges = false;
 
     @Option(name = "--disableComments", aliases = {"-dc"},
             handler = BooleanOptionHandler.class, usage = "disables comments in CNF")
@@ -361,8 +361,8 @@ public class Main {
     private List<List<PhylogeneticTree>> preprocessing(List<PhylogeneticTree> inputTrees) {
         List<List<PhylogeneticTree>> ans = new ArrayList<>();
 
-        List<PhylogeneticTree> currentTrees = collapseAll(inputTrees, ans);
         if (!disableSplits) {
+            List<PhylogeneticTree> currentTrees = collapseAll(inputTrees, ans);
             while (true) {
                 List<PhylogeneticTree> newTask = equalsTaxaSplit(currentTrees);
                 if (newTask == null) {
@@ -371,8 +371,10 @@ public class Main {
                 ans.add(newTask);
                 currentTrees = collapseAll(currentTrees, ans);
             }
+            ans.add(currentTrees);
+        } else {
+            ans.add(inputTrees);
         }
-        ans.add(currentTrees);
 
         return ans;
     }
