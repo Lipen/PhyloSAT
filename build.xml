@@ -1,4 +1,4 @@
-<project name="PhyloSAT">
+<project name="PhyloSAT" default="package-build">
     <property name="lib.dir" value="lib"/>
 
     <path id="class.path">
