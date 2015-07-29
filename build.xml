@@ -1,0 +1,79 @@
+<project name="PhyloSAT">
+    <property name="lib.dir" value="lib"/>
+
+    <path id="class.path">
+        <fileset dir="lib/">
+            <include name="**/*.jar" />
+        </fileset>
+    </path>
+
+    <target name="compile">
+        <mkdir dir="bin"/>
+        <mkdir dir="bin/java"/>
+        <javac srcdir="src/" destdir="bin/java" debug="on">
+            <classpath refid="class.path"/>
+            <compilerarg value="-Xlint"/>
+            <compilerarg line="-encoding utf-8"/>
+        </javac>
+    </target>
+
+    <target name="clean">
+        <delete failonerror="false" includeemptydirs="true">
+            <fileset dir="bin/java"/>
+        </delete>
+    </target>
+
+  
+  <target name="compile-tests" depends="compile">
+      <mkdir dir="bin"/>
+      <mkdir dir="bin/java-tests"/>
+      <javac srcdir="tests/" destdir="bin/java-tests" debug="on">
+          <classpath>
+              <path refid="class.path"/>
+              <pathelement path="bin/java"/>
+          </classpath>
+          <compilerarg value="-Xlint"/>
+      </javac>
+  </target>
+
+  <target name="test" depends="compile-tests">
+      <mkdir dir="test-report" />
+      <junit printsummary="yes" haltonfailure="no">
+          <classpath>
+              <pathelement path="bin/java-tests/"/>
+              <pathelement path="bin/java/"/>
+              <path refid="class.path"/>
+          </classpath>
+          <formatter type="xml"/>
+          <batchtest fork="yes" todir="./test-report">
+              <fileset dir="./tests/">
+                  <include name="**/*Test.java"/>
+              </fileset>
+          </batchtest>
+      </junit>
+  </target>
+
+  <target name="package-prepare">
+      <mkdir dir="bin/"/>
+      <mkdir dir="bin/dependencies"/>
+      <unjar dest="bin/dependencies">
+          <fileset dir="lib/" includes="**/*.jar"/>
+      </unjar>
+  </target>
+
+  <target name="package-build" depends="compile,package-prepare">
+      <mkdir dir="dist"/>
+
+      <jar destfile="dist/PhyloSAT.jar" duplicate="preserve">
+          <fileset dir="bin/java" includes="**/*"/>
+          <fileset dir="bin/dependencies" includes="**/*"/>
+          <manifest>
+              <attribute name="Main-Class"
+                  value="Main"/>
+          </manifest>
+      </jar>
+
+  </target>
+
+
+</project>
