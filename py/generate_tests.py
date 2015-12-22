@@ -39,8 +39,8 @@ def gen_special_test():
     for t in xrange(TREES_CNT):
         lefts += [gen_random_brackets(left)]
         random.shuffle(left)
-    for left in lefts:
-        ans += ['(%s,%s);' % (left, replace_tax(left))]
+    for t in xrange(TREES_CNT):
+        ans += ['(%s,%s);' % (lefts[t], replace_tax(lefts[TREES_CNT - (t + 1)]))]
     left_rand_pos, right_rand_pos = random.randint(0, SUBTREE_SIZE - 1), random.randint(0, SUBTREE_SIZE - 1) + SUBTREE_SIZE
     tree = ans[-1]
     ans = ans[:-1]
