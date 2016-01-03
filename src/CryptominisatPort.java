@@ -13,7 +13,8 @@ public class CryptominisatPort {
                                   PrintWriter CNFPrintWriter,
                                   PrintWriter solverPrintWriter,
                                   long timeLimit,
-                                  long[] executionTime) throws IOException {
+                                  long[] executionTime,
+                                  String solverOptions) throws IOException {
         if (CNFPrintWriter != null) {
             CNFPrintWriter.println(CNFString);
             CNFPrintWriter.flush();
@@ -24,9 +25,7 @@ public class CryptominisatPort {
         tmpPW.print(CNFString);
         tmpPW.close();
 
-        //Process p = Runtime.getRuntime().exec("cryptominisat --threads=4 tmp.cnf");
-
-        String command = "cryptominisat tmp.cnf";
+        String command = solverOptions + " tmp.cnf";
         CommandLine cmdLine = CommandLine.parse(command);
 
         DefaultExecutor executor = new DefaultExecutor();

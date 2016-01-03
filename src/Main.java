@@ -32,6 +32,9 @@ public class Main {
     @Option(name = "--cnf", usage = "write CNF formula to this file", metaVar = "<file>")
     private String cnfFilePath = "cnf";
 
+    @Option(name = "--solverOptions", aliases = {"-s"}, usage = "launch with this solver and solver options", metaVar = "<string>")
+    private String solverOptions = "cryptominisat --threads=4";
+
     @Option(name = "--hybridizationNumber", aliases = {"-h"},
             usage = "hybridization number, available in -ds mode", metaVar = "<int>")
     private int hn = -1;
@@ -301,7 +304,7 @@ public class Main {
             logger.warning("File " + cnfFilePath + " not found: " + e.getMessage());
         }
 
-        boolean[] solution = CryptominisatPort.solve(cnf, null, null, timeLimit, time);
+        boolean[] solution = CryptominisatPort.solve(cnf, null, null, timeLimit, time, solverOptions);
 
         if (time[0] == -1) {
             logger.info("TIME LIMIT EXCEEDED (" + timeLimit + ")");
