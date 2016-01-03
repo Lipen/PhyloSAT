@@ -229,6 +229,7 @@ public class Main {
 
         int k = calcUpperBound(trees);
         long[] time = new long[1];
+        PhylogeneticNetwork cur = null;
         PhylogeneticNetwork res = null;
 //        PhylogeneticNetwork res = solveSubtask(trees, k, MAX_TL, time);
 //        if (time[0] == -1) {
@@ -240,14 +241,15 @@ public class Main {
 //            return res;
 //        }
 
-        int l = mink, r = k+1;
+        int l = mink + 1, r = k+1;
         while (l < r) {
             int m = (l + r) / 2;
-            res = solveSubtask(trees, m, MAX_TL, time);
-            if (res == null) {
+            cur = solveSubtask(trees, m, MAX_TL, time);
+            if (cur == null) {
                 l = m + 1;
             } else {
                 r = m;
+                res = cur;
             }
         }
         return res;
