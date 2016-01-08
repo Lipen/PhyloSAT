@@ -32,6 +32,14 @@ def main(cmd, dir_name, result_tag):
     result_dir = os.path.join("../results_{}".format(result_tag), time)
     if not os.path.exists(result_dir):
         os.makedirs(result_dir)
+    if not os.path.isdir(dir_name):
+        file = dir_name.replace(" ", "\ ")
+        try:
+            launch(cmd + " " + file, result_dir)
+            return
+        except Exception as exc:
+            print("some exception")
+            print(exc)
     for root, folders, files in os.walk(dir_name):
         for f in files:
             file = os.path.join(root, f)
