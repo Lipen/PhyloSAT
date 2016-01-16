@@ -64,7 +64,9 @@ public class CryptominisatPort {
                 solverPrintWriter.println(line);
             }
             if (line.charAt(0) == 'v') {
-                ansLine += line.substring(2) + " ";
+            	ansLine += line.substring(2);
+                if (!(line.charAt(line.length() - 1) == ' '))
+                	ansLine += " ";
             }
         }
         input.close();
