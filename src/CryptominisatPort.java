@@ -1,6 +1,7 @@
 import org.apache.commons.exec.*;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 /**
@@ -77,12 +78,17 @@ public class CryptominisatPort {
         }
 
         String[] splitAns = ansLine.split(" ");
-        int[] model = new int[splitAns.length];
-		for (int i = 0; i < splitAns.length; i++) {
-			model[i] = Integer.parseInt(splitAns[i]);
+        ArrayList<Integer> model = new ArrayList<Integer>();
+        int max_c = 0;
+        for (int i = 0; i < splitAns.length; i++) {
+			int c = Integer.parseInt(splitAns[i]);
+        	model.add(c);
+			max_c = Math.max(Math.abs(c), max_c);
 		}
-		int ansLength = model[model.length - 2];
-        boolean[] ans = new boolean[ansLength];
+        boolean[] ans = new boolean[max_c];
+        for (int i = 0; i < ans.length; i++) {
+        	ans[i] = true;
+        }
         for (int m : model) {
         	if (!(m == 0)) {
         		ans[Math.abs(m) - 1] = m > 0;
