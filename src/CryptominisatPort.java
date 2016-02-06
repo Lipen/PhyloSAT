@@ -52,6 +52,14 @@ public class CryptominisatPort {
         executionTime[0] = System.currentTimeMillis() - curTime;
         if (executionTime[0] > timeLimit) {
             executionTime[0] = -1;
+            String cnf_k_num = CNFString.split("\n")[1];
+            cnf_k_num = cnf_k_num.split(" ")[6];
+            cnf_k_num = cnf_k_num.substring(0, cnf_k_num.length() - 1);
+            File unresolved_cnf = new File("cnf_unresolved_k_num_" + cnf_k_num);
+            PrintWriter unr_cnf = new PrintWriter(unresolved_cnf);
+            unr_cnf.print(CNFString);
+            unr_cnf.close();
+            
         }
 
         String ansLine = "";
