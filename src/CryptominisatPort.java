@@ -64,7 +64,9 @@ public class CryptominisatPort {
                 solverPrintWriter.println(line);
             }
             if (line.charAt(0) == 'v') {
-                ansLine += line.substring(2);
+            	ansLine += line.substring(2);
+                if (!(line.charAt(line.length() - 1) == ' '))
+                	ansLine += " ";
             }
         }
         input.close();
@@ -75,9 +77,16 @@ public class CryptominisatPort {
         }
 
         String[] splitAns = ansLine.split(" ");
-        boolean[] ans = new boolean[splitAns.length - 1];
-        for (int i = 0; i < ans.length; i++) {
-            ans[i] = !splitAns[i].contains("-");
+        int[] model = new int[splitAns.length];
+		for (int i = 0; i < splitAns.length; i++) {
+			model[i] = Integer.parseInt(splitAns[i]);
+		}
+		int ansLength = model[model.length - 2];
+        boolean[] ans = new boolean[ansLength];
+        for (int m : model) {
+        	if (!(m == 0)) {
+        		ans[Math.abs(m) - 1] = m > 0;
+        	}
         }
         return ans;
     }

@@ -4,6 +4,7 @@ import sys
 
 __author__ = 'vvorobyeva'
 
+
 def rewrite(file_name):
     with open(file_name, "r") as f:
         data = f.read()
@@ -18,7 +19,7 @@ def launch(comm, result_dir):
     result_file = os.path.join(result_dir, '{}.txt'.format(time))
     with open(result_file, "a+") as r_f:
         r_f.write("{}\n\n".format(comm.split(" ")[-1]))
-#    rewrite(comm[-1])
+    # rewrite(comm[-1])
     comm += '>> {} 2>&1'.format(result_file)
     os.system(comm)
     t2 = datetime.datetime.now()
@@ -31,14 +32,21 @@ def main(cmd, dir_name, result_tag):
     result_dir = os.path.join("../results_{}".format(result_tag), time)
     if not os.path.exists(result_dir):
         os.makedirs(result_dir)
+    if not os.path.isdir(dir_name):
+        file = dir_name.replace(" ", "\ ")
+        try:
+            launch(cmd + " " + file, result_dir)
+            return
+        except Exception as exc:
+            print("some exception")
+            print(exc)
     for root, folders, files in os.walk(dir_name):
         for f in files:
             file = os.path.join(root, f)
             print(file)
             file = file.replace(" ", "\ ")
             try:
-                cmd += " " + file
-                launch(cmd, result_dir)
+                launch(cmd + " " + file, result_dir)
             except Exception as exc:
                 print("some exception")
                 print(exc)
