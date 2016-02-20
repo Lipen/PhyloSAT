@@ -150,7 +150,7 @@ public class Main {
 
             PhylogeneticNetwork cur;
             if (hn >= 0) {
-                cur = solveSubtask(subtaskTrees, hn, 1000000, new long[1]);
+                cur = solveSubtask(subtaskTrees, hn, 10000000, new long[1]);
             } else {
                 cur = solveSubtaskWithoutUNSAT(subtaskTrees);
             }
@@ -194,7 +194,7 @@ public class Main {
             }
             for(int i = 0; i < inputTrees.size(); ++i) {
                 try {
-                    String treeFilePath = resultFilePath.substring(0, resultFilePath.lastIndexOf(".")) + ".tree" + i + ".gv";
+                    String treeFilePath = resultFilePath + ".tree" + i + ".gv";
                     PrintWriter gvPrintWriter = new PrintWriter(new File(treeFilePath));
                     gvPrintWriter.print(inputTrees.get(i).toGVString());
                     gvPrintWriter.close();
