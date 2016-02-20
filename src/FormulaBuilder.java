@@ -83,6 +83,8 @@ public class FormulaBuilder {
             addDataConstraints(treeNumber);
         }
 
+        addALOdirConstraints();
+  
         for (int treeNumber = 0; treeNumber < phTrees.size(); treeNumber++) {
             for (int otherTree = 0; otherTree < phTrees.size(); otherTree++) {
                 if (treeNumber != otherTree) {
@@ -529,6 +531,22 @@ public class FormulaBuilder {
             }
         }
     }
+
+    private void addALOdirConstraints(){
+    	commentCNF("ALO for different dirs");
+    	for (int nodeNumber : reticulationNodes()) {
+    		String clauseLeft = "";
+    		String clauseRight = "";
+    		for (int treeNumber = 0; treeNumber < phTrees.size(); treeNumber++) {
+    			clauseLeft += getVar("dir", treeNumber, nodeNumber) + " ";
+    			clauseRight += -getVar("dir", treeNumber, nodeNumber) + " ";
+    		}
+    		
+    		addClause(clauseLeft);
+    		addClause(clauseRight);
+    	}
+    }
+
 
     private void addRUsedConstraints(int treeNumber) {
         {
