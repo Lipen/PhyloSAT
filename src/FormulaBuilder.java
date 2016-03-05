@@ -954,7 +954,7 @@ public class FormulaBuilder {
         return ans;
     }
 
-    private List<Integer> possibleParents(int nodeNumber) {
+	private List<Integer> possibleParents(int nodeNumber) {
         if (nodeNumber < 0 || nodeNumber >= treeNodesCount + k) {
             throw new RuntimeException("Node number out of bounds");
         }
@@ -970,11 +970,13 @@ public class FormulaBuilder {
                 if (nodeNumber < parentNumber) {
                     ans.add(parentNumber);
                 }
-            } else if (parentNumber < treeNodesCount || (enableReticulationConnection && nodeNumber < parentNumber)) {
+            } else if (parentNumber < treeNodesCount) {
                 ans.add(parentNumber);
             }
         }
-
+        if (enableReticulationConnection && nodeNumber >= treeNodesCount)
+			ans.add(nodeNumber + 1);
+	
         return ans;
     }
 
