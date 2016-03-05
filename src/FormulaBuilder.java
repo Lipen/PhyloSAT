@@ -84,6 +84,7 @@ public class FormulaBuilder {
         }
 
         addALOdirConstraints();
+        addParentOrderConstraints();
   
         for (int treeNumber = 0; treeNumber < phTrees.size(); treeNumber++) {
             for (int otherTree = 0; otherTree < phTrees.size(); otherTree++) {
@@ -547,6 +548,29 @@ public class FormulaBuilder {
     	}
     }
 
+    private void addParentOrderConstraints(){
+    	commentCNF("add constraints for order on different parents");
+    	for (int i : treeNodes()){
+    		if (treeNodes().contains(i + 1)){
+    			addAllParentOrderPairConstraints(i, treeNodes());
+    			addAllParentOrderPairConstraints(i, reticulationNodes());
+    		}
+    	}
+    }
+    
+    private void addAllParentOrderPairConstraints(int i, List<Integer> nodes){
+    	for (int j : nodes){
+			for (int k : nodes){
+				if (possibleParents(i).contains(j) && possibleParents(i + 1).contains(k)){
+					if (k < j){
+						int p_i_j = -getVar("parent", i, j);
+						int p_i_1_k = -getVar("parent", i + 1, k);
+						addClause(p_i_j + " " + p_i_1_k);
+					}
+				}
+			}
+		}
+    }
 
     private void addRUsedConstraints(int treeNumber) {
         {
@@ -954,7 +978,7 @@ public class FormulaBuilder {
         return ans;
     }
 
-    private List<Integer> possibleParents(int nodeNumber) {
+	private List<Integer> possibleParents(int nodeNumber) {
         if (nodeNumber < 0 || nodeNumber >= treeNodesCount + k) {
             throw new RuntimeException("Node number out of bounds");
         }
@@ -970,11 +994,13 @@ public class FormulaBuilder {
                 if (nodeNumber < parentNumber) {
                     ans.add(parentNumber);
                 }
-            } else if (parentNumber < treeNodesCount || (enableReticulationConnection && nodeNumber < parentNumber)) {
+            } else if (parentNumber < treeNodesCount) {
                 ans.add(parentNumber);
             }
         }
-
+        if (enableReticulationConnection && nodeNumber >= treeNodesCount)
+			ans.add(nodeNumber + 1);
+	
         return ans;
     }
 

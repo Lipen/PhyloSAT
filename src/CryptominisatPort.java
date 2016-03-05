@@ -1,6 +1,7 @@
 import org.apache.commons.exec.*;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 /**
@@ -51,6 +52,14 @@ public class CryptominisatPort {
         executionTime[0] = System.currentTimeMillis() - curTime;
         if (executionTime[0] > timeLimit) {
             executionTime[0] = -1;
+            String cnf_k_num = CNFString.split("\n")[1];
+            cnf_k_num = cnf_k_num.split(" ")[6];
+            cnf_k_num = cnf_k_num.substring(0, cnf_k_num.length() - 1);
+            File unresolved_cnf = new File("cnf_unresolved_k_num_" + cnf_k_num);
+            PrintWriter unr_cnf = new PrintWriter(unresolved_cnf);
+            unr_cnf.print(CNFString);
+            unr_cnf.close();
+            
         }
 
         String ansLine = "";
@@ -77,12 +86,17 @@ public class CryptominisatPort {
         }
 
         String[] splitAns = ansLine.split(" ");
-        int[] model = new int[splitAns.length];
-		for (int i = 0; i < splitAns.length; i++) {
-			model[i] = Integer.parseInt(splitAns[i]);
+        ArrayList<Integer> model = new ArrayList<Integer>();
+        int max_c = 0;
+        for (int i = 0; i < splitAns.length; i++) {
+			int c = Integer.parseInt(splitAns[i]);
+        	model.add(c);
+			max_c = Math.max(Math.abs(c), max_c);
 		}
-		int ansLength = model[model.length - 2];
-        boolean[] ans = new boolean[ansLength];
+        boolean[] ans = new boolean[max_c];
+        for (int i = 0; i < ans.length; i++) {
+        	ans[i] = true;
+        }
         for (int m : model) {
         	if (!(m == 0)) {
         		ans[Math.abs(m) - 1] = m > 0;
