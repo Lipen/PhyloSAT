@@ -242,7 +242,7 @@ public class Main {
 		// return res;
 		// }
 
-		int l = mink + 1, r = k + 1;
+		int l = mink, r = k + 1;
 		while (l < r) {
 			cur = solveSubtask(trees, l, MAX_TL, time);
 			if (cur == null) {
