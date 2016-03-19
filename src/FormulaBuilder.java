@@ -556,6 +556,21 @@ public class FormulaBuilder {
     			addAllParentOrderPairConstraints(i, reticulationNodes());
     		}
     	}
+    	for (int i : reticulationNodes()){
+    		if (reticulationNodes().contains(i + 1)){
+    	    	for (int j : treeNodes()){
+    				for (int k : treeNodes()){
+    					if (possibleChildren(i).contains(j) && possibleChildren(i + 1).contains(k)){
+    						int p_j_i = -getVar("parent", j, i);
+    						int p_k_i_1 = -getVar("parent", k, i + 1);
+    						addClause(p_j_i + " " + p_k_i_1);
+    					}
+    				}
+    	    	}
+    		}
+    				
+    	}
+    		
     }
     
     private void addAllParentOrderPairConstraints(int i, List<Integer> nodes){
