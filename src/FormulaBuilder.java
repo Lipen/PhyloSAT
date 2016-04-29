@@ -74,6 +74,7 @@ public class FormulaBuilder {
         addChildParentConstraints();
 
         for (int treeNumber = 0; treeNumber < phTrees.size(); treeNumber++) {
+        	commentCNF("solve point for iterate solver");
             addDirUsedConstraints(treeNumber);
             if (this.enableReticulationConnection) {
                 addRUsedConstraints(treeNumber);
