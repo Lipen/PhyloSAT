@@ -72,21 +72,21 @@ public class FormulaBuilder {
         addReticulationChildConstraints();
         addReticulationParentConstraints();
         addChildParentConstraints();
-
+        addParentOrderConstraints();
+        commentCNF("solve point for iterate solver");
         for (int treeNumber = 0; treeNumber < phTrees.size(); treeNumber++) {
-        	commentCNF("solve point for iterate solver");
-            addDirUsedConstraints(treeNumber);
+        	addDirUsedConstraints(treeNumber);
             if (this.enableReticulationConnection) {
                 addRUsedConstraints(treeNumber);
             }
             addUpConstraints(treeNumber);
             addXConstraints(treeNumber);
             addDataConstraints(treeNumber);
+            commentCNF("solve point for iterate solver");
         }
 
         addALOdirConstraints();
-        addParentOrderConstraints();
-  
+        
         for (int treeNumber = 0; treeNumber < phTrees.size(); treeNumber++) {
             for (int otherTree = 0; otherTree < phTrees.size(); otherTree++) {
                 if (treeNumber != otherTree) {
@@ -94,7 +94,7 @@ public class FormulaBuilder {
                 }
             }
         }
-
+        commentCNF("solve point for iterate solver");
         String CNFProperties = String.format("p cnf %d %d\n", this.m.size(), this.clausesCount);
         this.sb.insert(0, CNFProperties);
 

@@ -211,8 +211,8 @@ public class Main {
 
 	private PhylogeneticNetwork solveSubtaskWithoutUNSAT(List<PhylogeneticTree> trees) throws IOException {
 		int CHECK_FIRST = 3;
-		long FIRST_TIME_LIMIT = 100000;
-		long MAX_TL = 1000000;
+		long FIRST_TIME_LIMIT = 1000000;
+		long MAX_TL = 100000;
 		// long TL_COEF = 50;
 
 		int mink = 0;
