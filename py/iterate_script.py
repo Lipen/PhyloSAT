@@ -34,5 +34,5 @@ def change_format(solution):
     return sol + " 0"
 
 
-iterate_solve(int(sys.argv[1]))
+iterate_solve(sys.argv[1])
 
