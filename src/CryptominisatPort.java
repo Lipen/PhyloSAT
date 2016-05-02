@@ -10,6 +10,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Vladimir Ulyantsev Date: 24.04.13 Time: 19:15
@@ -70,10 +71,8 @@ public class CryptominisatPort {
 		nFiles = nFiles.subList(0, nThreads);
 		
 		long curTime = System.currentTimeMillis();
-
-		
+	
 		ExecutorService executorService = Executors.newFixedThreadPool(nThreads);
-		System.out.println(nFiles.toString());
 		Set<Callable<String>> callables = new HashSet<Callable<String>>();
 		for (int i = 0; i < nThreads; i++) {
 			final String file = "tmp" + nFiles.get(i) + ".cnf";
@@ -96,15 +95,16 @@ public class CryptominisatPort {
 						}
 					}
 					outputReader.close();
-				    process.waitFor(timeLimit, TimeUnit.MILLISECONDS);
+
 					return ansLine;
 				}
 			});
 		}
 		String ansLine = "";
 		try {
-			ansLine = executorService.invokeAny(callables);
-		} catch (InterruptedException | ExecutionException e) {
+			ansLine = executorService.invokeAny(callables, timeLimit, TimeUnit.MILLISECONDS);
+			executorService.shutdown();
+		} catch (InterruptedException | ExecutionException | TimeoutException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
