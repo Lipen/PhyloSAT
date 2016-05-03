@@ -2,9 +2,9 @@ import sys
 from pycryptosat import Solver
 
 
-def iterate_solve(cnf_file):
+def iterate_solve(threads, cnf_file):
     with open(cnf_file, "r") as cnf:
-        s = Solver()
+        s = Solver(threads)
         line = cnf.readline()
         while line:
             line = cnf.readline()
@@ -34,5 +34,5 @@ def change_format(solution):
     return sol + " 0"
 
 
-iterate_solve(sys.argv[1])
+iterate_solve(int(sys.argv[1], sys.argv[2]))
 

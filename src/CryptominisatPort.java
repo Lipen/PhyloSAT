@@ -1,113 +1,47 @@
+import org.apache.commons.exec.*;
+
 import java.io.*;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Random;
-import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.Scanner;
 
 /**
  * Vladimir Ulyantsev Date: 24.04.13 Time: 19:15
  */
 public class CryptominisatPort {
-	public static int counter = 0;
-	public static String netData, addData;
-
-	static void permute(List<String> arr, int k){
-        for(int i = k; i < arr.size(); i++){
-            java.util.Collections.swap(arr, i, k);
-            permute(arr, k+1);
-            java.util.Collections.swap(arr, k, i);
-        }
-        if (k == arr.size() -1){
-        	String ans = netData + "c solve point for iterate solver\n";
-			for (String s : arr) {
-				ans += (s + "c solve point for iterate solver\n");
-			}
-			ans += (addData + "c solve point for iterate solver\n");
-			File tmpFile = new File("tmp" + counter + ".cnf");
-			PrintWriter tmpPW;
-			try {
-				tmpPW = new PrintWriter(tmpFile);
-				tmpPW.print(ans);
-				tmpPW.close();
-				counter += 1;
-			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-        }
-    }
-	
-
 	public static boolean[] solve(String CNFString, PrintWriter CNFPrintWriter, PrintWriter solverPrintWriter,
 			long timeLimit, long[] executionTime, String solverOptions) throws IOException {
 		if (CNFPrintWriter != null) {
 			CNFPrintWriter.println(CNFString);
 			CNFPrintWriter.flush();
 		}
-		String[] pieces = CNFString.split("c solve point for iterate solver\n");
-		netData = pieces[0];
-		addData = pieces[pieces.length - 1];
-		List<String> treesData = new ArrayList<String>();
-		for (int i = 1; i <= pieces.length - 2; i++) {
-			treesData.add(pieces[i]);
-		}
-		counter = 0;
-		permute(treesData, 0);
-		int nThreads = Math.min(20, counter);
-		List<Integer> nFiles = new ArrayList<Integer>();
-		for (int i = 0; i < counter; i++){
-			nFiles.add(i);
-		}
-		long seed = System.nanoTime();
-		Collections.shuffle(nFiles, new Random(seed));
-		nFiles = nFiles.subList(0, nThreads);
-		
-		long curTime = System.currentTimeMillis();
-	
-		ExecutorService executorService = Executors.newFixedThreadPool(nThreads);
-		Set<Callable<String>> callables = new HashSet<Callable<String>>();
-		for (int i = 0; i < nThreads; i++) {
-			final String file = "tmp" + nFiles.get(i) + ".cnf";
-			callables.add(new Callable<String>() {
-				public String call() throws Exception {
-					String command = solverOptions + " " + file;
-					Runtime runtime = Runtime.getRuntime();
-				    Process process = runtime.exec(command);
-				    BufferedReader outputReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-					String ansLine = "";
-					String line;
-					while ((line = outputReader.readLine()) != null) {
-						if (solverPrintWriter != null) {
-							solverPrintWriter.println(line);
-						}
-						if (line.length() > 0 && line.charAt(0) == 'v') {
-							ansLine += line.substring(2);
-							if (!(line.charAt(line.length() - 1) == ' '))
-								ansLine += " ";
-						}
-					}
-					outputReader.close();
 
-					return ansLine;
-				}
-			});
-		}
-		String ansLine = "";
+		File tmpFile = new File("tmp.cnf");
+		PrintWriter tmpPW = new PrintWriter(tmpFile);
+		tmpPW.print(CNFString);
+		tmpPW.close();
+		String command = solverOptions + " tmp.cnf";
+		CommandLine cmdLine = CommandLine.parse(command);
+
+		DefaultExecutor executor = new DefaultExecutor();
+		DefaultExecuteResultHandler resultHandler = new DefaultExecuteResultHandler();
+
+		executor.setExitValue(20);
+		ExecuteWatchdog watchdog = new ExecuteWatchdog(timeLimit);
+		executor.setWatchdog(watchdog);
+
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		ByteArrayOutputStream errStream = new ByteArrayOutputStream();
+		PumpStreamHandler streamHandler = new PumpStreamHandler(outputStream, errStream);
+		executor.setStreamHandler(streamHandler);
+
+		long curTime = System.currentTimeMillis();
 		try {
-			ansLine = executorService.invokeAny(callables, timeLimit, TimeUnit.MILLISECONDS);
-			executorService.shutdown();
-		} catch (InterruptedException | ExecutionException | TimeoutException e) {
-			// TODO Auto-generated catch block
+			executor.execute(cmdLine, resultHandler);
+			resultHandler.waitFor();
+		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
+
 		executionTime[0] = System.currentTimeMillis() - curTime;
 		if (executionTime[0] > timeLimit) {
 			executionTime[0] = -1;
@@ -118,7 +52,25 @@ public class CryptominisatPort {
 			PrintWriter unr_cnf = new PrintWriter(unresolved_cnf);
 			unr_cnf.print(CNFString);
 			unr_cnf.close();
+
 		}
+
+		String ansLine = "";
+		Scanner input = new Scanner(outputStream.toString());
+		String line;
+		while (input.hasNextLine()) {
+			line = input.nextLine();
+			if (solverPrintWriter != null) {
+				solverPrintWriter.println(line);
+			}
+			if (line.length() > 0 && line.charAt(0) == 'v') {
+				ansLine += line.substring(2);
+				if (!(line.charAt(line.length() - 1) == ' '))
+					ansLine += " ";
+			}
+		}
+		input.close();
+		// tmpFile.delete();
 
 		if (ansLine.isEmpty()) {
 			return null;
