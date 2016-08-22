@@ -2,5 +2,8 @@
 *.iml
 out
 soft
-*cnf
+*cnf*
+*.exe
 help
+gen
+*~

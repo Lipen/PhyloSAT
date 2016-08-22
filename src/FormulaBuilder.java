@@ -75,7 +75,7 @@ public class FormulaBuilder {
         addParentOrderConstraints();
         commentCNF("solve point for iterate solver");
         for (int treeNumber = 0; treeNumber < phTrees.size(); treeNumber++) {
-        	addDirUsedConstraints(treeNumber);
+            addDirUsedConstraints(treeNumber);
             if (this.enableReticulationConnection) {
                 addRUsedConstraints(treeNumber);
             }
@@ -86,7 +86,7 @@ public class FormulaBuilder {
         }
 
         addALOdirConstraints();
-        
+
         for (int treeNumber = 0; treeNumber < phTrees.size(); treeNumber++) {
             for (int otherTree = 0; otherTree < phTrees.size(); otherTree++) {
                 if (treeNumber != otherTree) {
@@ -107,10 +107,10 @@ public class FormulaBuilder {
 
     private void addPairwiseAtMostOne(String varName, List<Integer> varFirst, Getter secondGetter) {
         commentCNF("At-most-one constraints for " + varName + "_v_u");
-        for(int nodeNumber : varFirst) {
-            for(int firstNumber : secondGetter.get(nodeNumber)) {
-                for(int secondNumber : secondGetter.get(nodeNumber)) {
-                    if(firstNumber < secondNumber) {
+        for (int nodeNumber : varFirst) {
+            for (int firstNumber : secondGetter.get(nodeNumber)) {
+                for (int secondNumber : secondGetter.get(nodeNumber)) {
+                    if (firstNumber < secondNumber) {
                         addClause(-getVar(varName, nodeNumber, firstNumber),
                                 -getVar(varName, nodeNumber, secondNumber));
                     }
@@ -119,8 +119,7 @@ public class FormulaBuilder {
         }
     }
 
-    static int log(int x, int base)
-    {
+    static int log(int x, int base) {
         return (int) Math.ceil(Math.log(x) / Math.log(base));
     }
 
@@ -140,12 +139,12 @@ public class FormulaBuilder {
         }
 
         commentCNF("At-most-one constraints for " + varName + "_v_u");
-        for(int nodeNumber : varFirst) {
+        for (int nodeNumber : varFirst) {
             int g = 2;
             List<List<Integer>> group = new ArrayList<>();
             int count = 0, grSize = 0;
-            for(int p : secondGetter.get(nodeNumber)) {
-                if(count == 0) {
+            for (int p : secondGetter.get(nodeNumber)) {
+                if (count == 0) {
                     group.add(new ArrayList<Integer>());
                     grSize++;
                 }
@@ -153,10 +152,10 @@ public class FormulaBuilder {
                 count = (count + 1) % g;
             }
 
-            for(int grNum = 0; grNum < grSize; ++grNum) {
-                for(int varNumber : group.get(grNum)) {
-                    for(int bit = 0; bit < log(grSize, 2); ++bit) {
-                        if((grNum & (1 << bit)) != 0) {
+            for (int grNum = 0; grNum < grSize; ++grNum) {
+                for (int varNumber : group.get(grNum)) {
+                    for (int bit = 0; bit < log(grSize, 2); ++bit) {
+                        if ((grNum & (1 << bit)) != 0) {
                             addClause(-getVar(varName, nodeNumber, varNumber),
                                     getVar("cmd" + varName, nodeNumber, bit));
                         } else {
@@ -164,8 +163,8 @@ public class FormulaBuilder {
                                     -getVar("cmd" + varName, nodeNumber, bit));
                         }
                     }
-                    for(int secondVarNumber : group.get(grNum)) {
-                        if(varNumber < secondVarNumber) {
+                    for (int secondVarNumber : group.get(grNum)) {
+                        if (varNumber < secondVarNumber) {
                             addClause(-getVar(varName, nodeNumber, varNumber),
                                     -getVar(varName, nodeNumber, secondVarNumber));
                         }
@@ -534,58 +533,58 @@ public class FormulaBuilder {
         }
     }
 
-    private void addALOdirConstraints(){
-    	commentCNF("ALO for different dirs");
-    	for (int nodeNumber : reticulationNodes()) {
-    		String clauseLeft = "";
-    		String clauseRight = "";
-    		for (int treeNumber = 0; treeNumber < phTrees.size(); treeNumber++) {
-    			clauseLeft += getVar("dir", treeNumber, nodeNumber) + " ";
-    			clauseRight += -getVar("dir", treeNumber, nodeNumber) + " ";
-    		}
-    		
-    		addClause(clauseLeft);
-    		addClause(clauseRight);
-    	}
+    private void addALOdirConstraints() {
+        commentCNF("ALO for different dirs");
+        for (int nodeNumber : reticulationNodes()) {
+            String clauseLeft = "";
+            String clauseRight = "";
+            for (int treeNumber = 0; treeNumber < phTrees.size(); treeNumber++) {
+                clauseLeft += getVar("dir", treeNumber, nodeNumber) + " ";
+                clauseRight += -getVar("dir", treeNumber, nodeNumber) + " ";
+            }
+
+            addClause(clauseLeft);
+            addClause(clauseRight);
+        }
     }
 
-    private void addParentOrderConstraints(){
-    	commentCNF("add constraints for order on different parents");
-    	for (int i : treeNodes()){
-    		if (treeNodes().contains(i + 1)){
-    			addAllParentOrderPairConstraints(i, treeNodes());
-    			addAllParentOrderPairConstraints(i, reticulationNodes());
-    		}
-    	}
-    	for (int i : reticulationNodes()){
-    		if (reticulationNodes().contains(i + 1)){
-    	    	for (int j : treeNodes()){
-    				for (int k : treeNodes()){
-    					if (possibleChildren(i).contains(j) && possibleChildren(i + 1).contains(k)){
-    						int p_j_i = -getVar("parent", j, i);
-    						int p_k_i_1 = -getVar("parent", k, i + 1);
-    						addClause(p_j_i + " " + p_k_i_1);
-    					}
-    				}
-    	    	}
-    		}
-    				
-    	}
-    		
+    private void addParentOrderConstraints() {
+        commentCNF("add constraints for order on different parents");
+        for (int i : treeNodes()) {
+            if (treeNodes().contains(i + 1)) {
+                addAllParentOrderPairConstraints(i, treeNodes());
+                addAllParentOrderPairConstraints(i, reticulationNodes());
+            }
+        }
+        for (int i : reticulationNodes()) {
+            if (reticulationNodes().contains(i + 1)) {
+                for (int j : treeNodes()) {
+                    for (int k : treeNodes()) {
+                        if (possibleChildren(i).contains(j) && possibleChildren(i + 1).contains(k)) {
+                            int p_j_i = -getVar("parent", j, i);
+                            int p_k_i_1 = -getVar("parent", k, i + 1);
+                            addClause(p_j_i + " " + p_k_i_1);
+                        }
+                    }
+                }
+            }
+
+        }
+
     }
-    
-    private void addAllParentOrderPairConstraints(int i, List<Integer> nodes){
-    	for (int j : nodes){
-			for (int k : nodes){
-				if (possibleParents(i).contains(j) && possibleParents(i + 1).contains(k)){
-					if (k < j){
-						int p_i_j = -getVar("parent", i, j);
-						int p_i_1_k = -getVar("parent", i + 1, k);
-						addClause(p_i_j + " " + p_i_1_k);
-					}
-				}
-			}
-		}
+
+    private void addAllParentOrderPairConstraints(int i, List<Integer> nodes) {
+        for (int j : nodes) {
+            for (int k : nodes) {
+                if (possibleParents(i).contains(j) && possibleParents(i + 1).contains(k)) {
+                    if (k < j) {
+                        int p_i_j = -getVar("parent", i, j);
+                        int p_i_1_k = -getVar("parent", i + 1, k);
+                        addClause(p_i_j + " " + p_i_1_k);
+                    }
+                }
+            }
+        }
     }
 
     private void addRUsedConstraints(int treeNumber) {
@@ -994,7 +993,7 @@ public class FormulaBuilder {
         return ans;
     }
 
-	private List<Integer> possibleParents(int nodeNumber) {
+    private List<Integer> possibleParents(int nodeNumber) {
         if (nodeNumber < 0 || nodeNumber >= treeNodesCount + k) {
             throw new RuntimeException("Node number out of bounds");
         }
@@ -1015,8 +1014,8 @@ public class FormulaBuilder {
             }
         }
         if (enableReticulationConnection && nodeNumber >= treeNodesCount)
-			ans.add(nodeNumber + 1);
-	
+            ans.add(nodeNumber + 1);
+
         return ans;
     }
 
@@ -1054,7 +1053,7 @@ public class FormulaBuilder {
         return ans;
     }
 
-    private String getKey(String type, int ... params) {
+    private String getKey(String type, int... params) {
         String key = type;
         for (int p : params) {
             key += "_" + p;
@@ -1062,12 +1061,12 @@ public class FormulaBuilder {
         return key;
     }
 
-    private int createVar(String type, int ... params) {
+    private int createVar(String type, int... params) {
         m.put(getKey(type, params), m.size() + 1);
         return m.size();
     }
 
-    private int getVar(String type, int ... params) {
+    private int getVar(String type, int... params) {
         return m.get(getKey(type, params));
     }
 
@@ -1086,7 +1085,7 @@ public class FormulaBuilder {
         clausesCount++;
     }
 
-    private void addClause(int ... literals) {
+    private void addClause(int... literals) {
         String clause = "";
         for (int literal : literals) {
             clause += literal + " ";

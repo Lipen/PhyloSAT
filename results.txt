@@ -1,0 +1,2 @@
+k = 5, cnf -- 956 sec
+k = 5, bee -- 724 sec

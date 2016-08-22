@@ -41,6 +41,11 @@ public class CryptominisatPort {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
+        if (resultHandler.getException() != null) {
+            System.err.println(">>> !!! <<<");
+            resultHandler.getException().printStackTrace();
+//            System.exit(1);
+        }
 
 		executionTime[0] = System.currentTimeMillis() - curTime;
 		if (executionTime[0] > timeLimit) {
