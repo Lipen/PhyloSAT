@@ -9,15 +9,15 @@ import java.util.Map;
  */
 public class NetworkBuilder {
     public static PhylogeneticNetwork gvNetwork(Map<String, Integer> m, boolean[] solution, List<PhylogeneticTree> trees, int k) {
-        List< List<Integer> > graph = new ArrayList<>();
+        List<List<Integer>> graph = new ArrayList<>();
         boolean hasFictitiousRoot = trees.get(0).hasFictitiousRoot();
         int networkSize = trees.get(0).size() + 2 * k;
         int taxaSize = trees.get(0).getTaxaSize();
-        if(hasFictitiousRoot) {
+        if (hasFictitiousRoot) {
             networkSize -= 2;
             taxaSize -= 1;
         }
-        for(int i = 0; i < networkSize; ++i) {
+        for (int i = 0; i < networkSize; ++i) {
             graph.add(i, new ArrayList<Integer>());
         }
 
@@ -30,7 +30,7 @@ public class NetworkBuilder {
                 if (splitted[0].equals("left") || splitted[0].equals("right") || splitted[0].equals("ch")) {
                     int src = Integer.parseInt(splitted[1]);
                     int dst = Integer.parseInt(splitted[2]);
-                    if(hasFictitiousRoot) {
+                    if (hasFictitiousRoot) {
                         if (src > trees.get(0).size() + k - 1) {
                             src -= 2;
                         } else if (src >= trees.get(0).getTaxaSize()) {
@@ -47,8 +47,8 @@ public class NetworkBuilder {
             }
         }
 
-        List <String> labels = new ArrayList<>();
-        for(int i = 0; i < taxaSize; ++i) {
+        List<String> labels = new ArrayList<>();
+        for (int i = 0; i < taxaSize; ++i) {
             labels.add(trees.get(0).getLabel(i));
         }
 

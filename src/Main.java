@@ -214,7 +214,7 @@ public class Main {
     private PhylogeneticNetwork solveSubtaskWithoutUNSAT(List<PhylogeneticTree> trees) throws IOException {
         int CHECK_FIRST = 3;
         long FIRST_TIME_LIMIT = 1000; // timelimit is 1 second due to paper
-        long MAX_TL = 100000; // 100 seconds? Too small? FIXME
+        long MAX_TL = 1000_000; // 1000 seconds? Too small? FIXME
         // long TL_COEF = 50;
 
         int mink = 0;
@@ -245,28 +245,32 @@ public class Main {
         // }
 
         // why ascending? descending is faster
-//		int l = mink, r = k + 1;
-//		while (l < r) {
-//			cur = solveSubtask(trees, l, MAX_TL, time);
-//			if (cur == null) {
-//				l = l + 1;
-//			} else {
-//				res = cur;
-//				break;
-//			}
-//		}
-//		return res;
-
-        while (k >= mink) {
-            PhylogeneticNetwork temp = solveSubtask(trees, k, MAX_TL, time);
-            if (temp == null) {
-                return cur;
+        int l = mink, r = k + 1;
+        while (l < r) {
+            cur = solveSubtask(trees, l, MAX_TL, time);
+            if (cur == null) {
+                l = l + 1;
+            } else {
+                break;
             }
-            cur = temp;
-            k--;
         }
-        assert false; // should never happen I think FIXME
-        return null;
+        return cur;
+
+        // TODO
+        // Heuristics: descending from upper bound with step 2 (or sqrt(k - 3))
+        // When found UNSAT case, roll back to the last known SAT - 1 and continue
+        // with step 1 (or max(last_step / 2, 1))
+
+//        while (k >= mink) {
+//            PhylogeneticNetwork temp = solveSubtask(trees, k, MAX_TL, time);
+//            if (temp == null) {
+//                return cur;
+//            }
+//            cur = temp;
+//            k--;
+//        }
+//        assert false; // should never happen I think FIXME
+//        return null;
     }
 
     private int calcUpperBound(List<PhylogeneticTree> trees) {
