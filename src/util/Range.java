@@ -7,6 +7,7 @@ import java.util.Random;
 /**
  * @author Moklev Vyacheslav
  */
+// TODO maybe make Range reusable as Iterable
 public class Range implements Iterable<Integer>, Iterator<Integer> {
     private int start;
     private int end;
