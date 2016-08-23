@@ -57,7 +57,6 @@ public class CryptominisatPort {
 			PrintWriter unr_cnf = new PrintWriter(unresolved_cnf);
 			unr_cnf.print(CNFString);
 			unr_cnf.close();
-
 		}
 
 		String ansLine = "";
