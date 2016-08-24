@@ -7,11 +7,9 @@ import java.util.Random;
 /**
  * @author Moklev Vyacheslav
  */
-// TODO maybe make Range reusable as Iterable
-public class Range implements Iterable<Integer>, Iterator<Integer> {
+public class Range implements Iterable<Integer> {
     private int start;
     private int end;
-    private int current;
 
     /**
      * Creates closed range of integers
@@ -22,28 +20,39 @@ public class Range implements Iterable<Integer>, Iterator<Integer> {
     public Range(int start, int end) {
         this.start = start;
         this.end = end;
-        current = start;
     }
 
     @Override
     public Iterator<Integer> iterator() {
-        return this;
-    }
-
-    @Override
-    public boolean hasNext() {
-        return current <= end;
-    }
-
-    @Override
-    public Integer next() {
-        if (current <= end) {
-            return current++;
-        }
-        throw new NoSuchElementException();
+        return new RangeIterator();
     }
 
     public FilteredIterable intersect(Iterable<? extends Integer> iterable) {
         return new FilteredIterable(x -> x >= start && x <= end, iterable);
+    }
+
+    public boolean contains(int x) {
+        return x >= start && x <= end;
+    }
+
+    private class RangeIterator implements Iterator<Integer> {
+        private int current;
+
+        public RangeIterator() {
+            current = start;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return current <= end;
+        }
+
+        @Override
+        public Integer next() {
+            if (current <= end) {
+                return current++;
+            }
+            throw new NoSuchElementException();
+        }
     }
 }

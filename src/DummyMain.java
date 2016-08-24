@@ -1,16 +1,37 @@
+import jebl.evolution.io.NewickImporter;
+import jebl.evolution.trees.SimpleRootedTree;
+import jebl.evolution.trees.Tree;
+import util.FilteredIterable;
 import util.Range;
 
+import java.io.*;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author Moklev Vyacheslav
  */
 public class DummyMain {
-    public static void main(String[] args) {
-        List<Integer> list = Arrays.asList(1, 7, 8, 3, 7, 2, 3, 9, 4, 10, 2, -12, 3, 4, 6, 2, 8, 4, 12, 19);
-        for (int x: new Range(3, 8).intersect(list)) {
-            System.out.print(x + ", ");
+    public static void main(String[] args) throws IOException {
+        List<SimpleRootedTree> trees = new ArrayList<>();
+        String filePath = "C:\\Users\\slava\\Downloads\\PhyloSAT-master\\PhyloSAT\\data\\simple.tre";
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(filePath));
+            NewickImporter importer = new NewickImporter(reader, false);
+            trees.addAll(importer.importTrees().stream().map(tree -> (SimpleRootedTree) tree).collect(Collectors.toList()));
+            reader.close();
+        } catch (Exception ignored) {}
+
+        List<PhylogeneticTree> inputTrees = new ArrayList<>();
+        for (SimpleRootedTree srt : trees) {
+            PhylogeneticTree inputTree = new PhylogeneticTree(srt);
+            inputTrees.add(inputTree);
         }
+
+        PrintWriter pw = new PrintWriter(new FileWriter("out.keksik"), true);
+        pw.print(new BEEFormulaBuilder(inputTrees, 3, false).build());
+        pw.close();
     }
 }
