@@ -5,7 +5,7 @@ import beepp.util.RangeUnion;
 /**
  * @author Moklev Vyacheslav
  */
-public class IntegerVariable extends Variable {
+public class IntegerVariable extends Variable { // TODO implements IntegerExpression
     private RangeUnion domain;
     private boolean isDual;
 
