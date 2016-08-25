@@ -3,7 +3,7 @@ package beepp.expression;
 import beepp.util.Pair;
 
 /**
- * @author Моклев Вячеслав
+ * @author Vyacheslav Moklev
  */
 public interface Expression {
     Pair<String, String> compile();

@@ -3,7 +3,7 @@ package beepp.expression;
 import beepp.util.Pair;
 
 /**
- * @author Moklev Vyacheslav
+ * @author Vyacheslav Moklev
  */
 public class BooleanVariable extends Variable implements BooleanExpression {
     public BooleanVariable(String name) {

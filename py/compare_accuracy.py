@@ -1,4 +1,4 @@
-# Script to compare accuracy on random data
+# Script right compare accuracy on random data
 # Author: Vladimir Ulyantsev
 
 import random

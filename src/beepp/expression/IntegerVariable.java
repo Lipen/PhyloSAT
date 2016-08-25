@@ -1,11 +1,12 @@
 package beepp.expression;
 
+import beepp.util.Pair;
 import beepp.util.RangeUnion;
 
 /**
- * @author Moklev Vyacheslav
+ * @author Vyacheslav Moklev
  */
-public class IntegerVariable extends Variable { // TODO implements IntegerExpression
+public class IntegerVariable extends Variable implements IntegerExpression {
     private RangeUnion domain;
     private boolean isDual;
 
@@ -25,5 +26,10 @@ public class IntegerVariable extends Variable { // TODO implements IntegerExpres
 
     public IntegerVariable(String name, RangeUnion domain) {
         this(name, domain, false);
+    }
+
+    @Override
+    public Pair<String, String> compile() {
+        return new Pair<>("", name);
     }
 }

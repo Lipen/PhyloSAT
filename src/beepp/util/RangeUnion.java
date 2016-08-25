@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * @author Moklev Vyacheslav
+ * @author Vyacheslav Moklev
  */
 public class RangeUnion {
     private List<AtomicRange> ranges;

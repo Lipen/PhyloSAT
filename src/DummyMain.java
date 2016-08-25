@@ -1,6 +1,4 @@
-import beepp.expression.BooleanExpression;
-import beepp.expression.BooleanVariable;
-import beepp.expression.UniformBooleanOperation;
+import beepp.expression.*;
 import beepp.util.Pair;
 import beepp.util.RangeUnion;
 import jebl.evolution.io.NewickImporter;
@@ -17,13 +15,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * @author Moklev Vyacheslav
+ * @author Vyacheslav Moklev
  */
 public class DummyMain {
     public static void main(String[] args) throws IOException {
-        BooleanExpression expr = new BooleanVariable("a").and(new BooleanVariable("b")).then(
-            new BooleanVariable("c").or(new BooleanVariable("d"))
-        );
+        BooleanExpression expr = new IntegerVariable("x", 0, 10).less(new IntegerVariable("y", 5, 5));
         System.out.println(expr.holds());
         /*List<SimpleRootedTree> trees = new ArrayList<>();
         String filePath = "C:\\Users\\slava\\Downloads\\PhyloSAT-master\\PhyloSAT\\data\\simple.tre";

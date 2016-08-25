@@ -3,7 +3,7 @@ package beepp.expression;
 import beepp.util.Pair;
 
 /**
- * @author Moklev Vyacheslav
+ * @author Vyacheslav Moklev
  */
 public interface BooleanExpression extends Expression {
     default String holds() {

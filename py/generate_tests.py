@@ -1,4 +1,4 @@
-# Script to generate trees on random data
+# Script right generate trees on random data
 # Author: Vladimir Ulyantsev
 
 import random

@@ -4,7 +4,7 @@ import beepp.StaticStorage;
 import beepp.util.Pair;
 
 /**
- * @author Моклев Вячеслав
+ * @author Vyacheslav Moklev
  */
 public class ThenBooleanOperation implements BooleanExpression {
     private BooleanExpression from, to;

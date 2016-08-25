@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * @author Моклев Вячеслав
+ * @author Vyacheslav Moklev
  */
 public class UniformBooleanOperation implements BooleanExpression {
     private List<BooleanExpression> list;

@@ -1,7 +1,7 @@
 package beepp.util;
 
 /**
- * @author Моклев Вячеслав
+ * @author Vyacheslav Moklev
  */
 public class Pair<U, V> {
     public U a;

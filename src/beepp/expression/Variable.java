@@ -1,7 +1,7 @@
 package beepp.expression;
 
 /**
- * @author Moklev Vyacheslav
+ * @author Vyacheslav Moklev
  */
 public abstract class Variable {
     protected String name;
