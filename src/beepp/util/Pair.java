@@ -11,4 +11,9 @@ public class Pair<U, V> {
         this.a = a;
         this.b = b;
     }
+
+    @Override
+    public String toString() {
+        return "(" + a + ", " + b + ")";
+    }
 }

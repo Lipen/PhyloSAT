@@ -1,3 +1,7 @@
+import beepp.expression.BooleanExpression;
+import beepp.expression.BooleanVariable;
+import beepp.expression.UniformBooleanOperation;
+import beepp.util.Pair;
 import beepp.util.RangeUnion;
 import jebl.evolution.io.NewickImporter;
 import jebl.evolution.trees.SimpleRootedTree;
@@ -17,9 +21,10 @@ import java.util.stream.Collectors;
  */
 public class DummyMain {
     public static void main(String[] args) throws IOException {
-        RangeUnion rangeUnion = new RangeUnion(1, 2, 3, 4, 5, 6);
-        System.out.println(rangeUnion);
-        System.out.println(rangeUnion);
+        BooleanExpression expr = new BooleanVariable("a").and(new BooleanVariable("b")).then(
+            new BooleanVariable("c").or(new BooleanVariable("d"))
+        );
+        System.out.println(expr.holds());
         /*List<SimpleRootedTree> trees = new ArrayList<>();
         String filePath = "C:\\Users\\slava\\Downloads\\PhyloSAT-master\\PhyloSAT\\data\\simple.tre";
         try {
