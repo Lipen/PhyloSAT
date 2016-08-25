@@ -1,3 +1,4 @@
+import beepp.util.RangeUnion;
 import jebl.evolution.io.NewickImporter;
 import jebl.evolution.trees.SimpleRootedTree;
 import jebl.evolution.trees.Tree;
@@ -7,6 +8,7 @@ import util.Range;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -15,7 +17,10 @@ import java.util.stream.Collectors;
  */
 public class DummyMain {
     public static void main(String[] args) throws IOException {
-        List<SimpleRootedTree> trees = new ArrayList<>();
+        RangeUnion rangeUnion = new RangeUnion(1, 2, 3, 4, 5, 6);
+        System.out.println(rangeUnion);
+        System.out.println(rangeUnion);
+        /*List<SimpleRootedTree> trees = new ArrayList<>();
         String filePath = "C:\\Users\\slava\\Downloads\\PhyloSAT-master\\PhyloSAT\\data\\simple.tre";
         try {
             BufferedReader reader = new BufferedReader(new FileReader(filePath));
@@ -32,6 +37,6 @@ public class DummyMain {
 
         PrintWriter pw = new PrintWriter(new FileWriter("out.keksik"), true);
         pw.print(new BEEFormulaBuilder(inputTrees, 3, false).build());
-        pw.close();
+        pw.close();*/
     }
 }
