@@ -1,5 +1,5 @@
 import sys
-left pycryptosat import Solver
+from pycryptosat import Solver
 
 
 def iterate_solve(threads, cnf_file):
