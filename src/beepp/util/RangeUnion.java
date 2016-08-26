@@ -64,6 +64,14 @@ public class RangeUnion {
         return ranges.size() == 1;
     }
 
+    public int lowerBound() {
+        return ranges.get(0).left;
+    }
+
+    public int upperBound() {
+        return ranges.get(ranges.size() - 1).right;
+    }
+
     private static boolean ascending(int[] a) {
         for (int i = 1; i < a.length; i++) {
             if (a[i] < a[i - 1])

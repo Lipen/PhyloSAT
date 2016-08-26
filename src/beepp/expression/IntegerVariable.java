@@ -29,6 +29,16 @@ public class IntegerVariable extends Variable implements IntegerExpression {
     }
 
     @Override
+    public int lowerBound() {
+        return domain.lowerBound();
+    }
+
+    @Override
+    public int upperBound() {
+        return domain.upperBound();
+    }
+
+    @Override
     public Pair<String, String> compile() {
         return new Pair<>("", name);
     }

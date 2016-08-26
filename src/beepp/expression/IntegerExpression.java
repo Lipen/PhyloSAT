@@ -4,6 +4,11 @@ package beepp.expression;
  * @author Vyacheslav Moklev
  */
 public interface IntegerExpression extends Expression {
+
+    int lowerBound();
+
+    int upperBound();
+
     default IntegerExpression plus(IntegerExpression expr) {
         return new BinaryIntegerOperation("plus", this, expr);
     }
@@ -26,6 +31,22 @@ public interface IntegerExpression extends Expression {
 
     default IntegerExpression min(IntegerExpression expr) {
         return new BinaryIntegerOperation("min", this, expr);
+    }
+
+    default IntegerExpression groupPlus(IntegerExpression... expr) {
+        return new UniformIntegerOperation("plus", this, expr);
+    }
+
+    default IntegerExpression groupTimes(IntegerExpression... expr) {
+        return new UniformIntegerOperation("times", this, expr);
+    }
+
+    default IntegerExpression groupMax(IntegerExpression... expr) {
+        return new UniformIntegerOperation("max", this, expr);
+    }
+
+    default IntegerExpression groupMin(IntegerExpression... expr) {
+        return new UniformIntegerOperation("min", this, expr);
     }
 
     default BooleanExpression equals(IntegerExpression expr) {

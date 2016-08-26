@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
  */
 public class DummyMain {
     public static void main(String[] args) throws IOException {
-        BooleanExpression expr = new IntegerVariable("x", 0, 10).less(new IntegerVariable("y", 5, 5));
+        BooleanExpression expr = new IntegerVariable("x", 0, 10).groupPlus(new IntegerVariable("y", -10, 10)).greater(new IntegerVariable("z", 0, 1));
         System.out.println(expr.holds());
         /*List<SimpleRootedTree> trees = new ArrayList<>();
         String filePath = "C:\\Users\\slava\\Downloads\\PhyloSAT-master\\PhyloSAT\\data\\simple.tre";
