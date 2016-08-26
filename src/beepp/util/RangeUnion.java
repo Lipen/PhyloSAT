@@ -82,7 +82,17 @@ public class RangeUnion {
 
     @Override
     public String toString() {
-        return ranges.toString();
+        return "[" + ranges.stream()
+                .map(atomicRange -> {
+                    if (atomicRange.isSingular())
+                        return atomicRange.left + "";
+                    else
+                        return (atomicRange.left < 0 ? "(" + atomicRange.left + ")" : atomicRange.left + "")
+                                + "-" +
+                                (atomicRange.right < 0 ? "(" + atomicRange.right + ")" : atomicRange.right + "");
+                })
+                .collect(Collectors.joining(", "))
+                + "]";
     }
 
     private static class AtomicRange implements Comparable<AtomicRange> {
@@ -106,6 +116,10 @@ public class RangeUnion {
 
         public boolean intersects(AtomicRange another) {
             return contains(another.left) || contains(another.right);
+        }
+
+        public boolean isSingular() {
+            return left == right;
         }
 
         @Override

@@ -11,6 +11,11 @@ public class BooleanVariable extends Variable implements BooleanExpression {
     }
 
     @Override
+    public String getDeclaration() {
+        return "new_bool(" + name + ")";
+    }
+
+    @Override
     public Pair<String, String> compile() {
         return new Pair<>("", name);
     }

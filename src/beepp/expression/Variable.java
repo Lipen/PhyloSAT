@@ -13,4 +13,6 @@ public abstract class Variable {
     public String getName() {
         return name;
     }
+
+    public abstract String getDeclaration();
 }

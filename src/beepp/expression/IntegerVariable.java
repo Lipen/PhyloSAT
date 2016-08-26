@@ -29,6 +29,24 @@ public class IntegerVariable extends Variable implements IntegerExpression {
     }
 
     @Override
+    public String getDeclaration() {
+        if (isDual) {
+            if (domain.isAtomicRange()) {
+                return "new_int_dual(" + name + ", " + domain.lowerBound() + ", " + domain.upperBound() + ")";
+            } else {
+                return "new_int(" + name + ", " + domain + ")\n" +
+                        "channel_int2direct(" + name + ")";
+            }
+        } else {
+            if (domain.isAtomicRange()) {
+                return "new_int(" + name + ", " + domain.lowerBound() + ", " + domain.upperBound() + ")";
+            } else {
+                return "new_int(" + name + ", " + domain + ")";
+            }
+        }
+    }
+
+    @Override
     public int lowerBound() {
         return domain.lowerBound();
     }
