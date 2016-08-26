@@ -9,6 +9,10 @@ public interface IntegerExpression extends Expression {
 
     int upperBound();
 
+    default IntegerExpression negate() {
+        return new NegateExpression(this);
+    }
+
     default IntegerExpression plus(IntegerExpression expr) {
         return new BinaryIntegerOperation("plus", this, expr);
     }

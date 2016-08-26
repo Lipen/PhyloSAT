@@ -11,6 +11,10 @@ public interface BooleanExpression extends Expression {
         return compiled.a + (compiled.a.isEmpty() ? "" : "\n") + "bool_eq(" + compiled.b + ", true)";
     }
 
+    default BooleanExpression not() {
+        return new NegateExpression(this);
+    }
+
     default BooleanExpression and(BooleanExpression... exprs) {
         return new UniformBooleanOperation("and", this, exprs);
     }

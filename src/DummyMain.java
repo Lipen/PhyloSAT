@@ -19,14 +19,14 @@ import java.util.stream.Collectors;
  */
 public class DummyMain {
     public static void main(String[] args) throws IOException {
-        IntegerVariable x = new IntegerVariable("x", 0, 10);
-        IntegerVariable y = new IntegerVariable("y", 0, 10);
-        IntegerVariable z = new IntegerVariable("z", 0, 10);
-        BooleanExpression expr = x.groupPlus(y, z).equals(new IntegerVariable("27", 27, 27));
+        IntegerVariable x = new IntegerVariable("x", -10, 10);
+        IntegerVariable y = new IntegerVariable("y", -10, 10);
+        BooleanExpression expr1 = x.times(x).plus(y.times(y)).equals(new IntegerConstant(100));
+        BooleanExpression expr2 = x.plus(y).equals(new IntegerConstant(14));
         System.out.println(x.getDeclaration());
         System.out.println(y.getDeclaration());
-        System.out.println(z.getDeclaration());
-        System.out.println(expr.holds());
+        System.out.println(expr1.holds());
+        System.out.println(expr2.holds());
         /*List<SimpleRootedTree> trees = new ArrayList<>();
         String filePath = "C:\\Users\\slava\\Downloads\\PhyloSAT-master\\PhyloSAT\\data\\simple.tre";
         try {
