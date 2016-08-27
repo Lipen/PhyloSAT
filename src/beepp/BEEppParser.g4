@@ -2,6 +2,10 @@ parser grammar BEEppParser;
 
 options {tokenVocab = BEEppLexer;}
 
+file
+    :   (variableDefinition | boolExpr)*
+    ;
+
 variableDefinition
     :   'int' ID ':' domain
     |   'dual_int' ID ':' domain

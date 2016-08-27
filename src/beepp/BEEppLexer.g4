@@ -44,7 +44,7 @@ LEFT_BRACKET:   '(';
 RIGHT_BRACKET:  ')';
 
 // Base tokens
-INT_CONST:  '-'?[1-9][0-9]*;
+INT_CONST:  '0' | '-'?[1-9][0-9]*;
 BOOL_CONST: 'true' | 'false';
 ID:         [a-zA-Z_]+ [a-zA-Z0-9_]*;
 
