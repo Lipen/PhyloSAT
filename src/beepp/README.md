@@ -16,7 +16,7 @@ where `<domain>` is a union of ranges or a single range: `0..10` or `-10..-5, -4
     
 #### Constraints
 * Supported operations: 
-    * for int: `+`, `*`, `/`, `%`, `min`, `max`
+    * for int: `+`, `*`, `/`, `%`, `min`, `max`, `<`, `<=`, `>`, `>=`, `=`, `!=`
     * for bool: `|`, `&`, `^`, `=`, `->`
     * unary minus for negation, bool and int supported
     
