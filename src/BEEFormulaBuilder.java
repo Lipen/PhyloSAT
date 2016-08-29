@@ -1,3 +1,4 @@
+import beepp.util.RangeUnion;
 import util.FilteredIterable;
 import util.Range;
 
@@ -39,31 +40,74 @@ public class BEEFormulaBuilder {
 
     private void declareNetworkStructureConstraints() {
         declareChildrenOrder();
-        // TODO implement
         declareParentsOrder();
         declareParentChildrenConnection();
-//        declareParentChildrenOrderR();
+        declareParentChildrenOrderR();
     }
 
-    // ∀v ∈ V. l_v < r_v
     private void declareChildrenOrder() {
         for (int v : V()) {
-            println("int_lt(", var("l", v), ", ", var("r", v), ")");
+            println(var("l", v), " < ", var("r", v));
         }
     }
 
     private void declareParentsOrder() {
         for (int v : R()) {
-            println("int_lt(", var("pl", v), ", ", var("pr", v), ")");
+            println(var("pl", v), " < ", var("pr", v));
         }
     }
 
     private void declareParentChildrenConnection() {
-        // TODO implement
         declareParentChildrenConnectionVV();
-//        declareParentChildrenConnectionVR();
-//        declareParentChildrenConnectionRV();
-//        declareParentChildrenConnectionRR();
+        declareParentChildrenConnectionVR();
+        declareParentChildrenConnectionRV();
+        declareParentChildrenConnectionRR();
+    }
+
+    private void declareParentChildrenConnectionVV() {
+        for (int v : V()) {
+            for (int u : V().intersect(PC(v))) {
+                printlnf("%s = %d => %s = %d", var("l", v), u, var("p", u), v);
+                printlnf("%s = %d => %s = %d", var("r", v), u, var("p", u), v);
+                printlnf("%s = %d => (%s = %d | %s = %d)", var("p", u), v, var("l", v), u, var("r", v), u);
+            }
+        }
+    }
+
+    private void declareParentChildrenConnectionVR() {
+        for (int v: V()) {
+            for (int u: R().intersect(PC(v))) {
+                printlnf("%s = %d => (%s = %d | %s = %d)", var("l", v), u, var("pl", u), v, var("pr", u), v);
+                printlnf("%s = %d => (%s = %d | %s = %d)", var("r", v), u, var("pl", u), v, var("pr", u), v);
+                printlnf("%s = %d => (%s = %d | %s = %d)", var("pl", u), v, var("l", v), u, var("r", v), u);
+                printlnf("%s = %d => (%s = %d | %s = %d)", var("pr", u), v, var("l", v), u, var("r", v), u);
+            }
+        }
+    }
+
+    private void declareParentChildrenConnectionRV() {
+        for (int v: R()) {
+            for (int u: V().intersect(PC(v))) {
+                printlnf("%s = %d <=> %s = %d", var("c", v), u, var("p", u), v);
+            }
+        }
+    }
+
+    private void declareParentChildrenConnectionRR() {
+        for (int v: R()) {
+            for (int u: R().intersect(PC(v))) {
+                printlnf("%s = %d => (%s = %d | %s = %d)", var("c", v), u, var("pl", u), v, var("pr", u), v);
+                printlnf("%s = %d => %s = %d", var("pl", u), v, var("c", v), u);
+                printlnf("%s = %d => %s = %d", var("pr", u), v, var("c", v), u);
+            }
+        }
+    }
+
+    private void declareParentChildrenOrderR() {
+        for (int v: R()) {
+            println(var("c", v), " < ", var("pl", v));
+            println(var("c", v), " < ", var("pr", v));
+        }
     }
 
     private void println(Object... parts) {
@@ -73,46 +117,8 @@ public class BEEFormulaBuilder {
         sb.append("\n");
     }
 
-    private void declareParentChildrenConnectionVV() {
-        for (int v : V()) {
-            for (int u : V().intersect(PC(v))) {
-                /* (l_v = u) ⇒ (p_u = v) */
-                {
-                    String temp1 = tempVar();
-                    String temp2 = tempVar();
-                    declareBool(temp1);
-                    declareBool(temp2);
-                    println("int_eq_reif(", var("l", v), ", ", u, ", ", temp1, ")");
-                    println("int_eq_reif(", var("p", u), ", ", v, ", ", temp2, ")");
-                    println("bool_ite(", temp1, ", ", temp2, ", true)");
-                }
-                /* (r_v = u) ⇒ (p_u = v) */
-                {
-                    String temp1 = tempVar();
-                    String temp2 = tempVar();
-                    declareBool(temp1);
-                    declareBool(temp2);
-                    println("int_eq_reif(", var("r", v), ", ", u, ", ", temp1, ")");
-                    println("int_eq_reif(", var("p", u), ", ", v, ", ", temp2, ")");
-                    println("bool_ite(", temp1, ", ", temp2, ", true)");
-                }
-                /* (p_u = v) ⇒ (l_v = u || r_v = u) */
-                {
-                    // TODO optimize count of temp variables?
-                    String temp1 = tempVar();
-                    String temp2 = tempVar();
-                    String temp3 = tempVar();
-                    String temp4 = tempVar();
-                    declareBool(temp1);
-                    declareBool(temp2);
-                    println("int_eq_reif(", var("p", u), ", ", v, ", ", temp1, ")");
-                    println("int_eq_reif(", var("l", v), ", ", u, ", ", temp2, ")");
-                    println("int_eq_reif(", var("r", v), ", ", u, ", ", temp3, ")");
-                    println("bool_or_reif(", temp2, ", ", temp3, ", ", temp4, ")");
-                    println("bool_ite(", temp1, ", ", temp4, ", true)");
-                }
-            }
-        }
+    private void printlnf(String format, Object... args) {
+        sb.append(String.format(format + "\n", args));
     }
 
     private String tempVar() {
@@ -120,23 +126,33 @@ public class BEEFormulaBuilder {
     }
 
     private void declareBool(String name) {
-        println("new_bool(", name, ")");
+        println("bool ", name);
+    }
+
+    private void declareInt(String name, RangeUnion domain) {
+        //println("int ", name, ": ", domain.toBEEppString()); TODO uncomment when bug will be fixed
+        println("int ", name, ": ", domain.lowerBound(), "..", domain.upperBound());
     }
 
     private void declareInt(String name, int min, int max) {
         if (min > max)
             throw new IllegalArgumentException("Trying to declare int with min > max (" + min + " > " + max + ")");
-        println("new_int(", name, ", ", min, ", ", max, ")");
+        declareInt(name, new RangeUnion(min, max));
     }
 
     private void declareInt(String name, Iterable<Integer> domain) {
-        // stands for domain.empty()
-        if (!domain.iterator().hasNext())
+        if (!domain.iterator().hasNext()) // stands for domain.empty()
             throw new IllegalArgumentException("Trying to declare int with an empty domain");
-        declareInt(name, min(domain), max(domain)); // TODO if domain is not range -- use "make_int(X, D)"
+        RangeUnion ranges = new RangeUnion();
+        // TODO improve performance
+        for (int x: domain) {
+            ranges.addRange(x, x);
+        }
+        declareInt(name, ranges);
     }
 
     private void declareVariables() {
+        // Network structure
         for (int v : V()) {
             declareInt(var("l", v), PC(v));
             declareInt(var("r", v), PC(v));
@@ -149,6 +165,25 @@ public class BEEFormulaBuilder {
             declareInt(var("pr", v), PP(v));
             declareInt(var("c", v), PC(v));
         }
+        // Trees to network mapping
+        for (int vt: Vt()) {
+            for (int t: T()) {
+                declareInt(var("x", vt, t), V());
+            }
+        }
+        for (int v: R()) {
+            for (int t: T()) {
+                declareBool(var("d", v, t));
+                declareBool(var("ur", v, t));
+            }
+        }
+        for (int v: V()) {
+            for (int t : T()) {
+                declareBool(var("u", v, t));
+                declareInt(var("a", v, t), PU(v));
+            }
+        }
+        // TODO add more
     }
 
     private Integer min(Iterable<? extends Integer> iterable) {
@@ -167,6 +202,14 @@ public class BEEFormulaBuilder {
                 curMax = x;
         }
         return curMax;
+    }
+
+    private Range Vt() {
+        return new Range(n + 1, 2 * n); // TODO check
+    }
+
+    private Range T() {
+        return new Range(0, trees.size() - 1);
     }
 
     private int root() {

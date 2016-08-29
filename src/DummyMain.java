@@ -1,29 +1,23 @@
+import beepp.BEEppCompiler;
 import beepp.expression.*;
 import beepp.parser.BEEppLexer;
 import beepp.parser.BEEppParser;
 import beepp.util.Pair;
+import jebl.evolution.io.NewickImporter;
+import jebl.evolution.trees.SimpleRootedTree;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 
 import java.io.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Vyacheslav Moklev
  */
 public class DummyMain {
     public static void main(String[] args) throws IOException {
-        ANTLRInputStream inputStream = new ANTLRInputStream(new FileInputStream("in.beepp"));
-        BEEppLexer lexer = new BEEppLexer(inputStream);
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
-        BEEppParser parser = new BEEppParser(tokens);
-        Pair<Map<String, Variable>, List<BooleanExpression>> model = parser.file().model;
-
-        PrintWriter pw = new PrintWriter("out.bee");
-        model.a.values().forEach(variable -> pw.println(variable.getDeclaration()));
-        model.b.forEach(booleanExpression -> pw.println(booleanExpression.holds()));
-        pw.close();
-        /*List<SimpleRootedTree> trees = new ArrayList<>();
+        List<SimpleRootedTree> trees = new ArrayList<>();
         String filePath = "C:\\Users\\slava\\Downloads\\PhyloSAT-master\\PhyloSAT\\data\\simple.tre";
         try {
             BufferedReader reader = new BufferedReader(new FileReader(filePath));
@@ -40,6 +34,8 @@ public class DummyMain {
 
         PrintWriter pw = new PrintWriter(new FileWriter("out.keksik"), true);
         pw.print(new BEEFormulaBuilder(inputTrees, 3, false).build());
-        pw.close();*/
+        pw.close();
+
+        BEEppCompiler.compile(new FileInputStream("out.keksik"), new FileOutputStream("out.bee"));
     }
 }

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicMarkableReference;
 import java.util.stream.Collectors;
 
 /**
@@ -58,6 +59,16 @@ public class RangeUnion {
         ranges.add(newRange);
         ranges = ranges.stream().filter(r -> r != null).collect(Collectors.toList());
         Collections.sort(ranges);
+        for (int i = 0; i < ranges.size() - 1; i++) {
+            AtomicRange first = ranges.get(i);
+            AtomicRange second = ranges.get(i + 1);
+            if (first.right + 1 == second.left) {
+                second = new AtomicRange(first.left, second.right);
+                ranges.set(i, null);
+                ranges.set(i + 1, second);
+            }
+        }
+        ranges = ranges.stream().filter(r -> r != null).collect(Collectors.toList());
     }
 
     public boolean isAtomicRange() {
@@ -78,6 +89,12 @@ public class RangeUnion {
                 return false;
         }
         return true;
+    }
+
+    public String toBEEppString() {
+        return ranges.stream()
+                .map(atomicRange -> atomicRange.left + ".." + atomicRange.right)
+                .collect(Collectors.joining(", "));
     }
 
     @Override
