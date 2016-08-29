@@ -102,7 +102,7 @@ public class FormulaBuilder {
     }
 
     private interface Getter {
-        public List<Integer> get(int i);
+        List<Integer> get(int i);
     }
 
     private void addPairwiseAtMostOne(String varName, List<Integer> varFirst, Getter secondGetter) {

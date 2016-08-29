@@ -1,32 +1,28 @@
 import beepp.expression.*;
+import beepp.parser.BEEppLexer;
+import beepp.parser.BEEppParser;
 import beepp.util.Pair;
-import beepp.util.RangeUnion;
-import jebl.evolution.io.NewickImporter;
-import jebl.evolution.trees.SimpleRootedTree;
-import jebl.evolution.trees.Tree;
-import util.FilteredIterable;
-import util.Range;
+import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.CommonTokenStream;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.*;
 
 /**
  * @author Vyacheslav Moklev
  */
 public class DummyMain {
     public static void main(String[] args) throws IOException {
-        IntegerVariable x = new IntegerVariable("x", -10, 10);
-        IntegerVariable y = new IntegerVariable("y", -10, 10);
-        BooleanExpression expr1 = x.times(x).plus(y.times(y)).equals(new IntegerConstant(100));
-        BooleanExpression expr2 = x.plus(y).equals(new IntegerConstant(14));
-        System.out.println(x.getDeclaration());
-        System.out.println(y.getDeclaration());
-        System.out.println(expr1.holds());
-        System.out.println(expr2.holds());
+        ANTLRInputStream inputStream = new ANTLRInputStream(new FileInputStream("in.beepp"));
+        BEEppLexer lexer = new BEEppLexer(inputStream);
+        CommonTokenStream tokens = new CommonTokenStream(lexer);
+        BEEppParser parser = new BEEppParser(tokens);
+        Pair<Map<String, Variable>, List<BooleanExpression>> model = parser.file().model;
+
+        PrintWriter pw = new PrintWriter("out.bee");
+        model.a.values().forEach(variable -> pw.println(variable.getDeclaration()));
+        model.b.forEach(booleanExpression -> pw.println(booleanExpression.holds()));
+        pw.close();
         /*List<SimpleRootedTree> trees = new ArrayList<>();
         String filePath = "C:\\Users\\slava\\Downloads\\PhyloSAT-master\\PhyloSAT\\data\\simple.tre";
         try {
