@@ -151,7 +151,7 @@ public class Main {
 
             PhylogeneticNetwork cur;
             if (hn >= 0) {
-                cur = solveSubtask(subtaskTrees, hn, 1000000, new long[1]);
+                cur = solveSubtask(subtaskTrees, hn, 1_000_000, new long[1]);
             } else {
                 cur = solveSubtaskWithoutUNSAT(subtaskTrees);
             }

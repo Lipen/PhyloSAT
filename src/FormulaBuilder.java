@@ -807,12 +807,7 @@ public class FormulaBuilder {
 //                return treeNodes();
 //            }
 //        });
-        addBimanderAtMostOne("x_" + treeNumber, first, new Getter() {
-            @Override
-            public List<Integer> get(int i) {
-                return treeNodes();
-            }
-        });
+        addBimanderAtMostOne("x_" + treeNumber, first, i -> treeNodes());
 
 //        commentCNF("At-most-one constraints for x_" + treeNumber + "_tv_v");
 //        for (int treeNodeNumber = n; treeNodeNumber < 2 * n - 1; treeNodeNumber++) {

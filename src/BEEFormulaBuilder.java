@@ -35,7 +35,18 @@ public class BEEFormulaBuilder {
 
     private void declareConstraints() {
         declareNetworkStructureConstraints();
+        declareTreesToNetworkMapping();
         // TODO add more constraints
+    }
+
+    private void declareTreesToNetworkMapping() {
+        // TODO implement
+//        declareAMOx();
+//        declareXUConnection();
+//        declareRootMapping();
+//        declareLeafXAConnection();
+//        declareVerticeXAConnection(); // 4.1 - 4.3
+//        declareHeuristicsConstraints();
     }
 
     private void declareNetworkStructureConstraints() {
