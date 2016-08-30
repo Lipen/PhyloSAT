@@ -38,6 +38,8 @@ range returns [Pair<Integer, Integer> r]
 
 boolExpr returns [BooleanExpression expr] locals [String op]
     :   boolPrimary {$expr = $boolPrimary.expr;}
+    |   ('AMO' {$op = "AMO";}) '(' boolExprList? ')'
+        {$expr = new AtMostOneOperation($boolExprList.list);} // TODO check if boolExprList present
     |   i1=intExpr
         (  '<=' {$op = "leq";}
         |  '>=' {$op = "geq";}
@@ -58,6 +60,11 @@ boolPrimary returns [BooleanExpression expr]
     :   '(' boolExpr ')' {$expr = $boolExpr.expr;}
     |   BOOL_CONST {$expr = BooleanConstant.valueOf($BOOL_CONST.text.toUpperCase());}
     |   ID {$expr = (BooleanExpression) vars.get($ID.text);}
+    ;
+
+boolExprList returns [List<BooleanExpression> list]
+    :   {$list = new ArrayList<>();} b1=boolExpr {$list.add($b1.expr);}
+        (',' bc=boolExpr {$list.add($bc.expr);})*
     ;
 
 intExpr returns [IntegerExpression expr] locals [String op]
@@ -93,7 +100,7 @@ intPrimary returns [IntegerExpression expr]
     |   ID {$expr = (IntegerExpression) vars.get($ID.text);}
     ;
 
-
-intExprList
-    :   intExpr (',' intExpr)*
+intExprList returns [List<IntegerExpression> list]
+    :   {$list = new ArrayList<>();} i1=intExpr {$list.add($i1.expr);}
+        (',' ic=intExpr {$list.add($ic.expr);})*
     ;

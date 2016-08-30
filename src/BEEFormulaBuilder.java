@@ -41,12 +41,24 @@ public class BEEFormulaBuilder {
 
     private void declareTreesToNetworkMapping() {
         // TODO implement
-//        declareAMOx();
+        declareAMOx();
 //        declareXUConnection();
 //        declareRootMapping();
 //        declareLeafXAConnection();
-//        declareVerticeXAConnection(); // 4.1 - 4.3
+//        declareVertex-XAConnection(); // 4.1 - 4.3
 //        declareHeuristicsConstraints();
+    }
+
+    private void declareAMOx() {
+        for (int v: V()) {
+            for (int t: T()) {
+                List<String> list = new ArrayList<>();
+                for (int vt: Vt()) {
+                    list.add(var("x", vt, t) + " = " + v);
+                }
+                println("AMO(" + list.stream().collect(Collectors.joining(", ")), ")");
+            }
+        }
     }
 
     private void declareNetworkStructureConstraints() {
@@ -295,8 +307,8 @@ public class BEEFormulaBuilder {
     private String var(String prefix, int... params) {
         // TODO maybe add some runtime check: if all created vars where declared?
         return prefix + Arrays.stream(params)
-                .mapToObj(Integer::toString)
-                .collect(Collectors.joining("_"));
+                .mapToObj(x -> "_" + x)
+                .collect(Collectors.joining());
     }
 
 }

@@ -27,6 +27,7 @@ AND:        '&';
 XOR:        '^';
 IFF:        '=';
 ARROW:      '->';
+AMO:        'AMO';
 
 // Boolean operations: alternative notation
 ALT_OR:     'or' -> type(OR);

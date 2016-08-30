@@ -8,7 +8,11 @@ import beepp.util.Pair;
 public interface BooleanExpression extends Expression {
     default String holds() {
         Pair<String, String> compiled = compile();
-        return compiled.a + (compiled.a.isEmpty() ? "" : "\n") + "bool_eq(" + compiled.b + ", true)";
+        if (compiled.b != null) {
+            return compiled.a + (compiled.a.isEmpty() ? "" : "\n") + "bool_eq(" + compiled.b + ", true)";
+        } else {
+            return compiled.a;
+        }
     }
 
     default BooleanExpression not() {
