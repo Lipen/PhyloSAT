@@ -3,6 +3,8 @@ package beepp.expression;
 import beepp.util.Pair;
 import beepp.util.RangeUnion;
 
+import java.util.Map;
+
 /**
  * @author Vyacheslav Moklev
  */
@@ -59,5 +61,15 @@ public class IntegerVariable extends Variable implements IntegerExpression {
     @Override
     public Pair<String, String> compile() {
         return new Pair<>("", name);
+    }
+
+    @Override
+    public int eval(Map<String, Object> vars) {
+        Object obj = vars.get(name);
+        try {
+            return (int) obj;
+        } catch (ClassCastException e) {
+            throw new IllegalArgumentException("Variable \"" + name + "\" is not int");
+        }
     }
 }

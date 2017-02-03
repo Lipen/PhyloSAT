@@ -1,5 +1,6 @@
 package beepp;
 
+import beepp.expression.BinaryIntegerOperation;
 import beepp.expression.BooleanExpression;
 import beepp.expression.Variable;
 import beepp.parser.BEEppLexer;
@@ -16,7 +17,7 @@ import java.util.Map;
  * @author Moklev Vyacheslav
  */
 public class BEEppCompiler {
-    public static void compile(InputStream source, OutputStream destination) throws IOException {
+    public static List<BooleanExpression> compile(InputStream source, OutputStream destination) throws IOException {
         StaticStorage.lastTempVar = 0;
         ANTLRInputStream inputStream = new ANTLRInputStream(source);
         BEEppLexer lexer = new BEEppLexer(inputStream);
@@ -29,5 +30,6 @@ public class BEEppCompiler {
         model.b.forEach(booleanExpression -> pw.println(booleanExpression.holds()));
         pw.println("solve satisfy");
         pw.flush();
+        return model.b;
     }
 }

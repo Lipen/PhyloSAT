@@ -1,11 +1,10 @@
 package beepp.expression;
 
-import beepp.StaticStorage;
 import beepp.util.Pair;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -30,5 +29,13 @@ public class AtMostOneOperation implements BooleanExpression {
         }
         constraints.add("bool_array_sum_leq(" + names + ", 1)");
         return new Pair<>(constraints.stream().collect(Collectors.joining("\n")), null);
+    }
+
+    @Override
+    public boolean eval(Map<String, Object> vars) {
+        return list.stream()
+                .map(e -> e.eval(vars))
+                .filter(v -> v)
+                .count() <= 1;
     }
 }

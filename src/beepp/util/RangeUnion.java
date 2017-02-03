@@ -17,19 +17,6 @@ public class RangeUnion {
         ranges = new ArrayList<>();
     }
 
-    public RangeUnion(int... bounds) {
-        this();
-        if (bounds.length % 2 == 1) {
-            throw new IllegalArgumentException("Odd number of bounds");
-        }
-        if (!ascending(bounds)) {
-            throw new IllegalArgumentException("Bounds are not sorted in the ascending order");
-        }
-        for (int i = 0; i < bounds.length / 2; i++) {
-            ranges.add(new AtomicRange(bounds[2 * i], bounds[2 * i + 1]));
-        }
-    }
-
     public void addRange(int left, int right) {
         AtomicRange newRange = new AtomicRange(left, right);
         int leftIntersectionId = -1;
@@ -69,6 +56,19 @@ public class RangeUnion {
             }
         }
         ranges = ranges.stream().filter(r -> r != null).collect(Collectors.toList());
+    }
+
+    public RangeUnion(int... bounds) {
+        this();
+        if (bounds.length % 2 == 1) {
+            throw new IllegalArgumentException("Odd number of bounds");
+        }
+        if (!ascending(bounds)) {
+            throw new IllegalArgumentException("Bounds are not sorted in the ascending order");
+        }
+        for (int i = 0; i < bounds.length / 2; i++) {
+            ranges.add(new AtomicRange(bounds[2 * i], bounds[2 * i + 1]));
+        }
     }
 
     public boolean isAtomicRange() {

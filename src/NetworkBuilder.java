@@ -18,7 +18,7 @@ public class NetworkBuilder {
             taxaSize -= 1;
         }
         for (int i = 0; i < networkSize; ++i) {
-            graph.add(i, new ArrayList<Integer>());
+            graph.add(i, new ArrayList<>());
         }
 
         for (String s : m.keySet()) {

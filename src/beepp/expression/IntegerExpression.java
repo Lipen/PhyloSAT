@@ -1,5 +1,7 @@
 package beepp.expression;
 
+import java.util.Map;
+
 /**
  * @author Vyacheslav Moklev
  */
@@ -54,27 +56,28 @@ public interface IntegerExpression extends Expression {
     }
 
     default BooleanExpression equals(IntegerExpression expr) {
-        return new BinaryIntegerOperation("eq", this, expr);
+        return new BinaryIntBooleanOperation("eq", this, expr);
     }
 
     default BooleanExpression notEquals(IntegerExpression expr) {
-        return new BinaryIntegerOperation("neq", this, expr);
+        return new BinaryIntBooleanOperation("neq", this, expr);
     }
 
     default BooleanExpression lessEq(IntegerExpression expr) {
-        return new BinaryIntegerOperation("leq", this, expr);
+        return new BinaryIntBooleanOperation("leq", this, expr);
     }
 
     default BooleanExpression greaterEq(IntegerExpression expr) {
-        return new BinaryIntegerOperation("geq", this, expr);
+        return new BinaryIntBooleanOperation("geq", this, expr);
     }
 
     default BooleanExpression less(IntegerExpression expr) {
-        return new BinaryIntegerOperation("lt", this, expr);
+        return new BinaryIntBooleanOperation("lt", this, expr);
     }
 
     default BooleanExpression greater(IntegerExpression expr) {
-        return new BinaryIntegerOperation("gt", this, expr);
+        return new BinaryIntBooleanOperation("gt", this, expr);
     }
 
+    int eval(Map<String, Object> vars);
 }

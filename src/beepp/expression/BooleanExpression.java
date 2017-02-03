@@ -2,6 +2,8 @@ package beepp.expression;
 
 import beepp.util.Pair;
 
+import java.util.Map;
+
 /**
  * @author Vyacheslav Moklev
  */
@@ -16,7 +18,7 @@ public interface BooleanExpression extends Expression {
     }
 
     default BooleanExpression not() {
-        return new NegateExpression(this);
+        return new NegateBooleanExpression(this);
     }
 
     default BooleanExpression and(BooleanExpression... exprs) {
@@ -38,4 +40,6 @@ public interface BooleanExpression extends Expression {
     default BooleanExpression then(BooleanExpression expr) {
         return new ThenBooleanOperation(this, expr);
     }
+    
+    boolean eval(Map<String, Object> vars);
 }

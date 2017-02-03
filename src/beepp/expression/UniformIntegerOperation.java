@@ -6,7 +6,9 @@ import beepp.util.Pair;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * @author Vyacheslav Moklev
@@ -90,7 +92,7 @@ public class UniformIntegerOperation implements IntegerExpression {
     public Pair<String, String> compile() {
         List<String> constraints = new ArrayList<>();
         List<String> names = new ArrayList<>();
-        for (IntegerExpression expr: list) {
+        for (IntegerExpression expr : list) {
             Pair<String, String> compiled = expr.compile();
             if (!compiled.a.isEmpty())
                 constraints.add(compiled.a);
@@ -100,5 +102,25 @@ public class UniformIntegerOperation implements IntegerExpression {
         constraints.add("new_int(" + newVar + ", " + lowerBound() + ", " + upperBound() + ")");
         constraints.add("int_array_" + op + "(" + names + ", " + newVar + ")");
         return new Pair<>(constraints.stream().collect(Collectors.joining("\n")), newVar);
+    }
+
+    @Override
+    public int eval(Map<String, Object> vars) {
+        IntStream stream = list.stream()
+                .mapToInt(e -> e.eval(vars));
+        switch (op) {
+            case "plus":
+                return stream.sum();
+            case "times":
+                return stream.reduce(1, (a, b) -> a * b);
+            case "min":
+                return stream.min().orElseThrow(() -> 
+                        new IllegalArgumentException("Minimum of empty list"));
+            case "max":
+                return stream.max().orElseThrow(() ->
+                        new IllegalArgumentException("Maximum of empty list"));
+            default:
+                throw new IllegalArgumentException("Unknown op: \"" + op + "\"");
+        }
     }
 }

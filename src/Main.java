@@ -295,9 +295,9 @@ public class Main {
         FormulaBuilder builder = new FormulaBuilder(trees, k, m, enableReticulationEdges, disableComments);
         String cnf = builder.buildCNF();
         String help = builder.getHelpMap();
+        System.out.println("help: " + help);
         logger.info("CNF formula has " + builder.getVariablesCount() + " variables, " + builder.getClausesCount()
                 + " clauses and its length is " + cnf.length() + " characters");
-
         try {
             PrintWriter cnfPrintWriter = new PrintWriter(new File(cnfFilePath));
             cnfPrintWriter.print(cnf);

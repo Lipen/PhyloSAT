@@ -47,19 +47,24 @@ boolExpr returns [BooleanExpression expr] locals [String op]
         |  '<'  {$op = "lt";}
         |  '='  {$op = "eq";}
         |  '!=' {$op = "neq";}
-        ) i2=intExpr {$expr = new BinaryIntegerOperation($op, $i1.expr, $i2.expr);}
-    |   e1=boolExpr '&' e2=boolExpr  {$expr = $e1.expr.and($e2.expr);}
-    |   e1=boolExpr '^' e2=boolExpr  {$expr = $e1.expr.xor($e2.expr);}
-    |   e1=boolExpr '|' e2=boolExpr  {$expr = $e1.expr.or($e2.expr);}
-    |   e1=boolExpr '=' e2=boolExpr  {$expr = $e1.expr.iff($e2.expr);}
-    |   e1=boolExpr '->' e2=boolExpr {$expr = $e1.expr.then($e2.expr);}
+        ) i2=intExpr {$expr = new BinaryIntBooleanOperation($op, $i1.expr, $i2.expr);}
+    |   e1=boolExpr '&' e2=boolExpr   {$expr = $e1.expr.and($e2.expr);}
+    |   e1=boolExpr '^' e2=boolExpr   {$expr = $e1.expr.xor($e2.expr);}
+    |   e1=boolExpr '|' e2=boolExpr   {$expr = $e1.expr.or($e2.expr);}
+    |   e1=boolExpr '<=>' e2=boolExpr {$expr = $e1.expr.iff($e2.expr);}
+    |   e1=boolExpr '->' e2=boolExpr  {$expr = $e1.expr.then($e2.expr);}
     // |   <assoc=right> e1=expr '?' e2=expr ':' e3=expr // TODO implement
     ;
 
 boolPrimary returns [BooleanExpression expr]
     :   '(' boolExpr ')' {$expr = $boolExpr.expr;}
     |   BOOL_CONST {$expr = BooleanConstant.valueOf($BOOL_CONST.text.toUpperCase());}
-    |   ID {$expr = (BooleanExpression) vars.get($ID.text);}
+    |   ID {
+              $expr = (BooleanExpression) vars.get($ID.text);
+              if ($expr == null)
+                  throw new IllegalArgumentException("Variable was not declared: " + $ID.text);
+           }
+    |   '!' boolPrimary { $expr = new NegateBooleanExpression($boolPrimary.expr); }
     ;
 
 boolExprList returns [List<BooleanExpression> list]
@@ -70,7 +75,6 @@ boolExprList returns [List<BooleanExpression> list]
 intExpr returns [IntegerExpression expr] locals [String op]
     :   intPrimary {$expr = $intPrimary.expr;}
     // |   ('min' {$op = "min";} | 'max' {$op = "max";}) '(' intExprList? ')' TODO implement
-    |   '-' intExpr {$expr = new NegateExpression($intExpr.expr);}
     |   e1=intExpr
         (   '*' {$op = "times";}
         |   '/' {$op = "div";}
@@ -97,7 +101,12 @@ intExpr returns [IntegerExpression expr] locals [String op]
 intPrimary returns [IntegerExpression expr]
     :   '(' intExpr ')' {$expr = $intExpr.expr;}
     |   INT_CONST {$expr = new IntegerConstant(Integer.parseInt($INT_CONST.text));}
-    |   ID {$expr = (IntegerExpression) vars.get($ID.text);}
+    |   ID {
+               $expr = (IntegerExpression) vars.get($ID.text);
+               if ($expr == null)
+                   throw new IllegalArgumentException("Variable was not declared: " + $ID.text);
+           }
+    |   '-' intPrimary {$expr = new NegateExpression($intPrimary.expr);}
     ;
 
 intExprList returns [List<IntegerExpression> list]

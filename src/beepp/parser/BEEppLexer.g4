@@ -22,10 +22,12 @@ GREATER_EQ: '>=';
 NOT_EQ:     '!=';
 
 // Boolean operations
+NOT:        '!';
 OR:         '|';
 AND:        '&';
 XOR:        '^';
-IFF:        '=';
+EQ:         '=';
+IFF:        '<=>';
 ARROW:      '->';
 AMO:        'AMO';
 
@@ -34,7 +36,6 @@ ALT_OR:     'or' -> type(OR);
 ALT_AND:    'and' -> type(AND);
 ALT_XOR:    'xor' -> type(XOR);
 ALT_IFF:    'iff' -> type(IFF);
-ALT2_IFF:   '<=>' -> type(IFF);
 ALT_ARROW:  '=>' -> type(ARROW);
 
 // Control sequences

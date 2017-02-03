@@ -35,11 +35,13 @@ public class PhylogeneticTree {
     private boolean fictitiousRoot;
 
     private PhylogeneticTree() {
-        this.nodes = new ArrayList<>(); 
+        this.nodes = new ArrayList<>();
         fictitiousRoot = false;
     }
 
-    public boolean hasFictitiousRoot() { return fictitiousRoot; }
+    public boolean hasFictitiousRoot() {
+        return fictitiousRoot;
+    }
 
     public PhylogeneticTree(PhylogeneticTree other) {
         this();
@@ -101,23 +103,23 @@ public class PhylogeneticTree {
     }
 
     public void addFictitiousRoot() {
-        if(fictitiousRoot) {
+        if (fictitiousRoot) {
             throw new RuntimeException("It is bad idea to add the second fictitious root!");
         }
 
         fictitiousRoot = true;
 
         int taxaSize = getTaxaSize();
-        for(PhylogeneticNode node : nodes) {
-            if(node.parent == -1) {
+        for (PhylogeneticNode node : nodes) {
+            if (node.parent == -1) {
                 node.parent = nodes.size() + 1;
             } else {
                 node.parent++;
             }
 
-            for(int i = 0; i < node.children.size(); ++i) {
+            for (int i = 0; i < node.children.size(); ++i) {
                 int child = node.children.get(i);
-                if(child >= taxaSize) {
+                if (child >= taxaSize) {
                     node.children.set(i, child + 1);
                 }
             }
@@ -130,7 +132,7 @@ public class PhylogeneticTree {
     }
 
     public void removeFictitiousRoot() {
-        if(!fictitiousRoot) {
+        if (!fictitiousRoot) {
             throw new RuntimeException("Tree does not have any fictitious root!");
         }
 
@@ -140,16 +142,16 @@ public class PhylogeneticTree {
         nodes.remove(fictitiousTaxaNum);
         nodes.remove(nodes.size() - 1);
 
-        for(PhylogeneticNode node : nodes) {
-            if(node.parent == nodes.size() + 1) {
+        for (PhylogeneticNode node : nodes) {
+            if (node.parent == nodes.size() + 1) {
                 node.parent = -1;
             } else {
                 node.parent--;
             }
 
-            for(int i = 0; i < node.children.size(); ++i) {
+            for (int i = 0; i < node.children.size(); ++i) {
                 int child = node.children.get(i);
-                if(child >= fictitiousTaxaNum) {
+                if (child >= fictitiousTaxaNum) {
                     node.children.set(i, child - 1);
                 }
             }

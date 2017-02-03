@@ -6,26 +6,14 @@ import beepp.util.Pair;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Vyacheslav Moklev
  */
-public class BinaryIntegerOperation implements IntegerExpression, BooleanExpression { // TODO split?
-    private enum ResultType {
-        INT("", "int"), BOOL("_reif", "bool");
-
-        private final String modifier;
-        private final String typeName;
-
-        ResultType(String modifier, String typeName) {
-            this.modifier = modifier;
-            this.typeName = typeName;
-        }
-    }
-
+public class BinaryIntegerOperation implements IntegerExpression{ 
     private IntegerExpression left, right;
     private String op;
-    private ResultType resultType;
 
     public BinaryIntegerOperation (String op, IntegerExpression left, IntegerExpression right) {
         this.left = left;
@@ -38,22 +26,14 @@ public class BinaryIntegerOperation implements IntegerExpression, BooleanExpress
             case "mod":
             case "max":
             case "min":
-                resultType = ResultType.INT;
                 break;
-            case "leq":
-            case "geq":
-            case "eq":
-            case "lt":
-            case "gt":
-            case "neq":
-                resultType = ResultType.BOOL;
+            default:
+                throw new IllegalArgumentException("Unsupported op: \"" + op + "\"");
         }
     }
 
     @Override
     public int lowerBound() {
-        if (!resultType.typeName.equals("int"))
-            throw new IllegalStateException("Operation is supported only for integer expression");
         switch (op) {
             case "plus":
                 return left.lowerBound() + right.lowerBound();
@@ -67,7 +47,7 @@ public class BinaryIntegerOperation implements IntegerExpression, BooleanExpress
                 return Collections.min(list);
             case "div":
                 throw new UnsupportedOperationException("Div is not supported for now");
-                // TODO ask Amit about div's result, rounding mode: to xero, to closest, to lower
+                // TODO ask Amit about div's result, rounding mode: to zero, to closest, to lower
             case "mod":
                 throw new UnsupportedOperationException("Mod is not supported for now");
                 // TODO ask Amit about mod's result range
@@ -82,10 +62,6 @@ public class BinaryIntegerOperation implements IntegerExpression, BooleanExpress
 
     @Override
     public int upperBound() {
-        if (!resultType.typeName.equals("int"))
-            throw new IllegalStateException("Operation is supported only for integer expression");
-        if (!resultType.typeName.equals("int"))
-            throw new IllegalStateException("Operation is supported only for integer expression");
         switch (op) {
             case "plus":
                 return left.upperBound() + right.upperBound();
@@ -99,7 +75,7 @@ public class BinaryIntegerOperation implements IntegerExpression, BooleanExpress
                 return Collections.max(list);
             case "div":
                 throw new UnsupportedOperationException("Div is not supported for now");
-                // TODO ask Amit about div's result, rounding mode: to xero, to closest, to lower
+                // TODO ask Amit about div's result, rounding mode: to zero, to closest, to lower
             case "mod":
                 throw new UnsupportedOperationException("Mod is not supported for now");
                 // TODO ask Amit about mod's result range
@@ -119,12 +95,30 @@ public class BinaryIntegerOperation implements IntegerExpression, BooleanExpress
         String constraints = cLeft.a + (cLeft.a.isEmpty() ? "" : "\n")
                 + cRight.a + (cRight.a.isEmpty() ? "" : "\n");
         String newVar = "temp" + StaticStorage.lastTempVar++;
-        if (resultType == ResultType.INT) {
-            constraints += "new_int(" + newVar + ", " + lowerBound() + ", " + upperBound() + ")\n";
-        } else {
-            constraints += "new_bool(" + newVar + ")\n";
-        }
-        constraints += "int_" + op + resultType.modifier + "(" + cLeft.b + ", " + cRight.b + ", " + newVar + ")";
+        constraints += "new_int(" + newVar + ", " + lowerBound() + ", " + upperBound() + ")\n";
+        constraints += "int_" + op + "(" + cLeft.b + ", " + cRight.b + ", " + newVar + ")";
         return new Pair<>(constraints, newVar);
+    }
+
+    @Override
+    public int eval(Map<String, Object> vars) {
+        int leftValue = left.eval(vars);
+        int rightValue = right.eval(vars);
+        switch (op) {
+            case "plus":
+                return leftValue + rightValue;
+            case "times":
+                return leftValue * rightValue;
+            case "div":
+                return leftValue / rightValue;
+            case "mod":
+                return leftValue % rightValue;
+            case "max":
+                return Math.max(leftValue, rightValue);
+            case "min":
+                return Math.min(leftValue, rightValue);
+            default:
+                throw new IllegalArgumentException("Unsupported op: \"" + op + "\"");
+        }
     }
 }

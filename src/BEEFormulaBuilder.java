@@ -22,33 +22,208 @@ public class BEEFormulaBuilder {
         this.trees = trees;
         this.k = hybridisationNumber;
         this.enableReticulationConnection = enableReticulationConnection;
-        this.n = trees.get(0).getTaxaSize() - 1; // TODO check
+        this.n = trees.get(0).getTaxaSize() - 1; 
         this.sb = new StringBuilder();
         this.tempVarCounter = 0;
+        System.out.println("n = " + n + ", k = " + k);
     }
 
     public String build() {
-        declareVariables();
-        declareConstraints();
+        declareVariables();     // [2/2] done
+        declareConstraints();   // [2/3] TODO
         return sb.toString();
     }
-
+    
     private void declareConstraints() {
-        declareNetworkStructureConstraints();
-        declareTreesToNetworkMapping();
-        // TODO add more constraints
+        declareNetworkStructureConstraints(); // [4/4] done
+        declareTreesToNetworkMapping();       // [6/7] TODO
+        declareParentChildrenRelation();      // [5/5] done
+    }
+
+    private void declareParentChildrenRelation() {
+        declarePCR1();    // done
+        declarePCR2();    // done
+        declarePCR3();    // done  
+        declarePCR4();    // done
+        declarePCR5();    // done
+    }
+
+    private void declarePCR5() {
+        for (int t: T()) {
+            for (int v: LV()) {
+                for (int u: R().intersect(PP(v))) {
+                    for (int w: PU(u)) {
+                        if (w <= v) {
+                            printlnf("%s = %d => %s != %d", var("p", v), u, var("a", u, t), w);
+                        } else {
+                            printlnf("(%s = %d & %s = %d) => %s = %d",
+                                    var("p", v), u, var("a", u, t), w, var("a", v, t), w);
+                            printlnf("(%s = %d & %s = %d) => %s = %d",
+                                    var("p", v), u, var("a", v, t), w, var("a", u, t), w);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void declarePCR4() {
+        for (int t: T()) {
+            for (int v: R()) {
+                for (int u: R().intersect(PP(v))) {
+                    printlnf("(%s = %d & %s & %s) => %s",
+                            var("pl", v), u, var("d", v, t), var("ur", v, t), var("ur", u, t));
+                    printlnf("(%s = %d & !%s & %s) => %s",
+                            var("pr", v), u, var("d", v, t), var("ur", v, t), var("ur", u, t));
+                    printlnf("(%s = %d & !%s) => !%s",
+                            var("c", u), v, var("ur", v, t), var("ur", u, t));
+                }
+                for (int u: V().intersect(PP(v))) {
+                    printlnf("(%s = %d & !%s) => !%s",
+                            var("pl", v), u, var("ur", v, t), var("u", u, t));
+                    printlnf("(%s = %d & !%s) => !%s",
+                            var("pr", v), u, var("ur", v, t), var("u", u, t));
+                }
+                for (int u: LV().intersect(PC(v))) {
+                    printlnf("%s = %d => %s", var("c", v), u, var("ur", v, t));
+                }
+            }
+        }
+    }
+
+    private void declarePCR3() {
+        for (int t: T()) {
+            for (int v: R()) {
+                for (int u: R().intersect(PP(v))) {
+                    printlnf("(%s = %d & !%s) => !%s",
+                            var("pl", v), u, var("d", v, t), var("ur", u, t));
+                    printlnf("(%s = %d & %s) => !%s",
+                            var("pr", v), u, var("d", v, t), var("ur", u, t));
+                }
+                for (int u: V().intersect(PP(v))) {
+                    printlnf("(%s = %d & !%s) => !%s",
+                            var("pl", v), u, var("d", v, t), var("u", u, t));
+                    printlnf("(%s = %d & %s) => !%s",
+                            var("pr", v), u, var("d", v, t), var("u", u, t));
+                }
+            }
+        }
+    }
+
+    private void declarePCR2() {
+        for (int t: T()) {
+            for (int v: R()) {
+                for (int u: R().intersect(PP(v))) {
+                    printlnf("(%s = %d & %s) => (%s = %s)", 
+                            var("pl", v), u, var("d", v, t), var("a", u, t), var("a", v, t));
+                    printlnf("(%s = %d & !%s) => (%s = %s)",
+                            var("pr", v), u, var("d", v, t), var("a", u, t), var("a", v, t));
+                }
+            }
+        } 
+        for (int t: T()) {
+            for (int v: R()) {
+                for (int u: V().intersect(PP(v))) {
+                    printlnf("(%s = %d & %s & %s) => %s = %d",
+                            var("pl", v), u, var("d", v, t), var("u", u, t), var("a", v, t), u);
+                    printlnf("(%s = %d & !%s & %s) => %s = %d",
+                            var("pr", v), u, var("d", v, t), var("u", u, t), var("a", v, t), u);
+                    printlnf("(%s = %d & %s & !%s) => %s = %s",
+                            var("pl", v), u, var("d", v, t), var("u", u, t), var("a", u, t), var("a", v, t));
+                    printlnf("(%s = %d & !%s & !%s) => %s = %s",
+                            var("pr", v), u, var("d", v, t), var("u", u, t), var("a", u, t), var("a", v, t));
+                }
+            }
+        }
+    }
+
+    private void declarePCR1() {
+        for (int t: T()) {
+            for (int v: V().union(L())) {
+                for (int u: V().intersect(PP(v))) {
+                    printlnf("%s = %d => (%s <=> %s = %d)", var("p", v), u, var("u", u, t), var("a", v, t), u);
+                    for (int w: PP(u)) {
+                        printlnf("(%s = %d & !%s) => (%s = %d <=> %s = %d)", var("p", v), u, var("u", u, t), 
+                                var("a", u, t), w, var("a", v, t), w);
+                    }
+                }
+            }
+        }
     }
 
     private void declareTreesToNetworkMapping() {
-        // TODO implement
-        declareAMOx();
-//        declareXUConnection();
-//        declareRootMapping();
-//        declareLeafXAConnection();
-//        declareVertex-XAConnection(); // 4.1 - 4.3
-//        declareHeuristicsConstraints();
+        declareAMOx();                    // done
+        declareXUConnection();            // done
+        declareRootMapping();             // done
+        declareLeafXAConnection();        // done
+        declareVertexXAConnection();      // done
+        declareMappingOrder();            // done
+        declareHeuristicsConstraints();   // TODO
     }
 
+    private void declareHeuristicsConstraints() {
+        // TODO absurdish
+    }
+
+    private void declareMappingOrder() {
+        for (int t: T()) {
+            for (int v: V()) {
+                for (int u: V()) {
+                    for (int vt: Vt()) {
+                        if (u < v) {
+                            Optional<Integer> maybeUt = parent(t, vt);
+                            if (maybeUt.isPresent()) {
+                                int ut = maybeUt.get();
+                                printlnf("(%s = %d) => (%s != %d)", var("x", vt, t), v, var("x", ut, t), u);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void declareVertexXAConnection() {
+        for (int t: T()) {
+            for (int v: V()) {
+                for (int vt: Vt()) {
+                    Optional<Integer> maybeUt = parent(t, vt);
+                    if (maybeUt.isPresent()) {
+                        int ut = maybeUt.get();
+                        printlnf("(%s = %d) => (%s = %s)", var("x", vt, t), v, var("x", ut, t), var("a", v, t));
+                    }
+                }
+            }
+        }
+    }
+
+    private void declareLeafXAConnection() {
+        for (int t: T()) {
+            for (int v: L()) {
+                // vt = v: same numeration of leaves in the net and trees
+                // noinspection OptionalGetWithoutIsPresent -- v is a leaf, so parent is always present
+                int ut = parent(t, v).get();
+                printlnf("%s = %s", var("x", ut, t), var("a", v, t));
+            }
+        }
+    }
+    
+    private void declareXUConnection() {
+        for (int t: T()) {
+            for (int vt: Vt()) {
+                for (int v : V()) {
+                    printlnf("(%s = %d) => %s", var("x", vt, t), v, var("u", v, t));
+                }
+            }
+        }
+    }
+    
+    private void declareRootMapping() {
+        for (int t: T()) {
+            printlnf("%s = %d", var("x", rootT(), t), root());
+        }
+    }  
+    
     private void declareAMOx() {
         for (int v: V()) {
             for (int t: T()) {
@@ -62,10 +237,10 @@ public class BEEFormulaBuilder {
     }
 
     private void declareNetworkStructureConstraints() {
-        declareChildrenOrder();
-        declareParentsOrder();
-        declareParentChildrenConnection();
-        declareParentChildrenOrderR();
+        declareChildrenOrder();             // done
+        declareParentsOrder();              // done
+        declareParentChildrenConnection();  // [4/4] done
+        declareParentChildrenOrderR();      // done
     }
 
     private void declareChildrenOrder() {
@@ -89,7 +264,7 @@ public class BEEFormulaBuilder {
 
     private void declareParentChildrenConnectionVV() {
         for (int v : V()) {
-            for (int u : V().intersect(PC(v))) {
+            for (int u : LV().intersect(PC(v))) {
                 printlnf("%s = %d => %s = %d", var("l", v), u, var("p", u), v);
                 printlnf("%s = %d => %s = %d", var("r", v), u, var("p", u), v);
                 printlnf("%s = %d => (%s = %d | %s = %d)", var("p", u), v, var("l", v), u, var("r", v), u);
@@ -110,7 +285,7 @@ public class BEEFormulaBuilder {
 
     private void declareParentChildrenConnectionRV() {
         for (int v: R()) {
-            for (int u: V().intersect(PC(v))) {
+            for (int u: LV().intersect(PC(v))) {
                 printlnf("%s = %d <=> %s = %d", var("c", v), u, var("p", u), v);
             }
         }
@@ -141,7 +316,7 @@ public class BEEFormulaBuilder {
     }
 
     private void printlnf(String format, Object... args) {
-        sb.append(String.format(format + "\n", args));
+        sb.append(String.format(format, args)).append('\n');
     }
 
     private String tempVar() {
@@ -153,8 +328,8 @@ public class BEEFormulaBuilder {
     }
 
     private void declareInt(String name, RangeUnion domain) {
-        //println("int ", name, ": ", domain.toBEEppString()); TODO uncomment when bug will be fixed
-        println("int ", name, ": ", domain.lowerBound(), "..", domain.upperBound());
+        println("int ", name, ": ", domain.toBEEppString()); // TODO uncomment when bug will be fixed
+//        println("int ", name, ": ", domain.lowerBound(), "..", domain.upperBound());
     }
 
     private void declareInt(String name, int min, int max) {
@@ -203,10 +378,13 @@ public class BEEFormulaBuilder {
         for (int v: V()) {
             for (int t : T()) {
                 declareBool(var("u", v, t));
+            }
+        }
+        for (int v: LVR()) { // allNodes() in FormulaBuilder
+            for (int t: T()) {
                 declareInt(var("a", v, t), PU(v));
             }
         }
-        // TODO add more
     }
 
     private Integer min(Iterable<? extends Integer> iterable) {
@@ -226,15 +404,24 @@ public class BEEFormulaBuilder {
         }
         return curMax;
     }
-
+    
+    private Optional<Integer> parent(int t, int vt) {
+        int p = trees.get(t).getParent(vt);
+        return p >= 0 ? Optional.of(p) : Optional.empty();
+    }
+    
     private Range Vt() {
-        return new Range(n + 1, 2 * n); // TODO check
+        return new Range(n + 1, 2 * n); 
     }
 
     private Range T() {
         return new Range(0, trees.size() - 1);
     }
 
+    private int rootT() {
+        return 2 * n;
+    }
+    
     private int root() {
         return 2 * n + k; // TODO really it is root?
     }
@@ -265,17 +452,20 @@ public class BEEFormulaBuilder {
 
     // TODO add smart heuristics for PC, PP and PU based of input trees
     private Iterable<Integer> PC(int v) {
+        Iterable<Integer> childrenOrderOrReticulation = new Range(0, v - 1).union(R());
         if (enableReticulationConnection) {
             if (!LVR().contains(v))
                 throw new IllegalArgumentException("v is not in range [0, 2 * (n + k)]: v = " + v + ", range is [0, " + 2 * (n + k) + "]");
-            return FilteredIterable.notIs(root(), LVR());
+            if (L().contains(v))
+                return Collections.emptyList();
+            return FilteredIterable.notIs(root(), LVR().intersect(childrenOrderOrReticulation));
         } else {
             if (L().contains(v)) {
                 return Collections.emptyList();
             } else if (V().contains(v)) {
-                return FilteredIterable.notIs(root(), VR());
+                return FilteredIterable.notIs(root(), LVR().intersect(childrenOrderOrReticulation));
             } else { // holds that v ∈ R (v ∈ L ∪ V ∪ R, v ∉ L, v ∉ V ⇒ v ∈ R)
-                return FilteredIterable.notIs(root(), V());
+                return FilteredIterable.notIs(root(), LV().intersect(childrenOrderOrReticulation));
             }
         }
     }

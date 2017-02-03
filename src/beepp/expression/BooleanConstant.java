@@ -2,6 +2,8 @@ package beepp.expression;
 
 import beepp.util.Pair;
 
+import java.util.Map;
+
 /**
  * @author Vyacheslav Moklev
  */
@@ -17,5 +19,11 @@ public enum BooleanConstant implements BooleanExpression {
     @Override
     public Pair<String, String> compile() {
         return new Pair<>("", value + "");
+    }
+
+
+    @Override
+    public boolean eval(Map<String, Object> vars) {
+        return value;
     }
 }

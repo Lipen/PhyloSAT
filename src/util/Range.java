@@ -1,8 +1,8 @@
 package util;
 
-import java.util.Iterator;
-import java.util.NoSuchElementException;
-import java.util.Random;
+import beepp.expression.IntegerConstant;
+
+import java.util.*;
 
 /**
  * @author Moklev Vyacheslav
@@ -15,7 +15,7 @@ public class Range implements Iterable<Integer> {
      * Creates closed range of integers
      *
      * @param start left bound, inclusive
-     * @param end right bound, inclusive
+     * @param end   right bound, inclusive
      */
     public Range(int start, int end) {
         this.start = start;
@@ -29,6 +29,17 @@ public class Range implements Iterable<Integer> {
 
     public FilteredIterable intersect(Iterable<? extends Integer> iterable) {
         return new FilteredIterable(x -> x >= start && x <= end, iterable);
+    }
+
+    public Iterable<Integer> union(Iterable<Integer> iterable) {
+        Set<Integer> used = new HashSet<>();
+        for (Integer x : Range.this) {
+            used.add(x);
+        }
+        for (Integer x : iterable) {
+            used.add(x);
+        }
+        return used;
     }
 
     public boolean contains(int x) {

@@ -2,6 +2,8 @@ package beepp.expression;
 
 import beepp.util.Pair;
 
+import java.util.Map;
+
 /**
  * @author Vyacheslav Moklev
  */
@@ -18,5 +20,15 @@ public class BooleanVariable extends Variable implements BooleanExpression {
     @Override
     public Pair<String, String> compile() {
         return new Pair<>("", name);
+    }
+
+    @Override
+    public boolean eval(Map<String, Object> vars) {
+        Object obj = vars.get(name);
+        try {
+            return (boolean) obj;
+        } catch (ClassCastException e) {
+            throw new IllegalArgumentException("Variable \"" + name + "\" is not boolean");
+        }
     }
 }
