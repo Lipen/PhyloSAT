@@ -130,6 +130,13 @@ public class Main {
             PhylogeneticTree inputTree = new PhylogeneticTree(srt);
             inputTrees.add(inputTree);
             loggerString += "\n" + inputTree;
+            loggerString += "\n>>>***";
+            for (int i = 0; i < inputTree.getTaxaSize(); i++) {
+                loggerString += "\n" + (i + "> " + inputTree.getLabel(i));
+            }
+            for (int i = 0; i < inputTree.size(); i++) {
+                loggerString += "\n" + "    " + i + " [<- " + inputTree.getParent(i) + "] -> " + inputTree.getChildren(i);
+            }
         }
         logger.info(loggerString);
 
@@ -139,6 +146,12 @@ public class Main {
             String loggerStr = "Subtask trees:";
             for (PhylogeneticTree subtaskTree : subtaskTrees) {
                 loggerStr += "\n" + subtaskTree;
+                for (int i = 0; i < subtaskTree.getTaxaSize(); i++) {
+                    loggerStr += "\n" + (i + "> " + subtaskTree.getLabel(i));
+                }
+                for (int i = 0; i < subtaskTree.size(); i++) {
+                    loggerStr += "\n" + "    " + i + " [<- " + subtaskTree.getParent(i) + "] -> " + subtaskTree.getChildren(i);
+                }
             }
             logger.info(loggerStr);
 
@@ -146,9 +159,15 @@ public class Main {
             loggerStr = "Normalized trees:";
             for (PhylogeneticTree subtaskTree : subtaskTrees) {
                 loggerStr += "\n" + subtaskTree;
+                for (int i = 0; i < subtaskTree.getTaxaSize(); i++) {
+                    loggerStr += "\n" + (i + "> " + subtaskTree.getLabel(i));
+                }
+                for (int i = 0; i < subtaskTree.size(); i++) {
+                    loggerStr += "\n" + "    " + i + " [<- " + subtaskTree.getParent(i) + "] -> " + subtaskTree.getChildren(i);
+                }
             }
             logger.info(loggerStr);
-
+            
             PhylogeneticNetwork cur;
             if (hn >= 0) {
                 cur = solveSubtask(subtaskTrees, hn, 1_000_000, new long[1]);
@@ -295,7 +314,7 @@ public class Main {
         FormulaBuilder builder = new FormulaBuilder(trees, k, m, enableReticulationEdges, disableComments);
         String cnf = builder.buildCNF();
         String help = builder.getHelpMap();
-        System.out.println("help: " + help);
+//        System.out.println("help: " + help);
         logger.info("CNF formula has " + builder.getVariablesCount() + " variables, " + builder.getClausesCount()
                 + " clauses and its length is " + cnf.length() + " characters");
         try {

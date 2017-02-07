@@ -32,20 +32,25 @@ public class IntegerVariable extends Variable implements IntegerExpression {
 
     @Override
     public String getDeclaration() {
-        if (isDual) {
-            if (domain.isAtomicRange()) {
-                return "new_int_dual(" + name + ", " + domain.lowerBound() + ", " + domain.upperBound() + ")";
-            } else {
-                return "new_int(" + name + ", " + domain + ")\n" +
-                        "channel_int2direct(" + name + ")";
-            }
+//        if (isDual) {
+//            if (domain.isAtomicRange()) {
+//                return "new_int_dual(" + name + ", " + domain + ")";
+//            } else {
+//                return "new_int(" + name + ", " + domain + ")\n" +
+//                        "channel_int2direct(" + name + ")";
+//            }
+//        } else {
+        String decl;
+        if (domain.isAtomicRange()) {
+            decl = "new_int(" + name + ", " + domain.lowerBound() + ", " + domain.upperBound() + ")";
         } else {
-            if (domain.isAtomicRange()) {
-                return "new_int(" + name + ", " + domain.lowerBound() + ", " + domain.upperBound() + ")";
-            } else {
-                return "new_int(" + name + ", " + domain + ")";
-            }
+            decl = "new_int(" + name + ", " + domain + ")";
         }
+        if (isDual) {
+            decl += "\nchannel_int2direct(" + name + ")";
+        }
+        return decl;
+//        }
     }
 
     @Override
@@ -66,6 +71,9 @@ public class IntegerVariable extends Variable implements IntegerExpression {
     @Override
     public int eval(Map<String, Object> vars) {
         Object obj = vars.get(name);
+        if (obj == null) {
+            throw new IllegalArgumentException("There is no defined variable \"" + name + "\"");
+        }
         try {
             return (int) obj;
         } catch (ClassCastException e) {

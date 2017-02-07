@@ -124,6 +124,7 @@ public class PhylogeneticTree {
                 }
             }
         }
+        
         nodes.add(taxaSize, new PhylogeneticNode(nodes.size() + 1, new ArrayList<Integer>(), ""));
         PhylogeneticNode newRoot = new PhylogeneticNode(-1, new ArrayList<Integer>(), null);
         newRoot.children.add(taxaSize);

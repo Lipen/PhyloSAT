@@ -25,6 +25,9 @@ public class BooleanVariable extends Variable implements BooleanExpression {
     @Override
     public boolean eval(Map<String, Object> vars) {
         Object obj = vars.get(name);
+        if (obj == null) {
+            throw new IllegalArgumentException("There is no defined variable \"" + name + "\"");
+        }
         try {
             return (boolean) obj;
         } catch (ClassCastException e) {

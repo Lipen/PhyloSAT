@@ -6,24 +6,31 @@ options {tokenVocab = BEEppLexer;}
     import beepp.util.*;
     import beepp.util.Pair;
     import beepp.expression.*;
+    import beepp.StaticStorage;
     import java.util.Map;
     import java.util.HashMap;
 }
 
 @members {
-    Map<String, Variable> vars = new HashMap<>();
     List<BooleanExpression> constraints = new ArrayList<>();
+    List<String> constraintsText = new ArrayList<>();
 }
 
-file returns [Pair<Map<String, Variable>, List<BooleanExpression>> model]
-    :   (variableDefinition | boolExpr {constraints.add($boolExpr.expr);})*
-        {$model = new Pair<>(vars, constraints);}
+file returns [Pair<Map<String, Variable>, List<BooleanExpression>> model, List<String> text]
+    :   (variableDefinition | boolExpr {
+            constraints.add($boolExpr.expr);
+            constraintsText.add($boolExpr.text);
+        })*
+        {
+            $model = new Pair<>(StaticStorage.vars, constraints);
+            $text = constraintsText;
+        }
     ;
 
 variableDefinition
-    :   'int' ID ':' domain {vars.put($ID.text, new IntegerVariable($ID.text, $domain.dom));}
-    |   'dual_int' ID ':' domain {vars.put($ID.text, new IntegerVariable($ID.text, $domain.dom, true));}
-    |   'bool' ID {vars.put($ID.text, new BooleanVariable($ID.text));}
+    :   'int' ID ':' domain {StaticStorage.vars.put($ID.text, new IntegerVariable($ID.text, $domain.dom));}
+    |   'dual_int' ID ':' domain {StaticStorage.vars.put($ID.text, new IntegerVariable($ID.text, $domain.dom, true));}
+    |   'bool' ID {StaticStorage.vars.put($ID.text, new BooleanVariable($ID.text));}
     ;
 
 domain returns [RangeUnion dom]
@@ -60,7 +67,7 @@ boolPrimary returns [BooleanExpression expr]
     :   '(' boolExpr ')' {$expr = $boolExpr.expr;}
     |   BOOL_CONST {$expr = BooleanConstant.valueOf($BOOL_CONST.text.toUpperCase());}
     |   ID {
-              $expr = (BooleanExpression) vars.get($ID.text);
+              $expr = (BooleanExpression) StaticStorage.vars.get($ID.text);
               if ($expr == null)
                   throw new IllegalArgumentException("Variable was not declared: " + $ID.text);
            }
@@ -102,7 +109,7 @@ intPrimary returns [IntegerExpression expr]
     :   '(' intExpr ')' {$expr = $intExpr.expr;}
     |   INT_CONST {$expr = new IntegerConstant(Integer.parseInt($INT_CONST.text));}
     |   ID {
-               $expr = (IntegerExpression) vars.get($ID.text);
+               $expr = (IntegerExpression) StaticStorage.vars.get($ID.text);
                if ($expr == null)
                    throw new IllegalArgumentException("Variable was not declared: " + $ID.text);
            }

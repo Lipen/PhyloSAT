@@ -26,8 +26,20 @@ public class BEEFormulaBuilder {
         this.sb = new StringBuilder();
         this.tempVarCounter = 0;
         System.out.println("n = " + n + ", k = " + k);
+        System.out.println("L = " + makeList(L()));
+        System.out.println("V = " + makeList(V()));
+        System.out.println("R = " + makeList(R()));
+        System.out.println("T = " + makeList(T()));
     }
 
+    private <T> List<T> makeList(Iterable<T> iterable) {
+        List<T> list = new ArrayList<T>();
+        for (T t: iterable) {
+            list.add(t);
+        }
+        return list;
+    }
+    
     public String build() {
         declareVariables();     // [2/2] done
         declareConstraints();   // [2/3] TODO
@@ -43,8 +55,10 @@ public class BEEFormulaBuilder {
     private void declareParentChildrenRelation() {
         declarePCR1();    // done
         declarePCR2();    // done
-        declarePCR3();    // done  
-        declarePCR4();    // done
+        declarePCR3();    // done
+        if (enableReticulationConnection) {
+            declarePCR4();    // done
+        }
         declarePCR5();    // done
     }
 
@@ -70,7 +84,7 @@ public class BEEFormulaBuilder {
     private void declarePCR4() {
         for (int t: T()) {
             for (int v: R()) {
-                for (int u: R().intersect(PP(v))) {
+                for (int u : R().intersect(PP(v))) {
                     printlnf("(%s = %d & %s & %s) => %s",
                             var("pl", v), u, var("d", v, t), var("ur", v, t), var("ur", u, t));
                     printlnf("(%s = %d & !%s & %s) => %s",
@@ -94,11 +108,13 @@ public class BEEFormulaBuilder {
     private void declarePCR3() {
         for (int t: T()) {
             for (int v: R()) {
-                for (int u: R().intersect(PP(v))) {
-                    printlnf("(%s = %d & !%s) => !%s",
-                            var("pl", v), u, var("d", v, t), var("ur", u, t));
-                    printlnf("(%s = %d & %s) => !%s",
-                            var("pr", v), u, var("d", v, t), var("ur", u, t));
+                if (enableReticulationConnection) { // TODO check
+                    for (int u : R().intersect(PP(v))) {
+                        printlnf("(%s = %d & !%s) => !%s",
+                                var("pl", v), u, var("d", v, t), var("ur", u, t));
+                        printlnf("(%s = %d & %s) => !%s",
+                                var("pr", v), u, var("d", v, t), var("ur", u, t));
+                    }
                 }
                 for (int u: V().intersect(PP(v))) {
                     printlnf("(%s = %d & !%s) => !%s",
@@ -328,7 +344,8 @@ public class BEEFormulaBuilder {
     }
 
     private void declareInt(String name, RangeUnion domain) {
-        println("int ", name, ": ", domain.toBEEppString()); // TODO uncomment when bug will be fixed
+        // FIXME wisely choose dual_int / int
+        println("dual_int ", name, ": ", domain.toBEEppString()); // TODO uncomment when bug will be fixed
 //        println("int ", name, ": ", domain.lowerBound(), "..", domain.upperBound());
     }
 
@@ -372,7 +389,9 @@ public class BEEFormulaBuilder {
         for (int v: R()) {
             for (int t: T()) {
                 declareBool(var("d", v, t));
-                declareBool(var("ur", v, t));
+                if (enableReticulationConnection) { // TODO check
+                    declareBool(var("ur", v, t));
+                }
             }
         }
         for (int v: V()) {
@@ -474,16 +493,18 @@ public class BEEFormulaBuilder {
         if (!LVR().contains(v))
             throw new IllegalArgumentException("v is not in range [0, 2 * (n + k)]: v = " + v + ", range is [0, " + 2 * (n + k) + "]");
         if (enableReticulationConnection) {
-            return VR();
+            if (v == root()) {
+                return Collections.emptyList();
+            } else {
+                return VR();
+            }
         } else {
             if (v == root()) {
                 return Collections.emptyList();
-            } else if (V().contains(v)) { // if v ∈ V \ {ρ}
+            } else if (LV().contains(v)) { // if v ∈ L ∪ V \ {ρ}
                 return VR();
-            } else if (R().contains(v)) {
+            } else { // v ∈ R
                 return V();
-            } else { // holds that v ∈ L (v ∈ L ∪ V ∪ R, v ∉ V, v ∉ R ⇒ v ∈ L)
-                return VR();
             }
         }
     }

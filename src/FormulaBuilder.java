@@ -44,6 +44,10 @@ public class FormulaBuilder {
         this.enableReticulationConnection = enableReticulationConnection;
         this.disableComments = disableComments;
         this.clausesCount = 0;
+
+        System.out.println("n = " + n);
+        System.out.println("k = " + k);
+        System.out.println("froot = " + phTrees.get(0).hasFictitiousRoot());
     }
 
     public String getHelpMap() {
