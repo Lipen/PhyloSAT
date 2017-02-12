@@ -7,18 +7,16 @@ import java.util.stream.Collectors;
  * @author Moklev Vyacheslav
  */
 public class BEERunner {
-    private static final String BEE_PATH = "C:\\Users\\slava\\Downloads\\bee20160830\\";
+//    private static final String BEE_PATH = "C:\\Users\\slava\\Downloads\\bee20160830\\";
+    private static final String BEE_PATH = "C:\\Users\\Home\\Downloads\\bee20160830\\";
 
     private static int execute(String... args) {
         try {
             Process p = Runtime.getRuntime().exec(BEE_PATH + "BumbleBEE " +
                     Arrays.stream(args).map(s -> "\"" + s + "\"").collect(Collectors.joining(" ")));
             int retCode = p.waitFor();
-            System.out.println(
-                    new BufferedReader(
-                            new InputStreamReader(p.getInputStream())
-                    ).lines().collect(Collectors.joining("\n"))
-            );
+            System.out.println(p.getErrorStream().toString());
+            System.out.println(p.getOutputStream().toString());
             return retCode;
         } catch (IOException | InterruptedException e) {
             return -1;

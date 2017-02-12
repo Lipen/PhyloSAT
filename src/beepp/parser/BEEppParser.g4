@@ -16,21 +16,15 @@ options {tokenVocab = BEEppLexer;}
     List<String> constraintsText = new ArrayList<>();
 }
 
-file returns [Pair<Map<String, Variable>, List<BooleanExpression>> model, List<String> text]
-    :   (variableDefinition | boolExpr {
-            constraints.add($boolExpr.expr);
-            constraintsText.add($boolExpr.text);
-        })*
-        {
-            $model = new Pair<>(StaticStorage.vars, constraints);
-            $text = constraintsText;
-        }
+line returns [Variable variable, BooleanExpression expr]
+    :   variableDefinition { $variable = $variableDefinition.variable; }
+    |   boolExpr { $expr = $boolExpr.expr; }
     ;
 
-variableDefinition
-    :   'int' ID ':' domain {StaticStorage.vars.put($ID.text, new IntegerVariable($ID.text, $domain.dom));}
-    |   'dual_int' ID ':' domain {StaticStorage.vars.put($ID.text, new IntegerVariable($ID.text, $domain.dom, true));}
-    |   'bool' ID {StaticStorage.vars.put($ID.text, new BooleanVariable($ID.text));}
+variableDefinition returns [Variable variable] 
+    :   'int' ID ':' domain { $variable = new IntegerVariable($ID.text, $domain.dom); }
+    |   'dual_int' ID ':' domain { $variable = new IntegerVariable($ID.text, $domain.dom, true); }
+    |   'bool' ID { $variable = new BooleanVariable($ID.text); }
     ;
 
 domain returns [RangeUnion dom]

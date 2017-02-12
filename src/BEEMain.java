@@ -39,7 +39,7 @@ public class BEEMain {
 
     @Option(name = "--solverOptions", aliases = {
             "-s"}, usage = "launch with this solver and solver options", metaVar = "<string>")
-    private String solverOptions = "cryptominisat --threads=4";
+    private String solverOptions = "cryptominisat --threads=8";
 
     @Option(name = "--hybridizationNumber", aliases = {
             "-h"}, usage = "hybridization number, available in -ds mode", metaVar = "<int>")
@@ -282,17 +282,6 @@ public class BEEMain {
     private int calcUpperBound(List<PhylogeneticTree> trees) {
         return trees.get(0).getTaxaSize();
     }
-
-    // private int solveSubtask(List<PhylogeneticTree> trees, int mink, int
-    // maxk) throws IOException {
-    // long TIME_LIMIT = 1000000;
-    // for (int k = mink; k <= maxk; k++) {
-    // if (solveSubtask(trees, k, TIME_LIMIT, new long[1])) {
-    // return k;
-    // }
-    // }
-    // return -1;
-    // }
 
     private static String path(String filepath) throws IOException {
         return new File(filepath).getCanonicalPath();

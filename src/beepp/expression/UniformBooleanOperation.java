@@ -34,10 +34,25 @@ public class UniformBooleanOperation implements BooleanExpression {
                 constraints.add(compiled.a);
             names.add(compiled.b);
         }
-        String newVar = "temp" + StaticStorage.lastTempVar++;
+        String newVar = StaticStorage.newVar();
         constraints.add("new_bool(" + newVar + ")");
         constraints.add("bool_array_" + op + "_reif(" + names + ", " + newVar + ")");
         return new Pair<>(constraints.stream().collect(Collectors.joining("\n")), newVar);
+    }
+
+    @Override
+    public String holds() {
+        List<String> constraints = new ArrayList<>();
+        List<String> names = new ArrayList<>();
+        for (BooleanExpression expr : list) {
+            Pair<String, String> compiled = expr.compile();
+            if (!compiled.a.isEmpty())
+                constraints.add(compiled.a);
+            names.add(compiled.b);
+        }
+        constraints.add("bool_array_" + op + "(" + names + ")");
+        return constraints.stream()
+                .collect(Collectors.joining("\n"));
     }
 
     @Override

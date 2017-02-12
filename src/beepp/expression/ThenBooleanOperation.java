@@ -22,12 +22,22 @@ public class ThenBooleanOperation implements BooleanExpression {
         Pair<String, String> cTo = to.compile();
         String constraints = cFrom.a + (cFrom.a.isEmpty() ? "" : "\n")
                 + cTo.a + (cTo.a.isEmpty() ? "" : "\n");
-        String newVar = "temp" + StaticStorage.lastTempVar++;
+        String newVar = StaticStorage.newVar();
         constraints += "new_bool(" + newVar + ")\n";
         constraints += "bool_array_or_reif([-" + cFrom.b + ", " + cTo.b + "], " + newVar + ")";
         return new Pair<>(constraints, newVar);
     }
 
+    @Override
+    public String holds() {
+        Pair<String, String> cFrom = from.compile();
+        Pair<String, String> cTo = to.compile();
+        String constraints = cFrom.a + (cFrom.a.isEmpty() ? "" : "\n")
+                + cTo.a + (cTo.a.isEmpty() ? "" : "\n");
+        constraints += "bool_array_or([-" + cFrom.b + ", " + cTo.b + "])";
+        return constraints;
+    }
+    
     @Override
     public boolean eval(Map<String, Object> vars) {
         return !from.eval(vars) || to.eval(vars);

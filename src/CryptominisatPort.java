@@ -41,28 +41,21 @@ public class CryptominisatPort {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        if (resultHandler.getException() != null) {
-            System.err.println(">>> !!! <<<");
-            resultHandler.getException().printStackTrace();
-//            System.exit(1);
-        }
 
         executionTime[0] = System.currentTimeMillis() - curTime;
         if (executionTime[0] > timeLimit) {
-            // FIXME WAT IS THIS
-//            executionTime[0] = -1;
-//            String cnf_k_num = CNFString.split("\n")[1];
-//            
-//            System.out.println("0>>> " + CNFString.split("\n")[0]);
-//            System.out.println("1>>> " + CNFString.split("\n")[1]);
-//            System.out.println("2>>> " + CNFString.split("\n")[2]);
-//            
-//            cnf_k_num = cnf_k_num.split(" ")[6];
-//            cnf_k_num = cnf_k_num.substring(0, cnf_k_num.length() - 1);
-//            File unresolved_cnf = new File("cnf_unresolved_k_num_" + cnf_k_num);
-//            PrintWriter unr_cnf = new PrintWriter(unresolved_cnf);
-//            unr_cnf.print(CNFString);
-//            unr_cnf.close();
+            executionTime[0] = -1;
+        }
+        
+        if (resultHandler.getExitValue() != 10) {
+            System.err.println("Cryptomonisat exited with error code " + resultHandler.getExitValue());
+            System.err.println(outputStream.toString());
+            return null;
+        }
+        
+        if (watchdog.killedProcess()) {
+            System.err.println("Process was timeouted");
+            return null;
         }
 
         String ansLine = "";

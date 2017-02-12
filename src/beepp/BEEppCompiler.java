@@ -19,26 +19,26 @@ import java.util.Map;
  * @author Moklev Vyacheslav
  */
 public class BEEppCompiler {
-    public static Pair<List<BooleanExpression>, List<String>> compile(InputStream source, OutputStream destination) throws IOException {
-        StaticStorage.lastTempVar = 0;
-        StaticStorage.vars = new HashMap<>();
-        ANTLRInputStream inputStream = new ANTLRInputStream(source);
-        BEEppLexer lexer = new BEEppLexer(inputStream);
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
-        BEEppParser parser = new BEEppParser(tokens);
-        BEEppParser.FileContext file = parser.file();
-        Pair<Map<String, Variable>, List<BooleanExpression>> model = file.model;
-
-        PrintWriter pw = new PrintWriter(destination);
-        model.a.values().forEach(variable -> pw.println(variable.getDeclaration()));
-        model.b.forEach(booleanExpression -> pw.println(booleanExpression.holds()));
-        pw.println("solve satisfy");
-        pw.flush();
-        return new Pair<>(model.b, file.text);
-    }
+//    public static Pair<List<BooleanExpression>, List<String>> compile(InputStream source, OutputStream destination) throws IOException {
+//        StaticStorage.lastTempVar = 0;
+//        StaticStorage.vars = new HashMap<>();
+//        ANTLRInputStream inputStream = new ANTLRInputStream(source);
+//        BEEppLexer lexer = new BEEppLexer(inputStream);
+//        CommonTokenStream tokens = new CommonTokenStream(lexer);
+//        BEEppParser parser = new BEEppParser(tokens);
+//        BEEppParser.FileContext file = parser.file();
+//        Pair<Map<String, Variable>, List<BooleanExpression>> model = file.model;
+//
+//        PrintWriter pw = new PrintWriter(destination);
+//        model.a.values().forEach(variable -> pw.println(variable.getDeclaration()));
+//        model.b.forEach(booleanExpression -> pw.println(booleanExpression.holds()));
+//        pw.println("solve satisfy");
+//        pw.flush();
+//        return new Pair<>(model.b, file.text);
+//    }
     
     public static void fastCompile(InputStream source, OutputStream destination) throws IOException {
-        StaticStorage.lastTempVar = 0;
+        StaticStorage.resetVarCounter();
         StaticStorage.vars = new HashMap<>();
         BufferedReader br = new BufferedReader(new InputStreamReader(source));
         PrintWriter pw = new PrintWriter(destination);
@@ -47,9 +47,14 @@ public class BEEppCompiler {
             BEEppLexer lexer = new BEEppLexer(inputStream);
             CommonTokenStream tokens = new CommonTokenStream(lexer);
             BEEppParser parser = new BEEppParser(tokens);
-            Pair<Map<String, Variable>, List<BooleanExpression>> model = parser.file().model;
-            model.a.values().forEach(variable -> pw.println(variable.getDeclaration()));
-            model.b.forEach(booleanExpression -> pw.println(booleanExpression.holds()));
+
+            BEEppParser.LineContext ctx = parser.line();
+            if (ctx.variable != null) {
+                pw.println(ctx.variable.getDeclaration());
+                StaticStorage.vars.put(ctx.variable.getName(), ctx.variable);
+            } else {
+                pw.println(ctx.expr.holds());
+            }
         });
         pw.println("solve satisfy");
         pw.flush();

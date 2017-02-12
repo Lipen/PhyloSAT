@@ -98,7 +98,7 @@ public class UniformIntegerOperation implements IntegerExpression {
                 constraints.add(compiled.a);
             names.add(compiled.b);
         }
-        String newVar = "temp" + StaticStorage.lastTempVar++;
+        String newVar = StaticStorage.newVar();
         constraints.add("new_int(" + newVar + ", " + lowerBound() + ", " + upperBound() + ")");
         constraints.add("int_array_" + op + "(" + names + ", " + newVar + ")");
         return new Pair<>(constraints.stream().collect(Collectors.joining("\n")), newVar);

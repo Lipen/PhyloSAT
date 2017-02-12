@@ -94,7 +94,7 @@ public class BinaryIntegerOperation implements IntegerExpression{
         Pair<String, String> cRight = right.compile();
         String constraints = cLeft.a + (cLeft.a.isEmpty() ? "" : "\n")
                 + cRight.a + (cRight.a.isEmpty() ? "" : "\n");
-        String newVar = "temp" + StaticStorage.lastTempVar++;
+        String newVar = StaticStorage.newVar();
         constraints += "new_int(" + newVar + ", " + lowerBound() + ", " + upperBound() + ")\n";
         constraints += "int_" + op + "(" + cLeft.b + ", " + cRight.b + ", " + newVar + ")";
         return new Pair<>(constraints, newVar);

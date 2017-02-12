@@ -35,10 +35,20 @@ public class BinaryIntBooleanOperation implements BooleanExpression {
         Pair<String, String> cRight = right.compile();
         String constraints = cLeft.a + (cLeft.a.isEmpty() ? "" : "\n")
                 + cRight.a + (cRight.a.isEmpty() ? "" : "\n");
-        String newVar = "temp" + StaticStorage.lastTempVar++;
+        String newVar = StaticStorage.newVar();
         constraints += "new_bool(" + newVar + ")\n";
         constraints += "int_" + op + "_reif(" + cLeft.b + ", " + cRight.b + ", " + newVar + ")";
         return new Pair<>(constraints, newVar);
+    }
+
+    @Override
+    public String holds() {
+        Pair<String, String> cLeft = left.compile();
+        Pair<String, String> cRight = right.compile();
+        String constraints = cLeft.a + (cLeft.a.isEmpty() ? "" : "\n")
+                + cRight.a + (cRight.a.isEmpty() ? "" : "\n");
+        constraints += "int_" + op + "(" + cLeft.b + ", " + cRight.b + ")";
+        return constraints;
     }
 
     @Override

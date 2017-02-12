@@ -18,6 +18,11 @@ import java.util.stream.IntStream;
  */
 public class DummyMain {
     public static void main(String[] args) throws IOException {
+        if (true) {
+            BEEppCompiler.fastCompile(new FileInputStream("test"), new FileOutputStream("bee"));
+            return;
+        }
+        
         List<SimpleRootedTree> trees = new ArrayList<>();
         String filePath = "data\\clusters_neq_trees.txt";
         try {
