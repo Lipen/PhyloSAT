@@ -71,9 +71,9 @@ public class DummyMain {
         pw.print(new BEEFormulaBuilder(inputTrees, k, false).build());
         pw.close();
 
-        System.err.println("Compiling BEE++ to BEE...");
-        Pair<List<BooleanExpression>, List<String>> constraints = 
-                BEEppCompiler.compile(new FileInputStream("out.keksik"), new FileOutputStream("out.bee"));
+//        System.err.println("Compiling BEE++ to BEE...");
+//        Pair<List<BooleanExpression>, List<String>> constraints = 
+//                BEEppCompiler.compile(new FileInputStream("out.keksik"), new FileOutputStream("out.bee"));
         
 //        if (true) {
 //            Map<String, Object> vars = new HashMap<>();

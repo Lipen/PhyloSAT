@@ -35,7 +35,7 @@ public class Main {
 
     @Option(name = "--solverOptions", aliases = {
             "-s"}, usage = "launch with this solver and solver options", metaVar = "<string>")
-    private String solverOptions = "cryptominisat --threads=8";
+    private String solverOptions = "cryptominisat --threads=4";
 
     @Option(name = "--hybridizationNumber", aliases = {
             "-h"}, usage = "hybridization number, available in -ds mode", metaVar = "<int>")

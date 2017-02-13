@@ -47,18 +47,26 @@ public class BEEFormulaBuilder {
     }
     
     private void declareConstraints() {
+        println("// 1. Network structure constraints");
         declareNetworkStructureConstraints(); // [4/4] done
+        println("// 2. Trees to network mapping");
         declareTreesToNetworkMapping();       // [6/7] TODO
+        println("// 3. Parent to children relation");
         declareParentChildrenRelation();      // [5/5] done
     }
 
     private void declareParentChildrenRelation() {
+        println("// 3.1 PCR 1");
         declarePCR1();    // done
+        println("// 3.2 PCR 2");
         declarePCR2();    // done
+        println("// 3.3 PCR 3");
         declarePCR3();    // done
         if (enableReticulationConnection) {
+            println("// 3.4 PCR 4");
             declarePCR4();    // done
         }
+        println("// 3.5 PCR 5");
         declarePCR5();    // done
     }
 
@@ -158,10 +166,15 @@ public class BEEFormulaBuilder {
             for (int v: V().union(L())) {
                 for (int u: V().intersect(PP(v))) {
                     printlnf("%s = %d => (%s <=> %s = %d)", var("p", v), u, var("u", u, t), var("a", v, t), u);
-                    for (int w: PP(u)) {
-                        printlnf("(%s = %d & !%s) => (%s = %d <=> %s = %d)", var("p", v), u, var("u", u, t), 
-                                var("a", u, t), w, var("a", v, t), w);
-                    }
+                    
+                    // TODO check if PP -> PU change can break something
+//                    for (int w: PP(u)) {
+//                        printlnf("(%s = %d & !%s) => (%s = %d <=> %s = %d)", var("p", v), u, var("u", u, t), 
+//                                var("a", u, t), w, var("a", v, t), w);
+//                    }
+                    printlnf("(%s = %d & !%s) => (%s = %s)", var("p", v), u, var("u", u, t),
+                            var("a", u, t), var("a", v, t));
+                    
                 }
             }
         }
@@ -253,9 +266,13 @@ public class BEEFormulaBuilder {
     }
 
     private void declareNetworkStructureConstraints() {
+        println("// 1.1 Children order");
         declareChildrenOrder();             // done
+        println("// 1.2 Parents order");
         declareParentsOrder();              // done
+        println("// 1.3 Parents to children connection");
         declareParentChildrenConnection();  // [4/4] done
+        println("// 1.4 R children order");
         declareParentChildrenOrderR();      // done
     }
 
@@ -357,7 +374,7 @@ public class BEEFormulaBuilder {
 
     private void declareInt(String name, Iterable<Integer> domain) {
         if (!domain.iterator().hasNext()) // stands for domain.empty()
-            throw new IllegalArgumentException("Trying to declare int with an empty domain");
+            throw new IllegalArgumentException("Trying to declare int with an empty domain (name: " + name + ")");
         RangeUnion ranges = new RangeUnion();
         // TODO improve performance
         for (int x: domain) {
@@ -469,44 +486,55 @@ public class BEEFormulaBuilder {
         return new Range(2 * n + k + 1, 2 * (n + k));
     }
 
-    // TODO add smart heuristics for PC, PP and PU based of input trees
-    private Iterable<Integer> PC(int v) {
-        Iterable<Integer> childrenOrderOrReticulation = new Range(0, v - 1).union(R());
-        if (enableReticulationConnection) {
-            if (!LVR().contains(v))
-                throw new IllegalArgumentException("v is not in range [0, 2 * (n + k)]: v = " + v + ", range is [0, " + 2 * (n + k) + "]");
-            if (L().contains(v))
-                return Collections.emptyList();
-            return FilteredIterable.notIs(root(), LVR().intersect(childrenOrderOrReticulation));
-        } else {
-            if (L().contains(v)) {
-                return Collections.emptyList();
-            } else if (V().contains(v)) {
-                return FilteredIterable.notIs(root(), LVR().intersect(childrenOrderOrReticulation));
-            } else { // holds that v ∈ R (v ∈ L ∪ V ∪ R, v ∉ L, v ∉ V ⇒ v ∈ R)
-                return FilteredIterable.notIs(root(), LV().intersect(childrenOrderOrReticulation));
+
+    private List<Integer> PC(int v) {
+        int treeNodesCount = 2 * n + 1 + k;
+        if (v < 0 || v >= treeNodesCount + k) {
+            throw new RuntimeException("Node number out of bounds: " + v);
+        }
+
+        List<Integer> ans = new ArrayList<>();
+        if (v < n) {
+            return ans;
+        }
+        for (int childNumber : LVR()) {
+            if (v < treeNodesCount) {
+                if (childNumber < v || childNumber >= treeNodesCount) {
+                    ans.add(childNumber);
+                }
+            } else if (childNumber < treeNodesCount - 1 || (enableReticulationConnection && childNumber < v)) {
+                ans.add(childNumber);
             }
         }
+
+        return ans;
     }
 
-    private Iterable<Integer> PP(int v) {
-        if (!LVR().contains(v))
-            throw new IllegalArgumentException("v is not in range [0, 2 * (n + k)]: v = " + v + ", range is [0, " + 2 * (n + k) + "]");
-        if (enableReticulationConnection) {
-            if (v == root()) {
-                return Collections.emptyList();
-            } else {
-                return VR();
-            }
-        } else {
-            if (v == root()) {
-                return Collections.emptyList();
-            } else if (LV().contains(v)) { // if v ∈ L ∪ V \ {ρ}
-                return VR();
-            } else { // v ∈ R
-                return V();
+    private List<Integer> PP(int v) {
+        int treeNodesCount = 2 * n + 1 + k;
+        if (v < 0 || v >= treeNodesCount + k) {
+            throw new RuntimeException("Node number out of bounds");
+        }
+
+        List<Integer> ans = new ArrayList<>();
+        if (v == treeNodesCount - 1) {
+            return ans;
+        }
+        for (int parentNumber = n; parentNumber < treeNodesCount + k; parentNumber++) {
+            if (v < n) {
+                ans.add(parentNumber);
+            } else if (v < treeNodesCount) {
+                if (v < parentNumber) {
+                    ans.add(parentNumber);
+                }
+            } else if (parentNumber < treeNodesCount) {
+                ans.add(parentNumber);
             }
         }
+        if (enableReticulationConnection && v >= treeNodesCount)
+            ans.add(v + 1);
+
+        return ans;
     }
 
     private Iterable<Integer> PU(int v) {

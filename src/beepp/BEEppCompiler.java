@@ -20,7 +20,7 @@ import java.util.Map;
  */
 public class BEEppCompiler {
 //    public static Pair<List<BooleanExpression>, List<String>> compile(InputStream source, OutputStream destination) throws IOException {
-//        StaticStorage.lastTempVar = 0;
+//        StaticStorage.resetVarCounter();
 //        StaticStorage.vars = new HashMap<>();
 //        ANTLRInputStream inputStream = new ANTLRInputStream(source);
 //        BEEppLexer lexer = new BEEppLexer(inputStream);
@@ -43,6 +43,8 @@ public class BEEppCompiler {
         BufferedReader br = new BufferedReader(new InputStreamReader(source));
         PrintWriter pw = new PrintWriter(destination);
         br.lines().forEach(line -> {
+            if (line.trim().startsWith("//"))
+                return;
             ANTLRInputStream inputStream = new ANTLRInputStream(line);
             BEEppLexer lexer = new BEEppLexer(inputStream);
             CommonTokenStream tokens = new CommonTokenStream(lexer);

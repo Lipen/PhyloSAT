@@ -1,12 +1,9 @@
 import beepp.BEEppCompiler;
-import beepp.expression.BooleanExpression;
-import beepp.util.Pair;
 import jebl.evolution.io.ImportException;
 import jebl.evolution.io.NewickImporter;
 import jebl.evolution.taxa.Taxon;
 import jebl.evolution.trees.SimpleRootedTree;
 import jebl.evolution.trees.Tree;
-import org.apache.commons.exec.Executor;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -39,7 +36,7 @@ public class BEEMain {
 
     @Option(name = "--solverOptions", aliases = {
             "-s"}, usage = "launch with this solver and solver options", metaVar = "<string>")
-    private String solverOptions = "cryptominisat --threads=8";
+    private String solverOptions = "cryptominisat --threads=4";
 
     @Option(name = "--hybridizationNumber", aliases = {
             "-h"}, usage = "hybridization number, available in -ds mode", metaVar = "<int>")
@@ -112,14 +109,11 @@ public class BEEMain {
                 BufferedReader reader = new BufferedReader(new FileReader(filePath));
                 NewickImporter importer = new NewickImporter(reader, false);
 
-                int treesCount = 0;
                 for (Tree tree : importer.importTrees()) {
-                    treesCount++;
                     trees.add((SimpleRootedTree) tree);
                 }
                 reader.close();
 
-                logger.info(String.format("Loaded %d trees from %s", treesCount, filePath));
             } catch (Exception e) {
                 logger.warning("Can't load trees from file " + filePath);
                 e.printStackTrace();
@@ -128,26 +122,17 @@ public class BEEMain {
         }
         checkTrees(trees);
 
-        String loggerString = "Input original trees:";
         List<PhylogeneticTree> inputTrees = new ArrayList<>();
         for (SimpleRootedTree srt : trees) {
             PhylogeneticTree inputTree = new PhylogeneticTree(srt);
             inputTrees.add(inputTree);
-            loggerString += "\n" + inputTree;
         }
-        logger.info(loggerString);
 
         int finalK = 0;
         List<PhylogeneticNetwork> res = new ArrayList<>();
         for (List<PhylogeneticTree> subtaskTrees : preprocessing(inputTrees)) {
-            String loggerStr = "Subtask trees:";
-            for (PhylogeneticTree subtaskTree : subtaskTrees) {
-                loggerStr += "\n" + subtaskTree;
-            }
-            logger.info(loggerStr);
-
             subtaskTrees = normalize(subtaskTrees);
-            loggerStr = "Normalized trees:";
+            String loggerStr = "Normalized trees:";
             for (PhylogeneticTree subtaskTree : subtaskTrees) {
                 loggerStr += "\n" + subtaskTree;
             }
@@ -155,10 +140,8 @@ public class BEEMain {
 
             PhylogeneticNetwork cur;
             if (hn >= 0) {
-                logger.info("KEEEEK<<<");
                 cur = solveSubtask(subtaskTrees, hn, 1_000_000, new long[1]);
             } else {
-                logger.info("KEEEEEK>>>");
                 cur = solveSubtaskWithoutUNSAT(subtaskTrees);
             }
 
