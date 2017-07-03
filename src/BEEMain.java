@@ -202,7 +202,7 @@ public class BEEMain {
 
     private PhylogeneticNetwork solveSubtaskWithoutUNSAT(List<PhylogeneticTree> trees) throws IOException {
         int CHECK_FIRST = 3;
-        long FIRST_TIME_LIMIT = 1000; // timelimit is 1 second due to paper
+        long FIRST_TIME_LIMIT = 10 * 1000; // timelimit is 1 second due to paper
         long MAX_TL = 1000_000; // 1000 seconds? Too small? FIXME
         // long TL_COEF = 50;
 
@@ -223,43 +223,23 @@ public class BEEMain {
         long[] time = new long[1];
         PhylogeneticNetwork cur = null;
 
-        // PhylogeneticNetwork res = solveSubtask(trees, k, MAX_TL, time);
-        // if (time[0] == -1) {
-        // logger.info("There is no solution found in MAX_TL time");
-        // return res;
-        // }
-        // if (res == null) {
-        // logger.info("There is no solution with max bound k = " + k);
-        // return res;
-        // }
-
-        // why ascending? descending is faster
-        int l = mink, r = k + 1;
-        while (l < r) {
-            cur = solveSubtask(trees, l, MAX_TL, time);
-            if (cur == null) {
-                l = l + 1;
-            } else {
-                break;
-            }
-        }
-        return cur;
-
         // TODO
         // Heuristics: descending from upper bound with step 2 (or sqrt(k - 3))
-        // When found UNSAT case, roll back to the last known SAT - 1 and continue
-        // with step 1 (or max(last_step / 2, 1))
+        // When found UNSAT case, roll back to the last known SAT - 1 and continue with step 1 (or max(last_step / 2, 1))
 
-//        while (k >= mink) {
-//            PhylogeneticNetwork temp = solveSubtask(trees, k, MAX_TL, time);
-//            if (temp == null) {
-//                return cur;
-//            }
-//            cur = temp;
-//            k--;
-//        }
-//        assert false; // should never happen I think FIXME
-//        return null;
+        // Seems like there is no solution at k=upper_bound
+        k--;
+
+        while (k >= mink) {
+            PhylogeneticNetwork temp = solveSubtask(trees, k, MAX_TL, time);
+            if (temp == null) {
+                break;
+            }
+            cur = temp;
+            k--;
+        }
+
+        return cur;
     }
 
     private int calcUpperBound(List<PhylogeneticTree> trees) {
@@ -287,6 +267,7 @@ public class BEEMain {
 
         logger.info("Trying to solve problem of size " + trees.get(0).size() + " with " + k + " reticulation nodes");
 
+        // TODO: let BumbleBEE solve SAT
         logger.info("Solving SAT...");
         boolean[] solution = CryptominisatPort.solve(
                 cnf,
