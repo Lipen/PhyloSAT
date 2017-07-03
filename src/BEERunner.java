@@ -7,8 +7,7 @@ import java.util.stream.Collectors;
  * @author Moklev Vyacheslav
  */
 public class BEERunner {
-    private static final String BEE_PATH = "C:\\Users\\slava\\Downloads\\bee20160830\\";
-//    private static final String BEE_PATH = "C:\\Users\\Home\\Downloads\\bee20160830\\";
+    private static final String BEE_PATH = "";
 
     private static int execute(String... args) {
         try {
@@ -19,6 +18,7 @@ public class BEERunner {
             System.out.println(p.getOutputStream().toString());
             return retCode;
         } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
             return -1;
         }
     }
