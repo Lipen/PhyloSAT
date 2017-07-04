@@ -29,7 +29,7 @@ public class BEEMain {
 
     @Option(name = "--result", aliases = {
             "-r"}, usage = "write result network in GV format to this file", metaVar = "<GV file>")
-    private String resultFilePath = null;
+    private String resultFilePath = "network";
 
     @Option(name = "--cnf", usage = "write CNF formula to this file", metaVar = "<file>")
     private String cnfFilePath = "cnf";
@@ -39,7 +39,7 @@ public class BEEMain {
     private String solverOptions = "cryptominisat --threads=4";
 
     @Option(name = "--hybridizationNumber", aliases = {
-            "-h"}, usage = "hybridization number, available in -ds mode", metaVar = "<int>")
+            "-h", "-hn"}, usage = "hybridization number, available in -ds mode", metaVar = "<int>")
     private int hn = -1;
 
     @Option(name = "--enableReticulationEdges", aliases = {
@@ -177,7 +177,7 @@ public class BEEMain {
 
         if (resultFilePath != null) {
             try {
-                PrintWriter gvPrintWriter = new PrintWriter(new File(resultFilePath));
+                PrintWriter gvPrintWriter = new PrintWriter(new File(resultFilePath + ".gv"));
                 gvPrintWriter.print(res.get(0).toGVString());
                 gvPrintWriter.close();
             } catch (FileNotFoundException e) {
@@ -185,8 +185,7 @@ public class BEEMain {
             }
             for (int i = 0; i < inputTrees.size(); ++i) {
                 try {
-                    String treeFilePath = resultFilePath.substring(0, resultFilePath.lastIndexOf(".")) + ".tree" + i
-                            + ".gv";
+                    String treeFilePath = resultFilePath + ".tree" + i + ".gv";
                     PrintWriter gvPrintWriter = new PrintWriter(new File(treeFilePath));
                     gvPrintWriter.print(inputTrees.get(i).toGVString());
                     gvPrintWriter.close();
