@@ -202,7 +202,7 @@ public class BEEMain {
 
     private PhylogeneticNetwork solveSubtaskWithoutUNSAT(List<PhylogeneticTree> trees) throws IOException {
         int CHECK_FIRST = 3;
-        long FIRST_TIME_LIMIT = 10 * 1000; // timelimit is 1 second due to paper
+        long FIRST_TIME_LIMIT = 60 * 1000; // timelimit is 1 second due to paper
         long MAX_TL = 1000_000; // 1000 seconds? Too small? FIXME
         // long TL_COEF = 50;
 
