@@ -11,8 +11,9 @@ import java.util.stream.IntStream;
  */
 public class BEENetworkBuilder {
     public static PhylogeneticNetwork buildNetwork(Map<String, Object> map, List<PhylogeneticTree> trees, int k) {
+        // FIXME: we only need taxa list, not all input trees
         int n = trees.get(0).getTaxaSize() - 1;
-        boolean hasFictitiousRoot = trees.get(0).hasFictitiousRoot(); 
+        boolean hasFictitiousRoot = trees.get(0).hasFictitiousRoot();
         List<Integer> L = IntStream.rangeClosed(0, n).mapToObj(x -> x).collect(Collectors.toList());
         List<Integer> V = IntStream.rangeClosed(n + 1, 2 * n + k).mapToObj(x -> x).collect(Collectors.toList());
         List<Integer> R = IntStream.rangeClosed(2 * n + k + 1, 2 * (n + k)).mapToObj(x -> x).collect(Collectors.toList());
@@ -25,7 +26,7 @@ public class BEENetworkBuilder {
                 .map(i -> trees.get(0).getLabel(i))
                 .collect(Collectors.toList());
         for (int v: V) {
-            if (hasFictitiousRoot && v == 2 * n + k) 
+            if (hasFictitiousRoot && v == 2 * n + k)
                 continue;
             int left = (int) map.get("l_" + v);
             int right = (int) map.get("r_" + v);
