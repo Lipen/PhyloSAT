@@ -124,7 +124,7 @@ public class PhylogeneticTree {
                 }
             }
         }
-        
+
         nodes.add(taxaSize, new PhylogeneticNode(nodes.size() + 1, new ArrayList<Integer>(), ""));
         PhylogeneticNode newRoot = new PhylogeneticNode(-1, new ArrayList<Integer>(), null);
         newRoot.children.add(taxaSize);
@@ -325,6 +325,11 @@ public class PhylogeneticTree {
     }
 
     public String toGVString() {
+        if (fictitiousRoot) {
+            removeFictitiousRoot();
+            fictitiousRoot = true;
+        }
+
         String ans = "graph G {\n";
         ans += "  node [shape=circle width=0.3 fixedsize=true height=0.3];\n";
         ans += "  {rank = same ranksep=0.75 nodesep=0.75;";
@@ -345,6 +350,12 @@ public class PhylogeneticTree {
         }
 
         ans += "}\n";
+
+        if (fictitiousRoot) {
+            fictitiousRoot = false;
+            addFictitiousRoot();
+        }
+
         return ans;
     }
 
