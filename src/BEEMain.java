@@ -200,7 +200,7 @@ public class BEEMain {
     }
 
     private PhylogeneticNetwork solveSubtaskWithoutUNSAT(List<PhylogeneticTree> trees) throws IOException {
-        int CHECK_FIRST = 3;
+        int CHECK_FIRST = 2;
         long FIRST_TIME_LIMIT = 60 * 1000; // timelimit is 1 second due to paper
         long MAX_TL = 1000_000; // 1000 seconds? Too small? FIXME
         // long TL_COEF = 50;
@@ -263,6 +263,11 @@ public class BEEMain {
         BEERunner.makeDimacs(path("out.bee"), path("bee.dimacs"), path("bee.map"));
 
         String cnf = new BufferedReader(new FileReader("bee.dimacs")).lines().collect(Collectors.joining("\n"));
+
+        if (cnf.isEmpty()) {
+            // BumbleBEE returns UNSAT and writes nothing into bee.dimacs if the problem is considered UNSAT
+            return null;
+        }
 
         logger.info("Trying to solve problem of size " + trees.get(0).size() + " with " + k + " reticulation nodes");
 
