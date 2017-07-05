@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 
 argc = len(sys.argv)
@@ -37,3 +38,9 @@ run('{0} -T{1} {2}.gv -o {2}.{1}'.format(engine, format_, filename_output))
 for i in range(trees_amount):
     filename_tree = filename_output + '.tree{}'.format(i)
     run('{0} -T{1} {2}.gv -o {2}.{1}'.format(engine, format_, filename_tree))
+
+if format_ == 'png':
+    print('[*] Merging...')
+    filenames = ' '.join('{}.tree{}.{}'.format(filename_output, i, format_) for i in range(trees_amount)) + ' {}.{}'.format(filename_output, format_)
+    filename_merged = 'merged_{}.{}'.format(re.sub('^network_', '', filename_output), format_)
+    run('convert {} -background white -gravity center -append {}'.format(filenames, filename_merged))
