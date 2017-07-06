@@ -268,7 +268,8 @@ public class PhylogeneticTree {
     }
 
     public int getTaxaSize() {
-        return this.size() / 2 + 1;
+        // Tree with n leaves contains (2n-1) vertices
+        return (this.size() + 1) / 2;
     }
 
     public boolean isLeaf(int nodeNum) {
