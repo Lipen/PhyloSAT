@@ -54,6 +54,14 @@ public class BEEMain {
             "-ds"}, handler = BooleanOptionHandler.class, usage = "disables splits, so it is possible to set hybridization number")
     private boolean disableSplits = false;
 
+    @Option(name = "--firstTimeLimit", aliases = {
+            "-ftl"}, usage = "time available to solve first (k=0..) subtasks", metaVar = "<seconds>")
+    private int firstTimeLimit = 5;
+
+    @Option(name = "--maxTimeLimit", aliases = {
+            "-tl", "-mtl"}, usage = "maximum time available to solve subtask", metaVar = "<seconds>")
+    private int maxTimeLimit = 30;
+
     private FileHandler loggerHandler = null;
 
     Logger logger = Logger.getLogger("Logger");
@@ -158,15 +166,17 @@ public class BEEMain {
             outer:
             for (int i = 0; i < res.size(); ++i) {
                 for (int j = i + 1; j < res.size(); ++j) {
-                    Set<String> first = res.get(i).getTaxaSet();
-                    Set<String> second = res.get(j).getTaxaSet();
-                    if (first.containsAll(second)) {
-                        if (res.get(i).substituteSubtask(res.get(j))) {
+                    PhylogeneticNetwork firstSubtask = res.get(i);
+                    PhylogeneticNetwork secondSubtask = res.get(j);
+                    Set<String> firstTaxaSet = firstSubtask.getTaxaSet();
+                    Set<String> secondTaxaSet = secondSubtask.getTaxaSet();
+                    if (firstTaxaSet.containsAll(secondTaxaSet)) {
+                        if (firstSubtask.substituteSubtask(secondSubtask)) {
                             res.remove(j);
                             break outer;
                         }
-                    } else if (second.containsAll(first)) {
-                        if (res.get(j).substituteSubtask(res.get(i))) {
+                    } else if (secondTaxaSet.containsAll(firstTaxaSet)) {
+                        if (secondSubtask.substituteSubtask(firstSubtask)) {
                             res.remove(i);
                             break outer;
                         }
@@ -175,10 +185,12 @@ public class BEEMain {
             }
         }
 
+        PhylogeneticNetwork resultNetwork = res.get(0);
+
         if (resultFilePath != null) {
             try {
                 PrintWriter gvPrintWriter = new PrintWriter(new File(resultFilePath + ".gv"));
-                gvPrintWriter.print(res.get(0).toGVString());
+                gvPrintWriter.print(resultNetwork.toGVString());
                 gvPrintWriter.close();
             } catch (FileNotFoundException e) {
                 logger.warning("Can not open " + resultFilePath + " :\n" + e.getMessage());
@@ -201,13 +213,13 @@ public class BEEMain {
 
     private PhylogeneticNetwork solveSubtaskWithoutUNSAT(List<PhylogeneticTree> trees) throws IOException {
         int CHECK_FIRST = 2;  // Pre-check k = 0..CHECK_FIRST
-        long FIRST_TIME_LIMIT = 60 * 1000;  // milliseconds?
-        long MAX_TL = 1800 * 1000;  // 30min
+        // long FIRST_TIME_LIMIT = 30 * 1000;  // milliseconds, 30sec
+        // long MAX_TL = 60 * 1000;  // 1min
 
         int mink = 0;
         while (mink <= CHECK_FIRST) {
             long[] time = new long[1];
-            PhylogeneticNetwork res = solveSubtask(trees, mink, FIRST_TIME_LIMIT, time);
+            PhylogeneticNetwork res = solveSubtask(trees, mink, firstTimeLimit * 1000, time);
             if (time[0] == -1) {
                 break;
             }
@@ -225,7 +237,7 @@ public class BEEMain {
 
         while (k >= mink) {
             long[] time = new long[1];
-            PhylogeneticNetwork temp = solveSubtask(trees, k, MAX_TL, time);
+            PhylogeneticNetwork temp = solveSubtask(trees, k, maxTimeLimit * 1000, time);
             if (temp == null) {
                 break;
             }
@@ -258,26 +270,40 @@ public class BEEMain {
 
         if (cnf.isEmpty()) {
             // BumbleBEE writes nothing into bee.dimacs if the problem is considered UNSAT
+            logger.info("BumbleBEE says the problem is UNSAT");
             return null;
         }
 
-        logger.info("Trying to solve problem of size " + trees.get(0).size() + " with " + k + " reticulation nodes");
+        int n = trees.get(0).getTaxaSize();
+        logger.info("Trying to solve problem of size " + n + " with " + k + " reticulation nodes");
 
         logger.info("Solving SAT...");
         boolean[] solution = CryptominisatPort.solve(
-                cnf,
-                null,
-                null,
-                timeLimit,
-                time,
-                solverOptions
+                cnf,          // String CNFString
+                null,         // PrintWriter CNFPrintWriter
+                null,         // PrintWriter solverPrintWriter
+                timeLimit,    // long timeLimit
+                time,         // long[] executionTime
+                solverOptions // String solverOptions
         );
 
         if (time[0] == -1) {
             logger.info("TIME LIMIT EXCEEDED (" + timeLimit + ")");
             return null;
         }
-        logger.info("Execution time : " + time[0] + " / " + timeLimit);
+        logger.info("Solver execution time: " + time[0] + " / " + timeLimit);
+
+        // === LOG EXECUTION TIME ===
+        try(FileWriter fw = new FileWriter("solver_execution_time.log", true);
+            BufferedWriter bw = new BufferedWriter(fw);
+            PrintWriter out = new PrintWriter(bw))
+        {
+            out.println(n + "," + k + "," + time[0] + "," + (solution == null ? "UNSAT" : "SAT"));
+        } catch (IOException e) {
+            System.err.println("IOException: " + e.getMessage());
+        }
+        // === LOG EXECUTION TIME ===
+
         if (solution == null) {
             logger.info("NO SOLUTION with k = " + k);
         } else {
