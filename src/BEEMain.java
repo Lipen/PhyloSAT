@@ -251,12 +251,14 @@ public class BEEMain {
 
     private PhylogeneticNetwork solveSubtask(List<PhylogeneticTree> trees, int k, long timeLimit, long[] time) throws IOException {
         logger.info("Making BEE++ source...");
-        PrintWriter pw = new PrintWriter(new FileWriter("out.keksik"), true);
-        pw.print(new BEEFormulaBuilder(trees, k, false).build());
-        pw.close();
+        // PrintWriter pw = new PrintWriter(new FileWriter("out.keksik"), true);
+        // pw.print(new BEEFormulaBuilder(trees, k, false).build());
+        // pw.close();
+        String BEEFormula = new BEEFormulaBuilder(trees, k, false).build();
 
         logger.info("Compiling BEE++ to BEE...");
-        BEEppCompiler.fastCompile(new FileInputStream("out.keksik"), new FileOutputStream("out.bee"));
+        // BEEppCompiler.fastCompile(new FileInputStream("out.keksik"), new FileOutputStream("out.bee"));
+        BEEppCompiler.fastCompile(BEEFormula, new FileOutputStream("out.bee"));
 
         logger.info("Compiling BEE to SAT...");
         BEERunner.makeDimacs(path("out.bee"), path("bee.dimacs"), path("bee.map"));
