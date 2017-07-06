@@ -249,8 +249,7 @@ public class BEEMain {
         return new File(filepath).getCanonicalPath();
     }
 
-    private PhylogeneticNetwork solveSubtask(List<PhylogeneticTree> trees, int k, long timeLimit, long[] time)
-            throws IOException {
+    private PhylogeneticNetwork solveSubtask(List<PhylogeneticTree> trees, int k, long timeLimit, long[] time) throws IOException {
         logger.info("Making BEE++ source...");
         PrintWriter pw = new PrintWriter(new FileWriter("out.keksik"), true);
         pw.print(new BEEFormulaBuilder(trees, k, false).build());
@@ -362,8 +361,7 @@ public class BEEMain {
         return ans;
     }
 
-    private List<PhylogeneticTree> collapseAll(List<PhylogeneticTree> inputTrees,
-                                               List<List<PhylogeneticTree>> splitTrees) {
+    private List<PhylogeneticTree> collapseAll(List<PhylogeneticTree> inputTrees, List<List<PhylogeneticTree>> splitTrees) {
         ArrayList<PhylogeneticTree> ans = new ArrayList<>();
         for (PhylogeneticTree inputTree : inputTrees) {
             ans.add(new PhylogeneticTree(inputTree));
@@ -375,9 +373,9 @@ public class BEEMain {
         }
         if (collapsedCount > 0) {
             logger.info(collapsedCount + " subtrees collapsed in each phylogenetic tree");
-            logger.info(
-                    "There were " + inputTrees.get(0).getTaxaSize() + " taxons, now it is " + ans.get(0).getTaxaSize());
+            logger.info("There were " + inputTrees.get(0).getTaxaSize() + " taxons, now it is " + ans.get(0).getTaxaSize());
         }
+
         return ans;
     }
 
