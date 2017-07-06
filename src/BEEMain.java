@@ -200,10 +200,9 @@ public class BEEMain {
     }
 
     private PhylogeneticNetwork solveSubtaskWithoutUNSAT(List<PhylogeneticTree> trees) throws IOException {
-        int CHECK_FIRST = 2;
-        long FIRST_TIME_LIMIT = 60 * 1000; // timelimit is 1 second due to paper
-        long MAX_TL = 1000_000; // 1000 seconds? Too small? FIXME
-        // long TL_COEF = 50;
+        int CHECK_FIRST = 2;  // Pre-check k = 0..CHECK_FIRST
+        long FIRST_TIME_LIMIT = 60 * 1000;  // milliseconds?
+        long MAX_TL = 1800 * 1000;  // 30min
 
         int mink = 0;
         while (mink <= CHECK_FIRST) {
@@ -218,27 +217,23 @@ public class BEEMain {
             mink++;
         }
 
-        int k = calcUpperBound(trees);
-        long[] time = new long[1];
-        PhylogeneticNetwork cur = null;
+        PhylogeneticNetwork last = null;
+        int k = calcUpperBound(trees) - 1;
 
-        // TODO
-        // Heuristics: descending from upper bound with step 2 (or sqrt(k - 3))
-        // When found UNSAT case, roll back to the last known SAT - 1 and continue with step 1 (or max(last_step / 2, 1))
-
-        // Seems like there is no solution at k=upper_bound
-        k--;
+        // TODO: heuristics -- descending from upper bound with step 2 (or sqrt(k - 3))
+        // When found UNSAT case, roll back to the last known SAT-1 and continue with step 1 (or max(last_step/2, 1))
 
         while (k >= mink) {
+            long[] time = new long[1];
             PhylogeneticNetwork temp = solveSubtask(trees, k, MAX_TL, time);
             if (temp == null) {
                 break;
             }
-            cur = temp;
+            last = temp;
             k--;
         }
 
-        return cur;
+        return last;
     }
 
     private int calcUpperBound(List<PhylogeneticTree> trees) {
@@ -250,14 +245,10 @@ public class BEEMain {
     }
 
     private PhylogeneticNetwork solveSubtask(List<PhylogeneticTree> trees, int k, long timeLimit, long[] time) throws IOException {
-        logger.info("Making BEE++ source...");
-        // PrintWriter pw = new PrintWriter(new FileWriter("out.keksik"), true);
-        // pw.print(new BEEFormulaBuilder(trees, k, false).build());
-        // pw.close();
+        logger.info("Building BEE++ formula...");
         String BEEFormula = new BEEFormulaBuilder(trees, k, false).build();
 
         logger.info("Compiling BEE++ to BEE...");
-        // BEEppCompiler.fastCompile(new FileInputStream("out.keksik"), new FileOutputStream("out.bee"));
         BEEppCompiler.fastCompile(BEEFormula, new FileOutputStream("out.bee"));
 
         logger.info("Compiling BEE to SAT...");
@@ -266,13 +257,12 @@ public class BEEMain {
         String cnf = new BufferedReader(new FileReader("bee.dimacs")).lines().collect(Collectors.joining("\n"));
 
         if (cnf.isEmpty()) {
-            // BumbleBEE returns UNSAT and writes nothing into bee.dimacs if the problem is considered UNSAT
+            // BumbleBEE writes nothing into bee.dimacs if the problem is considered UNSAT
             return null;
         }
 
         logger.info("Trying to solve problem of size " + trees.get(0).size() + " with " + k + " reticulation nodes");
 
-        // TODO: let BumbleBEE solve SAT
         logger.info("Solving SAT...");
         boolean[] solution = CryptominisatPort.solve(
                 cnf,
