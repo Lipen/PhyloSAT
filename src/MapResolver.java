@@ -13,20 +13,20 @@ import java.util.stream.Collectors;
  * @author Moklev Vyacheslav
  */
 public class MapResolver {
-    private static final Pattern BOOL_PATTERN = 
-            Pattern.compile("\\(([a-zA-Z_0-9]+),bool,(-?[0-9]+)\\)\\.");
+    private static final Pattern BOOL_PATTERN =
+            Pattern.compile("^\\(([a-zA-Z_0-9]+),bool,(-?[0-9]+)\\)\\.$");
     private static final String LIST_REGEX = "((-?[0-9]+,)*-?[0-9]+)?";
     private static final Pattern INT_PATTERN =
-            Pattern.compile("\\(([a-zA-Z_0-9]+),int,order\\(min\\((-?[0-9]+)\\),\\[(" + LIST_REGEX + ")]\\)\\).");
-    private static final Pattern END_PATTERN = 
-            Pattern.compile("end_bee_map.");
+            Pattern.compile("^\\(([a-zA-Z_0-9]+),int,order\\(min\\((-?[0-9]+)\\),\\[(" + LIST_REGEX + ")]\\)\\).$");
+    private static final Pattern END_PATTERN =
+            Pattern.compile("^end_bee_map.$");
 
     public static Map<String, Object> resolve(File file, boolean[] solution) throws FileNotFoundException {
         Map<String, Object> map = new TreeMap<>();
         List<String> lines = new BufferedReader(new FileReader(file))
                 .lines()
                 .collect(Collectors.toList());
-        for (String line: lines) {
+        for (String line : lines) {
             line = line.trim();
             Matcher boolMatcher = BOOL_PATTERN.matcher(line);
             Matcher intMatcher = INT_PATTERN.matcher(line);
@@ -60,7 +60,7 @@ public class MapResolver {
                     }
                 }).collect(Collectors.toList());
                 boolean lastValue = true;
-                for (boolean value: order) {
+                for (boolean value : order) {
                     if (!lastValue && value) {
                         System.err.println("Invalid order array: " + order);
                     }
