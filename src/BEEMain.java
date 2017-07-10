@@ -274,7 +274,7 @@ public class BEEMain {
         }
 
         // === LOG EXECUTION TIME ===
-        try(FileWriter fw = new FileWriter("solver_execution_time_BumbleBEE.log", true);
+        try(FileWriter fw = new FileWriter("solver_execution_time.log", true);
             BufferedWriter bw = new BufferedWriter(fw);
             PrintWriter out = new PrintWriter(bw))
         {
@@ -291,59 +291,6 @@ public class BEEMain {
 
         logger.info("SOLUTION FOUND with k = " + k);
         return BEENetworkBuilder.buildNetwork(map, trees, k);
-
-    /*
-        logger.info("Compiling BEE to SAT...");
-        BEERunner.makeDimacs(path("out.bee"), path("bee.dimacs"), path("bee.map"));
-
-        String cnf = new BufferedReader(new FileReader("bee.dimacs")).lines().collect(Collectors.joining("\n"));
-
-        if (cnf.isEmpty()) {
-            // BumbleBEE writes nothing into bee.dimacs if the problem is considered UNSAT
-            logger.info("BumbleBEE says the problem is UNSAT");
-            return null;
-        }
-
-        int n = trees.get(0).getTaxaSize();
-        logger.info("Trying to solve problem of size " + n + " with " + k + " reticulation nodes");
-
-        logger.info("Solving SAT...");
-        boolean[] solution = CryptominisatPort.solve(
-                cnf,          // String CNFString
-                null,         // PrintWriter CNFPrintWriter
-                null,         // PrintWriter solverPrintWriter
-                timeLimit,    // long timeLimit
-                time,         // long[] executionTime
-                solverOptions // String solverOptions
-        );
-
-        if (time[0] == -1) {
-            logger.info("TIME LIMIT EXCEEDED (" + timeLimit + ")");
-            return null;
-        }
-        logger.info("Solver execution time: " + time[0] + " / " + timeLimit);
-
-        // === LOG EXECUTION TIME ===
-        try(FileWriter fw = new FileWriter("solver_execution_time.log", true);
-            BufferedWriter bw = new BufferedWriter(fw);
-            PrintWriter out = new PrintWriter(bw))
-        {
-            out.println(n + "," + k + "," + time[0] + "," + (solution == null ? "UNSAT" : "SAT"));
-        } catch (IOException e) {
-            System.err.println("IOException: " + e.getMessage());
-        }
-        // === LOG EXECUTION TIME ===
-
-        if (solution == null) {
-            logger.info("NO SOLUTION with k = " + k);
-        } else {
-            Map<String, Object> map = MapResolver.resolve(new File("bee.map"), solution);
-            logger.info("SOLUTION FOUND with k = " + k);
-            return BEENetworkBuilder.buildNetwork(map, trees, k);
-        }
-
-        return null;
-    */
     }
 
     private List<PhylogeneticTree> normalize(List<PhylogeneticTree> inputTrees) {
