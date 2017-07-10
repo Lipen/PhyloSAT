@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.TreeMap;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -68,7 +67,7 @@ public class BEERunner {
         }
 
         executionTime[0] = System.currentTimeMillis() - curTime;
-        if (executionTime[0] > timeLimit) {
+        if (timeLimit != ExecuteWatchdog.INFINITE_TIMEOUT && executionTime[0] > timeLimit) {
             executionTime[0] = -1;
         }
 

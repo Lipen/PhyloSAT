@@ -15,7 +15,8 @@ import java.util.*;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
-import java.util.stream.Collectors;
+
+import static org.apache.commons.exec.ExecuteWatchdog.INFINITE_TIMEOUT;
 
 /**
  * Moklev Vyacheslav
@@ -229,14 +230,15 @@ public class BEEMain {
             mink++;
         }
 
-        PhylogeneticNetwork last = null;
+        long[] time = new long[1];
         int k = calcUpperBound(trees) - 1;
+        // First timeout is infinite, because you NEED any solution, otherwise everything will blow up!
+        PhylogeneticNetwork last = solveSubtask(trees, k--, INFINITE_TIMEOUT, time);
 
         // TODO: heuristics -- descending from upper bound with step 2 (or sqrt(k - 3))
         // When found UNSAT case, roll back to the last known SAT-1 and continue with step 1 (or max(last_step/2, 1))
 
         while (k >= mink) {
-            long[] time = new long[1];
             PhylogeneticNetwork temp = solveSubtask(trees, k, maxTimeLimit * 1000, time);
             if (temp == null) {
                 break;
