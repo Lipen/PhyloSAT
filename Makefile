@@ -21,7 +21,7 @@ Grass2RpocWaxy:
 Grass2WaxyIts:
 	python run.py $DIR_GRASS2/Grass2WaxyIts.tree.restrict.num network_Grass2WaxyIts
 
-all_tests: test_easiest test_simple test_medium test_hard
+tests: test_easiest test_simple test_medium test_hard
 
 test_easiest:
 	python run.py test_easiest.trees network_test_easiest
@@ -30,4 +30,4 @@ test_simple:
 test_medium:
 	python run.py test_medium.trees network_test_medium
 test_hard:
-	python run.py test_hard.trees network_test_hard
+	python run.py test_hard.trees network_test_hard -tl 300 -ftl 30
