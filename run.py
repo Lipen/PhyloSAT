@@ -22,22 +22,30 @@ with open(filename_input) as f:
 
 engine = 'dot'
 format_ = 'png'
+dir_network = 'networks'
+dir_merged = 'merged'
+filename_output_network = os.path.join(dir_network, filename_output)
+
+os.makedirs(dir_network, exist_ok=True)
+os.makedirs(dir_merged, exist_ok=True)
 
 
 def run(cmd):
     print('[.] Running "{}"...'.format(cmd))
     os.system(cmd)
 
-run('java -jar out/artifacts/PhyloSAT_jar/PhyloSAT.jar {} {} -r {}'.format(filename_input, extra_args, filename_output))
+run('java -jar out/artifacts/PhyloSAT_jar/PhyloSAT.jar {} {} -r {}'.format(filename_input, extra_args, filename_output_network))
 
 print('[*] Rendering...')
-run('{0} -T{1} {2}.gv -o {2}.{1}'.format(engine, format_, filename_output))
+run('{0} -T{1} {2}.gv -o {2}.{1}'.format(engine, format_, filename_output_network))
 for i in range(trees_amount):
-    filename_tree = filename_output + '.tree{}'.format(i)
+    filename_tree = '{}.tree{}'.format(filename_output_network, i)
     run('{0} -T{1} {2}.gv -o {2}.{1}'.format(engine, format_, filename_tree))
 
 if format_ == 'png':
     print('[*] Merging...')
-    filenames = ' '.join('{}.tree{}.{}'.format(filename_output, i, format_) for i in range(trees_amount)) + ' {}.{}'.format(filename_output, format_)
+    filenames = ' '.join('{}.tree{}.{}'.format(filename_output_network, i, format_) for i in range(trees_amount))
+    filenames += ' {}.{}'.format(filename_output_network, format_)
     filename_merged = 'merged_{}.{}'.format(re.sub('^network_', '', filename_output), format_)
+    filename_merged = os.path.join(dir_merged, filename_merged)
     run('convert {} -background white -gravity center -append {}'.format(filenames, filename_merged))
