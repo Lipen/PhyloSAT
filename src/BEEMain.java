@@ -263,6 +263,36 @@ public class BEEMain {
         logger.info("Compiling BEE++ to BEE...");
         BEEppCompiler.fastCompile(BEEFormula, new FileOutputStream("out.bee"));
 
+        int n = trees.get(0).getTaxaSize();
+        logger.info("Solving problem of size " + n + " with " + k + " reticulation nodes with BumbleBEE...");
+        Map<String, Object> map = BEERunner.resolve(path("out.bee"), timeLimit, time);
+
+        if (time[0] == -1) {
+            logger.info("TIME LIMIT EXCEEDED (" + timeLimit + ")");
+        } else {
+            logger.info("Solver execution time: " + time[0] + " / " + timeLimit);
+        }
+
+        // === LOG EXECUTION TIME ===
+        try(FileWriter fw = new FileWriter("solver_execution_time_BumbleBEE.log", true);
+            BufferedWriter bw = new BufferedWriter(fw);
+            PrintWriter out = new PrintWriter(bw))
+        {
+            out.println(n + "," + k + "," + time[0] + "," + (map == null ? "UNSAT" : "SAT"));
+        } catch (IOException e) {
+            System.err.println("IOException: " + e.getMessage());
+        }
+        // === LOG EXECUTION TIME ===
+
+        if (map == null) {
+            logger.info("NO SOLUTION with k = " + k);
+            return null;
+        }
+
+        logger.info("SOLUTION FOUND with k = " + k);
+        return BEENetworkBuilder.buildNetwork(map, trees, k);
+
+    /*
         logger.info("Compiling BEE to SAT...");
         BEERunner.makeDimacs(path("out.bee"), path("bee.dimacs"), path("bee.map"));
 
@@ -313,6 +343,7 @@ public class BEEMain {
         }
 
         return null;
+    */
     }
 
     private List<PhylogeneticTree> normalize(List<PhylogeneticTree> inputTrees) {
