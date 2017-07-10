@@ -7,15 +7,12 @@ argc = len(sys.argv)
 if argc > 1:
     filename_input = sys.argv[1]
 else:
-    filename_input = 'test.tree'
+    filename_input = 'test_simple.trees'
 if argc > 2:
     filename_output = sys.argv[2]
 else:
     filename_output = 'network'
-if argc > 3:
-    extra_args = '-ds -h {}'.format(sys.argv[3])
-else:
-    extra_args = ''
+extra_args = ' '.join(sys.argv[3:])
 
 with open(filename_input) as f:
     trees_amount = 0
