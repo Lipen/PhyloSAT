@@ -55,12 +55,12 @@ public class BEEMain {
     private boolean disableSplits = false;
 
     @Option(name = "--firstTimeLimit", aliases = {
-            "-ftl"}, usage = "time available to solve first (k=0..) subtasks", metaVar = "<seconds>")
-    private int firstTimeLimit = 5;
+            "-ftl"}, usage = "time available to solve first few subtasks", metaVar = "<seconds>")
+    private int firstTimeLimit = 10;
 
     @Option(name = "--maxTimeLimit", aliases = {
             "-tl", "-mtl"}, usage = "maximum time available to solve subtask", metaVar = "<seconds>")
-    private int maxTimeLimit = 30;
+    private int maxTimeLimit = 300;
 
     private FileHandler loggerHandler = null;
 
