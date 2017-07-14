@@ -1,6 +1,7 @@
 import os
 import re
 import sys
+import subprocess
 
 argc = len(sys.argv)
 
@@ -32,7 +33,7 @@ os.makedirs(dir_merged, exist_ok=True)
 
 def run(cmd):
     print('[.] Running "{}"...'.format(cmd))
-    os.system(cmd)
+    subprocess.run(cmd, shell=True)
 
 run('java -jar out/artifacts/PhyloSAT_jar/PhyloSAT.jar {} {} -r {}'.format(filename_input, extra_args, filename_output_network))
 
@@ -48,4 +49,4 @@ if format_ == 'png':
     filenames += ' {}.{}'.format(filename_output_network, format_)
     filename_merged = 'merged_{}.{}'.format(re.sub('^network_', '', filename_output), format_)
     filename_merged = os.path.join(dir_merged, filename_merged)
-    run('convert {} -background white -gravity center -append {}'.format(filenames, filename_merged))
+    run('magick convert {} -background white -gravity center -append {}'.format(filenames, filename_merged))
