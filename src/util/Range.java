@@ -1,7 +1,5 @@
 package util;
 
-import beepp.expression.IntegerConstant;
-
 import java.util.*;
 
 /**

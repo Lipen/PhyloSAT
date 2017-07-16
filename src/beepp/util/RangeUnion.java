@@ -1,10 +1,6 @@
 package beepp.util;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicMarkableReference;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -44,7 +40,7 @@ public class RangeUnion {
             ranges.set(rightIntersectionId, null);
         }
         ranges.add(newRange);
-        ranges = ranges.stream().filter(r -> r != null).collect(Collectors.toList());
+        ranges = ranges.stream().filter(Objects::nonNull).collect(Collectors.toList());
         Collections.sort(ranges);
         for (int i = 0; i < ranges.size() - 1; i++) {
             AtomicRange first = ranges.get(i);
@@ -55,7 +51,7 @@ public class RangeUnion {
                 ranges.set(i + 1, second);
             }
         }
-        ranges = ranges.stream().filter(r -> r != null).collect(Collectors.toList());
+        ranges = ranges.stream().filter(Objects::nonNull).collect(Collectors.toList());
     }
 
     public RangeUnion(int... bounds) {

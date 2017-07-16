@@ -1,5 +1,4 @@
 import beepp.BEEppCompiler;
-import jebl.evolution.io.ImportException;
 import jebl.evolution.io.NewickImporter;
 import jebl.evolution.taxa.Taxon;
 import jebl.evolution.trees.SimpleRootedTree;
@@ -65,9 +64,38 @@ public class BEEMain {
 
     private FileHandler loggerHandler = null;
 
-    Logger logger = Logger.getLogger("Logger");
+    private Logger logger = Logger.getLogger("Logger");
 
-    public FileHandler addLoggerHandler(String logFilePath) throws IOException {
+    private static String path(String filepath) throws IOException {
+        return new File(filepath).getCanonicalPath();
+    }
+
+    private static void checkTrees(List<SimpleRootedTree> trees) {
+        if (trees.size() < 2) {
+            throw new RuntimeException("There are less then 2 trees");
+        }
+
+        Set<Taxon> taxa = new TreeSet<>(trees.get(0).getTaxa());
+        int taxaSize = taxa.size();
+        for (int t = 1; t < trees.size(); t++) {
+            SimpleRootedTree tree = trees.get(t);
+            Set<Taxon> treeTaxa = new TreeSet<>(tree.getTaxa());
+            if (treeTaxa.size() != taxaSize) {
+                String msg = String.format("Tree %d has %d taxa, but tree 0 has %d", t, treeTaxa.size(), taxaSize);
+                throw new RuntimeException(msg);
+            }
+            if (!taxa.containsAll(treeTaxa)) {
+                String msg = String.format("Tree %d and tree 0 has different taxa", t);
+                throw new RuntimeException(msg);
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        new BEEMain().run(args);
+    }
+
+    private FileHandler addLoggerHandler(String logFilePath) throws IOException {
         FileHandler fh = new FileHandler(logFilePath, false);
         logger.addHandler(fh);
         SimpleFormatter formatter = new SimpleFormatter();
@@ -82,7 +110,7 @@ public class BEEMain {
         logger.removeHandler(fh);
     }
 
-    private int launcher(String[] args) throws IOException, ImportException {
+    private int launcher(String[] args) throws IOException {
         Locale.setDefault(Locale.US);
 
         CmdLineParser parser = new CmdLineParser(this);
@@ -254,10 +282,6 @@ public class BEEMain {
         return trees.get(0).getTaxaSize();
     }
 
-    private static String path(String filepath) throws IOException {
-        return new File(filepath).getCanonicalPath();
-    }
-
     private PhylogeneticNetwork solveSubtask(List<PhylogeneticTree> trees, int k, long timeLimit, long[] time) throws IOException {
         logger.info("Building BEE++ formula...");
         String BEEFormula = new BEEFormulaBuilder(trees, k, false).build();
@@ -276,10 +300,9 @@ public class BEEMain {
         }
 
         // === LOG EXECUTION TIME ===
-        try(FileWriter fw = new FileWriter("solver_execution_time.log", true);
-            BufferedWriter bw = new BufferedWriter(fw);
-            PrintWriter out = new PrintWriter(bw))
-        {
+        try (FileWriter fw = new FileWriter("solver_execution_time.log", true);
+             BufferedWriter bw = new BufferedWriter(fw);
+             PrintWriter out = new PrintWriter(bw)) {
             out.println(n + "," + k + "," + time[0] + "," + (map == null ? "UNSAT" : "SAT"));
         } catch (IOException e) {
             System.err.println("IOException: " + e.getMessage());
@@ -465,27 +488,6 @@ public class BEEMain {
         return null;
     }
 
-    private static void checkTrees(List<SimpleRootedTree> trees) {
-        if (trees.size() < 2) {
-            throw new RuntimeException("There are less then 2 trees");
-        }
-
-        Set<Taxon> taxa = new TreeSet<>(trees.get(0).getTaxa());
-        int taxaSize = taxa.size();
-        for (int t = 1; t < trees.size(); t++) {
-            SimpleRootedTree tree = trees.get(t);
-            Set<Taxon> treeTaxa = new TreeSet<>(tree.getTaxa());
-            if (treeTaxa.size() != taxaSize) {
-                String msg = String.format("Tree %d has %d taxa, but tree 0 has %d", t, treeTaxa.size(), taxaSize);
-                throw new RuntimeException(msg);
-            }
-            if (!taxa.containsAll(treeTaxa)) {
-                String msg = String.format("Tree %d and tree 0 has different taxa", t);
-                throw new RuntimeException(msg);
-            }
-        }
-    }
-
     public int run(String[] args) {
         try {
             return launcher(args);
@@ -499,10 +501,6 @@ public class BEEMain {
             }
         }
         return -1;
-    }
-
-    public static void main(String[] args) {
-        new BEEMain().run(args);
     }
 
 }

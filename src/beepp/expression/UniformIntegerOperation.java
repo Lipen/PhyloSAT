@@ -41,7 +41,6 @@ public class UniformIntegerOperation implements IntegerExpression {
                             .reduce(-1, (x, y) -> x * y); // [a1, b1] * ... * [an, bn] >= - |max1| * ... * |maxn|, where |maxk| = max{|x|, x ∈ [ak, bk]}
                 } else { // all positive => precise lower bound [a1, b1] * ... * [an, bn] >= a1 * ... * an
                     return lowerBounds.stream()
-                            .map(Integer::intValue)
                             .reduce(1, (x, y) -> x * y);
                 }
             case "min":

@@ -83,31 +83,34 @@ public class PhylogeneticNetwork {
 
     public String toGVString() {
         String ans = "graph G {\n";
+        // ans += "  node [shape=invtriangle width=0.4 fixedsize=true height=0.4];\n";
         ans += "  node [shape=circle width=0.3 fixedsize=true height=0.3];\n";
-        ans += "  {rank = same ranksep=0.75 nodesep=0.75;";
+        ans += "  {rank=same ranksep=0.75 nodesep=0.75;";
         for (PhylogeneticNode node : nodes) {
             if (node.label != null) {
                 ans += " " + node.label;
             }
         }
         ans += "}\n";
-        ans += "  node [shape = square label = \"\" width=0.15 fixedsize=true height=0.15];\n ";
+        ans += "  node [shape=square label=\"\" width=0.15 fixedsize=true height=0.15];\n ";
+        // ans += "  node [shape=square width=0.3 fixedsize=true height=0.3];\n ";
         boolean hasReticulationNodes = false;
         for (int i = 0; i < nodes.size(); i++) {
-            if(nodes.get(i).children.size() == 1) {
+            if (nodes.get(i).children.size() == 1) {
                 ans += " _" + i;
                 hasReticulationNodes = true;
             }
         }
         if (hasReticulationNodes) {
-            ans += ";\n";
+            ans += ";\n ";
         }
-        ans += "  node [shape = point width=default height=default];\n";
+        ans += " node [shape=point width=default height=default];\n";
+        // ans += " node [shape=circle width=0.3 fixedsize=true height=0.3];\n";
         for (int i = 0; i < nodes.size(); i++) {
-            String src = (nodes.get(i).label == null) ? '_' + Integer.toString(i) : nodes.get(i).label;
+            String src = (nodes.get(i).label == null) ? "_" + i : nodes.get(i).label;
             for (int j = 0; j < nodes.get(i).children.size(); ++j) {
                 int child = nodes.get(i).children.get(j);
-                String dst = (nodes.get(child).label == null) ? '_' + Integer.toString(child) : nodes.get(child).label;
+                String dst = (nodes.get(child).label == null) ? "_" + child : nodes.get(child).label;
                 ans += "  " + src + " -- " + dst + ";\n";
             }
         }

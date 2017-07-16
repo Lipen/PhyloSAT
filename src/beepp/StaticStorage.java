@@ -2,7 +2,6 @@ package beepp;
 
 import beepp.expression.Variable;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**

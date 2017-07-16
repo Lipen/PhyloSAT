@@ -1,9 +1,7 @@
-import jebl.evolution.io.ImportException;
 import jebl.evolution.io.NewickImporter;
 import jebl.evolution.taxa.Taxon;
 import jebl.evolution.trees.SimpleRootedTree;
 import jebl.evolution.trees.Tree;
-import org.apache.commons.exec.Executor;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -72,7 +70,7 @@ public class Main {
         logger.removeHandler(fh);
     }
 
-    private int launcher(String[] args) throws IOException, ImportException {
+    private int launcher(String[] args) throws IOException {
         Locale.setDefault(Locale.US);
 
         CmdLineParser parser = new CmdLineParser(this);
