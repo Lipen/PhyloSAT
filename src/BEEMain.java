@@ -213,7 +213,7 @@ public class BEEMain {
     }
 
     private PhylogeneticNetwork solveSubtaskWithoutUNSAT(List<PhylogeneticTree> trees) throws IOException {
-        int CHECK_FIRST = 2;  // Pre-check k = 0..CHECK_FIRST
+        int CHECK_FIRST = 3;  // Pre-check k = 0..CHECK_FIRST
         // long FIRST_TIME_LIMIT = 30 * 1000;  // milliseconds, 30sec
         // long MAX_TL = 60 * 1000;  // 1min
 
