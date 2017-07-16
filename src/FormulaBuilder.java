@@ -1,5 +1,4 @@
 import java.util.*;
-import java.util.concurrent.Callable;
 
 /**
  * Vladimir Ulyantsev
@@ -149,7 +148,7 @@ public class FormulaBuilder {
             int count = 0, grSize = 0;
             for (int p : secondGetter.get(nodeNumber)) {
                 if (count == 0) {
-                    group.add(new ArrayList<Integer>());
+                    group.add(new ArrayList<>());
                     grSize++;
                 }
                 group.get(grSize - 1).add(p);
@@ -209,12 +208,7 @@ public class FormulaBuilder {
 //                return possibleParents(i);
 //            }
 //        });
-        addBimanderAtMostOne("parent", first, new Getter() {
-            @Override
-            public List<Integer> get(int i) {
-                return possibleParents(i);
-            }
-        });
+        addBimanderAtMostOne("parent", first, this::possibleParents);
 
 //        commentCNF("At-most-one constraints for parent_v_u");
 //        for (int nodeNumber = 0; nodeNumber < treeNodesCount - 1; nodeNumber++) {
@@ -278,18 +272,8 @@ public class FormulaBuilder {
 //            }
 //        });
 
-        addBimanderAtMostOne("left", first, new Getter() {
-            @Override
-            public List<Integer> get(int i) {
-                return possibleChildren(i);
-            }
-        });
-        addBimanderAtMostOne("right", first, new Getter() {
-            @Override
-            public List<Integer> get(int i) {
-                return possibleChildren(i);
-            }
-        });
+        addBimanderAtMostOne("left", first, this::possibleChildren);
+        addBimanderAtMostOne("right", first, this::possibleChildren);
 
 //        commentCNF("At-most-one constraints for left_v_u and right_v_u");
         commentCNF("Also, constraints for left_v_u < right_v_u");
@@ -339,12 +323,7 @@ public class FormulaBuilder {
 //                return possibleChildren(i);
 //            }
 //        });
-        addBimanderAtMostOne("ch", reticulationNodes(), new Getter() {
-            @Override
-            public List<Integer> get(int i) {
-                return possibleChildren(i);
-            }
-        });
+        addBimanderAtMostOne("ch", reticulationNodes(), this::possibleChildren);
 
 //        commentCNF("At-most-one constraints for ch_v_u");
 //        for (int nodeNumber : reticulationNodes()) {
@@ -402,18 +381,8 @@ public class FormulaBuilder {
 //                return possibleParents(i);
 //            }
 //        });
-        addBimanderAtMostOne("lp", reticulationNodes(), new Getter() {
-            @Override
-            public List<Integer> get(int i) {
-                return possibleParents(i);
-            }
-        });
-        addBimanderAtMostOne("rp", reticulationNodes(), new Getter() {
-            @Override
-            public List<Integer> get(int i) {
-                return possibleParents(i);
-            }
-        });
+        addBimanderAtMostOne("lp", reticulationNodes(), this::possibleParents);
+        addBimanderAtMostOne("rp", reticulationNodes(), this::possibleParents);
 
 
         commentCNF("At-most-one constraints for lp_v_u and rp_v_u");
@@ -676,12 +645,7 @@ public class FormulaBuilder {
 //                return possibleUp(i);
 //            }
 //        });
-        addBimanderAtMostOne("up_" + treeNumber, allNodes(), new Getter() {
-            @Override
-            public List<Integer> get(int i) {
-                return possibleUp(i);
-            }
-        });
+        addBimanderAtMostOne("up_" + treeNumber, allNodes(), this::possibleUp);
 
 //        commentCNF("At-most-one constraints for up_%d_v_u", treeNumber);
 //        for (int nodeNumber : allNodes()) {

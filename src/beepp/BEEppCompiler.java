@@ -14,7 +14,7 @@ import java.util.HashMap;
  */
 public class BEEppCompiler {
 
-    public static void fastCompile(String formula, OutputStream destination) throws IOException {
+    public static void fastCompile(String formula, OutputStream destination) {
         StaticStorage.resetVarCounter();
         StaticStorage.vars = new HashMap<>();
         BufferedReader br = new BufferedReader(new StringReader(formula));

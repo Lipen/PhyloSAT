@@ -80,10 +80,10 @@ public class CryptominisatPort {
         }
 
         String[] splitAns = ansLine.split(" ");
-        ArrayList<Integer> model = new ArrayList<Integer>();
+        ArrayList<Integer> model = new ArrayList<>();
         int max_c = 0;
-        for (int i = 0; i < splitAns.length; i++) {
-            int c = Integer.parseInt(splitAns[i]);
+        for (String splitAn : splitAns) {
+            int c = Integer.parseInt(splitAn);
             model.add(c);
             max_c = Math.max(Math.abs(c), max_c);
         }
