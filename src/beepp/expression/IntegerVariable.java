@@ -32,25 +32,15 @@ public class IntegerVariable extends Variable implements IntegerExpression {
 
     @Override
     public String getDeclaration() {
-//        if (isDual) {
-//            if (domain.isAtomicRange()) {
-//                return "new_int_dual(" + name + ", " + domain + ")";
-//            } else {
-//                return "new_int(" + name + ", " + domain + ")\n" +
-//                        "channel_int2direct(" + name + ")";
-//            }
-//        } else {
-        String decl;
+        String decl = "new_int";
         if (domain.isAtomicRange()) {
-            decl = "new_int(" + name + ", " + domain.lowerBound() + ", " + domain.upperBound() + ")";
+            if (isDual) decl += "_dual";
+            decl += "(" + name + ", " + domain.lowerBound() + ", " + domain.upperBound() + ")";
         } else {
-            decl = "new_int(" + name + ", " + domain + ")";
-        }
-        if (isDual) {
-            decl += "\nchannel_int2direct(" + name + ")";
+            decl += "(" + name + ", " + domain + ")";
+            if (isDual) decl += "\nchannel_int2direct(" + name + ")";
         }
         return decl;
-//        }
     }
 
     @Override
