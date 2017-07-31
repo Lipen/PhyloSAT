@@ -1,48 +1,18 @@
 import org.apache.commons.exec.*;
 
-import java.io.*;
-import java.util.Arrays;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
-/**
- * @author Moklev Vyacheslav
- */
-public class BEERunner {
+class Runner {
     private static final Pattern PATTERN =
-            Pattern.compile("^((?:l|r|c|pl|pr)_\\d+)\\s*=\\s*(\\d+)$");
+            Pattern.compile("^(p_\\d+(?:_\\d+)?)\\s*=\\s*(\\d+|true|false)$");
 
-    private static int execute(String... args) {
-        try {
-            Process p = Runtime.getRuntime()
-                .exec("BumbleBEE " + Arrays.stream(args)
-                .map(s -> "\"" + s + "\"")
-                .collect(Collectors.joining(" ")));
-            int retCode = p.waitFor();
-            System.out.println(p.getErrorStream().toString());
-            System.out.println(p.getOutputStream().toString());
-            return retCode;
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-            return -1;
-        }
-    }
-
-    public static void makeDimacs(String inBEE, String outDimacs, String outMap) {
-        try {
-            new PrintWriter(outDimacs).close();
-            new PrintWriter(outMap).close();
-            execute(inBEE, "-dimacs", outDimacs, outMap);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static Map<String, Object> resolve(String inBEE, long timeLimit, long[] executionTime) throws IOException {
+    static Map<String, Object> resolve(String inBEE, long timeLimit, long[] executionTime) throws IOException {
         String command = "BumbleBEE " + inBEE;
         CommandLine cmdLine = CommandLine.parse(command);
 
@@ -96,8 +66,13 @@ public class BEERunner {
 
             if (matcher.find()) {
                 String name = matcher.group(1);
-                int value = Integer.parseInt(matcher.group(2));
-                map.put(name, value);
+                try {
+                    int value = Integer.parseInt(matcher.group(2));
+                    map.put(name, value);
+                } catch (NumberFormatException e) {
+                    boolean value = Boolean.parseBoolean(matcher.group(2));
+                    map.put(name, value);
+                }
             }
         }
 
