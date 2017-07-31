@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="phylosat" default="all">
+
+
+  <property file="phylosat.properties"/>
+  <!-- Uncomment the following property if no tests compilation is needed -->
+
+  <property name="skip.tests" value="true"/>
+
+
+  <!-- Compiler options -->
+
+  <property name="compiler.debug" value="on"/>
+  <property name="compiler.generate.no.warnings" value="off"/>
+  <property name="compiler.args" value=""/>
+  <property name="compiler.max.memory" value="700m"/>
+  <patternset id="ignored.files">
+    <exclude name="**/*.hprof/**"/>
+    <exclude name="**/*.pyc/**"/>
+    <exclude name="**/*.pyo/**"/>
+    <exclude name="**/*.rbc/**"/>
+    <exclude name="**/*.yarb/**"/>
+    <exclude name="**/*~/**"/>
+    <exclude name="**/.DS_Store/**"/>
+    <exclude name="**/.git/**"/>
+    <exclude name="**/.hg/**"/>
+    <exclude name="**/.svn/**"/>
+    <exclude name="**/CVS/**"/>
+    <exclude name="**/__pycache__/**"/>
+    <exclude name="**/_svn/**"/>
+    <exclude name="**/vssver.scc/**"/>
+    <exclude name="**/vssver2.scc/**"/>
+  </patternset>
+  <patternset id="library.patterns">
+    <include name="*.war"/>
+    <include name="*.swc"/>
+    <include name="*.apk"/>
+    <include name="*.zip"/>
+    <include name="*.egg"/>
+    <include name="*.ane"/>
+    <include name="*.jar"/>
+    <include name="*.ear"/>
+  </patternset>
+  <patternset id="compiler.resources">
+    <exclude name="**/?*.java"/>
+    <exclude name="**/?*.form"/>
+    <exclude name="**/?*.class"/>
+    <exclude name="**/?*.groovy"/>
+    <exclude name="**/?*.scala"/>
+    <exclude name="**/?*.flex"/>
+    <exclude name="**/?*.kt"/>
+    <exclude name="**/?*.clj"/>
+    <exclude name="**/?*.aj"/>
+  </patternset>
+
+
+  <!-- Project Libraries -->
+
+  <path id="library.lib.classpath">
+    <pathelement location="${basedir}/lib/antlr-4.7-complete.jar"/>
+    <pathelement location="${basedir}/lib/args4j-2.0.12.jar"/>
+    <pathelement location="${basedir}/lib/commons-exec-1.1.jar"/>
+    <pathelement location="${basedir}/lib/hamcrest-core-1.3.jar"/>
+    <pathelement location="${basedir}/lib/jebl.jar"/>
+    <pathelement location="${basedir}/lib/junit-4.11.jar"/>
+  </path>
+
+  <!-- Modules -->
+
+
+  <!-- Module PhyloSAT -->
+
+  <dirname property="module.phylosat.basedir" file="${ant.file}"/>
+
+
+
+  <property name="compiler.args.phylosat" value="-encoding UTF-8 -source 8 -target 8 ${compiler.args}"/>
+
+  <property name="phylosat.output.dir" value="${module.phylosat.basedir}/out/production/PhyloSAT"/>
+  <property name="phylosat.testoutput.dir" value="${module.phylosat.basedir}/out/test/PhyloSAT"/>
+
+  <path id="phylosat.module.bootclasspath">
+    <!-- Paths to be included in compilation bootclasspath -->
+  </path>
+
+  <path id="phylosat.module.production.classpath">
+    <path refid="library.lib.classpath"/>
+  </path>
+
+  <path id="phylosat.runtime.production.module.classpath">
+    <pathelement location="${phylosat.output.dir}"/>
+    <path refid="library.lib.classpath"/>
+  </path>
+
+  <path id="phylosat.module.classpath">
+    <pathelement location="${phylosat.output.dir}"/>
+    <path refid="library.lib.classpath"/>
+  </path>
+
+  <path id="phylosat.runtime.module.classpath">
+    <pathelement location="${phylosat.testoutput.dir}"/>
+    <pathelement location="${phylosat.output.dir}"/>
+    <path refid="library.lib.classpath"/>
+  </path>
+
+
+  <patternset id="excluded.from.module.phylosat">
+    <patternset refid="ignored.files"/>
+  </patternset>
+
+  <patternset id="excluded.from.compilation.phylosat">
+    <patternset refid="excluded.from.module.phylosat"/>
+  </patternset>
+
+  <path id="phylosat.module.sourcepath">
+    <dirset dir="${module.phylosat.basedir}">
+      <include name="src"/>
+      <include name="gen"/>
+    </dirset>
+  </path>
+
+  <path id="phylosat.module.test.sourcepath">
+    <dirset dir="${module.phylosat.basedir}">
+      <include name="tests"/>
+    </dirset>
+  </path>
+
+
+  <target name="compile.module.phylosat" depends="compile.module.phylosat.production,compile.module.phylosat.tests" description="Compile module PhyloSAT"/>
+
+  <target name="compile.module.phylosat.production" description="Compile module PhyloSAT; production classes">
+    <mkdir dir="${phylosat.output.dir}"/>
+    <javac destdir="${phylosat.output.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true" includeantruntime="false">
+      <compilerarg line="${compiler.args.phylosat}"/>
+      <bootclasspath refid="phylosat.module.bootclasspath"/>
+      <classpath refid="phylosat.module.production.classpath"/>
+      <src refid="phylosat.module.sourcepath"/>
+      <patternset refid="excluded.from.compilation.phylosat"/>
+      <!-- <exclude name="Manager.java"/> -->
+    </javac>
+
+    <copy todir="${phylosat.output.dir}">
+      <fileset dir="${module.phylosat.basedir}/src">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+      </fileset>
+      <fileset dir="${module.phylosat.basedir}/gen">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <target name="compile.module.phylosat.tests" depends="compile.module.phylosat.production" description="compile module PhyloSAT; test classes" unless="skip.tests">
+    <mkdir dir="${phylosat.testoutput.dir}"/>
+    <javac destdir="${phylosat.testoutput.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true">
+      <compilerarg line="${compiler.args.phylosat}"/>
+      <bootclasspath refid="phylosat.module.bootclasspath"/>
+      <classpath refid="phylosat.module.classpath"/>
+      <src refid="phylosat.module.test.sourcepath"/>
+      <patternset refid="excluded.from.compilation.phylosat"/>
+    </javac>
+
+    <copy todir="${phylosat.testoutput.dir}">
+      <fileset dir="${module.phylosat.basedir}/tests">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <target name="clean.module.phylosat" description="cleanup module">
+    <delete dir="${phylosat.output.dir}"/>
+    <delete dir="${phylosat.testoutput.dir}"/>
+  </target>
+
+  <target name="init" description="Build initialization">
+    <!-- Perform any build initialization in this target -->
+  </target>
+
+  <target name="clean" depends="clean.module.phylosat" description="cleanup all"/>
+
+  <target name="build.modules" depends="init, clean, compile.module.phylosat" description="build all modules"/>
+
+  <target name="init.artifacts">
+    <property name="artifacts.temp.dir" value="${basedir}/__artifacts_temp"/>
+    <property name="artifact.output.phylosat:jar" value="${basedir}/out/artifacts/PhyloSAT_jar"/>
+    <mkdir dir="${artifacts.temp.dir}"/>
+    <property name="temp.jar.path.PhyloSAT.jar" value="${artifacts.temp.dir}/PhyloSAT.jar"/>
+  </target>
+
+  <target name="artifact.phylosat:jar" depends="init.artifacts, compile.module.phylosat" description="Build &#39;PhyloSAT:jar&#39; artifact">
+    <property name="artifact.temp.output.phylosat:jar" value="${artifacts.temp.dir}/PhyloSAT_jar"/>
+    <mkdir dir="${artifact.temp.output.phylosat:jar}"/>
+    <jar destfile="${temp.jar.path.PhyloSAT.jar}" duplicate="preserve" filesetmanifest="mergewithoutmain">
+      <zipfileset dir="${phylosat.output.dir}"/>
+      <zipfileset src="${basedir}/lib/args4j-2.0.12.jar"/>
+      <zipfileset src="${basedir}/lib/hamcrest-core-1.3.jar"/>
+      <zipfileset src="${basedir}/lib/jebl.jar"/>
+      <zipfileset src="${basedir}/lib/commons-exec-1.1.jar"/>
+      <zipfileset src="${basedir}/lib/junit-4.11.jar"/>
+      <zipfileset src="${basedir}/lib/antlr-4.7-complete.jar"/>
+      <manifest>
+        <attribute name="Main-Class" value="Main"/>
+      </manifest>
+    </jar>
+    <copy file="${temp.jar.path.PhyloSAT.jar}" tofile="${artifact.temp.output.phylosat:jar}/PhyloSAT.jar"/>
+  </target>
+
+  <target name="build.all.artifacts" depends="artifact.phylosat:jar" description="Build all artifacts">
+    <mkdir dir="${artifact.output.phylosat:jar}"/>
+    <copy todir="${artifact.output.phylosat:jar}">
+      <fileset dir="${artifact.temp.output.phylosat:jar}"/>
+    </copy>
+
+    <!-- Delete temporary files -->
+    <delete dir="${artifacts.temp.dir}"/>
+  </target>
+
+  <target name="all" depends="build.modules, build.all.artifacts" description="build all"/>
+</project>
