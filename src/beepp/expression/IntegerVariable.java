@@ -12,13 +12,13 @@ public class IntegerVariable extends Variable implements IntegerExpression {
     private final RangeUnion domain;
     private final boolean isDual;
 
-    private IntegerVariable(String name, RangeUnion domain, boolean isDual) {
+    public IntegerVariable(String name, RangeUnion domain, boolean isDual) {
         super(name);
         this.domain = domain;
         this.isDual = isDual;
     }
 
-    private IntegerVariable(String name, int lowerBound, int upperBound, boolean isDual) {
+    public IntegerVariable(String name, int lowerBound, int upperBound, boolean isDual) {
         this(name, new RangeUnion(lowerBound, upperBound), isDual);
     }
 
