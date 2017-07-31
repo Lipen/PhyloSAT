@@ -35,6 +35,7 @@ def run(cmd):
     print('[.] Running "{}"...'.format(cmd))
     subprocess.run(cmd, shell=True)
 
+
 run('java -jar out/artifacts/PhyloSAT_jar/PhyloSAT.jar {} {} -r {}'.format(filename_input, extra_args, filename_output_network))
 
 print('[*] Rendering...')
