@@ -67,6 +67,10 @@ public class RangeUnion {
         }
     }
 
+    public boolean isEmpty() {
+        return ranges.isEmpty();
+    }
+
     public boolean isAtomicRange() {
         return ranges.size() == 1;
     }

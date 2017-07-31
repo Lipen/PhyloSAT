@@ -29,6 +29,7 @@ XOR:        '^';
 EQ:         '=';
 IFF:        '<=>';
 ARROW:      '->';
+ALO:        'ALO';
 AMO:        'AMO';
 
 // Boolean operations: alternative notation
@@ -51,6 +52,6 @@ BOOL_CONST: 'true' | 'false';
 ID:         [a-zA-Z_]+ [a-zA-Z0-9_]*;
 
 // Ignored characters -- used only as a delimiters
-WS:             [ \t\n\r]+ -> channel(HIDDEN);
-COMMENT:        '/*' .*? '*/' -> skip;
-LINE_COMMENT:   '//' ~'\n'* '\n' -> skip;
+WS:           [ \t\n\r]+ -> channel(HIDDEN);
+LINE_COMMENT: '//' ~'\n'*;
+EXPLICIT:     '@' ~'\n'*;
