@@ -14,8 +14,8 @@ import java.util.stream.Stream;
  * @author Vyacheslav Moklev
  */
 public class UniformBooleanOperation implements BooleanExpression {
-    private List<BooleanExpression> list;
-    private String op; // supported operations: and, or, xor, iff 
+    private final List<BooleanExpression> list;
+    private final String op; // supported operations: and, or, xor, iff
 
     public UniformBooleanOperation(String op, BooleanExpression first, BooleanExpression... rest) {
         this.op = op;

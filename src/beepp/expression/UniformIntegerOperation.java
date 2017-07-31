@@ -14,8 +14,8 @@ import java.util.stream.IntStream;
  * @author Vyacheslav Moklev
  */
 public class UniformIntegerOperation implements IntegerExpression {
-    private List<IntegerExpression> list;
-    private String op; // available: plus, times, min, max
+    private final List<IntegerExpression> list;
+    private final String op; // available: plus, times, min, max
 
     public UniformIntegerOperation(String op, IntegerExpression first, IntegerExpression... rest) {
         this.op = op;

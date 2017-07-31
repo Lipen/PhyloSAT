@@ -9,8 +9,9 @@ import java.util.Map;
  * @author Vyacheslav Moklev
  */
 public class BinaryIntBooleanOperation implements BooleanExpression { 
-    private IntegerExpression left, right;
-    private String op;
+    private final IntegerExpression left;
+    private final IntegerExpression right;
+    private final String op;
 
     public BinaryIntBooleanOperation(String op, IntegerExpression left, IntegerExpression right) {
         this.left = left;

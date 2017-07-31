@@ -12,8 +12,9 @@ import java.util.Map;
  * @author Vyacheslav Moklev
  */
 public class BinaryIntegerOperation implements IntegerExpression{ 
-    private IntegerExpression left, right;
-    private String op;
+    private final IntegerExpression left;
+    private final IntegerExpression right;
+    private final String op;
 
     public BinaryIntegerOperation (String op, IntegerExpression left, IntegerExpression right) {
         this.left = left;

@@ -8,7 +8,7 @@ import java.util.Map;
  * @author Vyacheslav Moklev
  */
 public class NegateBooleanExpression implements BooleanExpression {
-    private BooleanExpression expr;
+    private final BooleanExpression expr;
 
     public NegateBooleanExpression(BooleanExpression expr) {
         this.expr = expr;

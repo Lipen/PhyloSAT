@@ -9,7 +9,8 @@ import java.util.Map;
  * @author Vyacheslav Moklev
  */
 public class ThenBooleanOperation implements BooleanExpression {
-    private BooleanExpression from, to;
+    private final BooleanExpression from;
+    private final BooleanExpression to;
 
     public ThenBooleanOperation(BooleanExpression from, BooleanExpression to) {
         this.from = from;

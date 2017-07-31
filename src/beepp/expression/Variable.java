@@ -4,9 +4,9 @@ package beepp.expression;
  * @author Vyacheslav Moklev
  */
 public abstract class Variable {
-    protected String name;
+    final String name;
 
-    public Variable(String name) {
+    Variable(String name) {
         this.name = name;
     }
 

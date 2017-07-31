@@ -8,7 +8,7 @@ import java.util.Map;
  * @author Vyacheslav Moklev
  */
 public class IntegerConstant implements IntegerExpression {
-    private int value;
+    private final int value;
 
     public IntegerConstant(int value) {
         this.value = value;

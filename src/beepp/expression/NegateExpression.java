@@ -8,7 +8,7 @@ import java.util.Map;
  * @author Vyacheslav Moklev
  */
 public class NegateExpression implements IntegerExpression {
-    private IntegerExpression expr;
+    private final IntegerExpression expr;
 
     public NegateExpression(IntegerExpression expr) {
         this.expr = expr;
