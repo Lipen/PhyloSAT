@@ -22,7 +22,7 @@ qwerty5:
 
 Grass2: Grass2NdhfWaxy Grass2PhytRbcl Grass2PhytRpoc Grass2PhytWaxy Grass2RbclWaxy Grass2RpocWaxy Grass2WaxyIts
 Grass2NdhfWaxy:
-	# ${PY} run.py ${DIR_GRASS2}/Grass2NdhfWaxy.tree.restrict.num network_Grass2NdhfWaxy -ftl -1 -cf 5
+	${PY} run.py ${DIR_GRASS2}/Grass2NdhfWaxy.tree.restrict.num network_Grass2NdhfWaxy -ftl -1 -cf 3
 Grass2PhytRbcl:
 	${PY} run.py ${DIR_GRASS2}/Grass2PhytRbcl.tree.restrict.num network_Grass2PhytRbcl -ftl -1 -cf 5
 Grass2PhytRpoc:
@@ -34,7 +34,7 @@ Grass2RbclWaxy:
 Grass2RpocWaxy:
 	${PY} run.py ${DIR_GRASS2}/Grass2RpocWaxy.tree.restrict.num network_Grass2RpocWaxy -ftl -1 -cf 5
 Grass2WaxyIts:
-	# ${PY} run.py ${DIR_GRASS2}/Grass2WaxyIts.tree.restrict.num network_Grass2WaxyIts -ftl -1 -cf 5
+	${PY} run.py ${DIR_GRASS2}/Grass2WaxyIts.tree.restrict.num network_Grass2WaxyIts -ftl -1 -cf 5
 
 Grass3:Grass3NdhfPhytRbcl Grass3NdhfPhytRpoc Grass3NdhfPhytWaxy Grass3NdhfRbclWaxy Grass3NdhfRpocWaxy Grass3NdhfWaxyIts Grass3PhytRbclIts Grass3PhytRbclRpoc Grass3PhytRbclWaxy Grass3PhytRpocIts Grass3PhytRpocWaxy Grass3PhytWaxyIts Grass3RbclRpocIts Grass3RbclRpocWaxy Grass3RbclWaxyIts Grass3RpocWaxyIts
 Grass3NdhfPhytRbcl:
@@ -88,7 +88,7 @@ Grass3NdhfRpocWaxy_ds:
 
 Grass2_ds: Grass2NdhfWaxy_ds Grass2PhytRbcl_ds Grass2PhytRpoc_ds Grass2PhytWaxy_ds Grass2RbclWaxy_ds Grass2RpocWaxy_ds Grass2WaxyIts_ds
 Grass2NdhfWaxy_ds:
-	# ${PY} run.py ${DIR_GRASS2}/Grass2NdhfWaxy.tree.restrict.num network_Grass2NdhfWaxy -ds -h 1 -tl -1
+	${PY} run.py ${DIR_GRASS2}/Grass2NdhfWaxy.tree.restrict.num network_Grass2NdhfWaxy -ds -h 7 -tl -1
 Grass2PhytRbcl_ds:
 	${PY} run.py ${DIR_GRASS2}/Grass2PhytRbcl.tree.restrict.num network_Grass2PhytRbcl -ds -h 4 -tl -1
 Grass2PhytRpoc_ds:
