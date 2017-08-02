@@ -87,8 +87,14 @@ class Main {
         new Main().run(args);
     }
 
-    private FileHandler addLoggerHandler(String logFilePath) throws IOException {
-        FileHandler fh = new FileHandler(logFilePath, false);
+    private FileHandler addLoggerHandler(String logFilePath) {
+        FileHandler fh;
+        try {
+            fh = new FileHandler(logFilePath, false);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException("RUN!");
+        }
         fh.setFormatter(new SimpleFormatter());
 
         logger.addHandler(fh);
@@ -97,7 +103,7 @@ class Main {
         return fh;
     }
 
-    private void launcher(String[] args) throws IOException {
+    private void launcher(String[] args) {
         Locale.setDefault(Locale.US);
 
         CmdLineParser parser = new CmdLineParser(this);
