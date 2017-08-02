@@ -14,16 +14,13 @@ import java.util.HashMap;
  * @author Moklev Vyacheslav
  */
 public class BEEppCompiler {
-
-    public static void fastCompile(String formula, OutputStream destination) throws IOException {
+    public static void fastCompile(String formula, String filename) {
         StaticStorage.resetVarCounter();
         StaticStorage.vars = new HashMap<>();
         try (BufferedReader br = new BufferedReader(new StringReader(formula));
-             PrintWriter pw = new PrintWriter(destination)
+             PrintWriter pw = new PrintWriter(filename)
         ) {
             br.lines().forEach(line -> {
-                // if (line.trim().startsWith("//"))
-                //     return;
                 CharStream inputStream = CharStreams.fromString(line);
                 BEEppLexer lexer = new BEEppLexer(inputStream);
                 TokenStream tokens = new CommonTokenStream(lexer);
@@ -47,6 +44,11 @@ public class BEEppCompiler {
 
             pw.println("solve satisfy");
             pw.flush();
+        } catch (FileNotFoundException e) {
+            System.err.println("[!] Couldn't open <" + filename + ">: " + e.getMessage());
+        } catch (IOException e) {
+            System.err.println("[!] So sad: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }

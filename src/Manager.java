@@ -1,6 +1,5 @@
 import jebl.evolution.trees.SimpleRootedTree;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -11,17 +10,22 @@ import java.util.stream.Collectors;
 class Manager {
     private final List<Tree> trees;
     private final List<Subtask> subtasks = new ArrayList<>(1);
+    private Network result;
+    private SolveParameters solveParameters;
 
 
-    Manager(List<SimpleRootedTree> trees) {
+    Manager(List<SimpleRootedTree> trees, SolveParameters solveParameters) {
         this.trees = trees.stream()
                 .map(Tree::new)
                 .collect(Collectors.toList());
         this.subtasks.add(new ClusterSubtask(this.trees));
+        this.solveParameters = solveParameters;
     }
 
 
     void preprocess() {
+        System.out.println("[*] Preprocessing...");
+
         int collapsedCounter = 0;
 
         if (Tree.collapse(trees, subtasks))
@@ -29,6 +33,8 @@ class Manager {
 
         while (Tree.clusterize(trees, subtasks) && Tree.collapse(trees, subtasks))
             collapsedCounter++;
+
+        System.out.println("[+] Total number of collapses: " + collapsedCounter);
     }
 
     List<CollapsedSubtask> getCollapsedSubtasks() {
@@ -45,24 +51,50 @@ class Manager {
                 .collect(Collectors.toList());
     }
 
+    void solve() {
+        for (CollapsedSubtask subtask : getCollapsedSubtasks())
+            subtask.solve(solveParameters);
+
+        for (ClusterSubtask subtask : getClusterSubtasks())
+            subtask.solve(solveParameters);
+    }
+
     Network cookNetwork() {
-        Network ans = subtasks.get(0).answer;
+        result = subtasks.get(0).answer;
 
         for (int i = subtasks.size() - 1; i > 0; i--) {
-            ans.substituteSubtask(subtasks.get(i));
+            result.substituteSubtask(subtasks.get(i));
         }
 
-        return ans;
+        return result;
     }
 
     void printTrees(String resultFilePath, Logger logger) {
+        if (resultFilePath == null)
+            return;
+
         for (int i = 0; i < trees.size(); ++i) {
             String treeFilePath = resultFilePath + ".tree" + i + ".gv";
-            try (PrintWriter gvPrintWriter = new PrintWriter(new File(treeFilePath))) {
+
+            try (PrintWriter gvPrintWriter = new PrintWriter(treeFilePath)) {
+                logger.info(String.format("Printing tree #%d to <%s>", i, treeFilePath));
                 gvPrintWriter.print(trees.get(i).toGVString());
             } catch (FileNotFoundException e) {
                 logger.warning("Couldn't open <" + resultFilePath + ">:\n" + e.getMessage());
             }
+        }
+    }
+
+    void printNetwork(String resultFilePath, Logger logger) {
+        if (resultFilePath == null)
+            return;
+        String networkFilePath = resultFilePath + ".gv";
+
+        try (PrintWriter gvPrintWriter = new PrintWriter(networkFilePath)) {
+            logger.info(String.format("Printing network to <%s>", networkFilePath));
+            gvPrintWriter.print(result.toGVString());
+        } catch (FileNotFoundException e) {
+            logger.warning("Couldn't open <" + resultFilePath + ">:\n" + e.getMessage());
         }
     }
 }

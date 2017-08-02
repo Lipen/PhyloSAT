@@ -99,10 +99,6 @@ final class Network extends Graph {
         this.n = trees.get(0).getTaxaSize();
         this.k = hybridizationNumber;
 
-        // System.out.println("Constructing network from trees:");
-        // for (Tree tree : trees)
-        //     System.out.println("\t" + tree);
-
         int rho;
         if (trees.get(0).hasFictitiousRoot())
             rho = 2 * n + k;
@@ -143,8 +139,6 @@ final class Network extends Graph {
         /* Builds network from just one tree, so it has no reticulate nodes */
         this.n = subtree.getTaxaSize();
         this.k = 0;
-
-        System.out.println("Constructing network from subtree (n=" + n + "):\n\t" + subtree);
 
         Map<Integer, Integer> parentMapping = subtree.getParentMapping();
         int rho;
@@ -194,7 +188,7 @@ final class Network extends Graph {
             String label = leaf.getLabel();
 
             if (label.equals(subtaskLabel)) {
-                System.out.println("Substituting subtask: " + subtaskLabel);
+                System.out.println("[*] Substituting subtask: " + subtaskLabel);
                 injectNetwork(subtask.answer, leaf);
                 flag = false;
                 break;
@@ -206,16 +200,16 @@ final class Network extends Graph {
 
         this.n = root.getLeaves().size();
         this.k += subtask.answer.getK();
-        System.out.println("Now n = " + n + ", k = " + k);
+        System.out.println("[.] Now n = " + n + ", k = " + k);
     }
 
-    private void injectNetwork(Network network, NetworkNode leaf) {
-        if (network == null)
+    private void injectNetwork(Network injection, NetworkNode leaf) {
+        if (injection == null)
             return;
 
         NetworkNode leafParent = leaf.getParent();
-        Collections.replaceAll(leafParent.getChildren(), leaf, network.root);
-        network.root.setParent(leafParent);
+        Collections.replaceAll(leafParent.getChildren(), leaf, injection.root);
+        injection.root.setParent(leafParent);
     }
 
     private List<NetworkNode> traverseBottomUp(boolean addRoot, boolean addLeaves) {
@@ -249,8 +243,6 @@ final class Network extends Graph {
         Map<NetworkNode, Integer> m = new HashMap<>();
         m.put(null, 0);  // stub
         List<NetworkNode> leaves = getTaxa();
-        // System.out.println("Leaves: " + leaves);
-        // System.out.println("Root: " + root);
 
         ans.append("  /* Leaves */\n");
         ans.append("  { node [shape=invtriangle] rank=sink\n");
@@ -265,7 +257,6 @@ final class Network extends Graph {
 
         ans.append("  /* Internals and Reticulates */\n");
         List<NetworkNode> traversal = traverseBottomUp(true, false);
-        // System.out.println("Traversal: " + traversal);
 
         for (NetworkNode node : traversal) {
             m.put(node, m.size());
@@ -308,11 +299,6 @@ final class Network extends Graph {
     private IntStream R(int rho) {
         /* Reticulate */
         return IntStream.rangeClosed(rho + 1, rho + k);
-    }
-
-    private IntStream LV(int rho) {
-        /* Leaves + Vertices */
-        return IntStream.concat(L(), V(rho));
     }
 
     private IntStream LV_(int rho) {

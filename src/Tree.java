@@ -218,7 +218,7 @@ final class Tree extends Graph {
                 String label = leaves.stream()
                         .map(Node::getLabel)
                         .collect(Collectors.joining("+"));
-                System.out.println("Collapsed " + leaves.size() + " leaves into " + label);
+                System.out.println("[.] Collapsed " + leaves.size() + " leaves into " + label);
                 Tree subtree = firstTree.buildSubtree(first);
 
                 // subtrees_external.add(subtree);
@@ -267,7 +267,7 @@ final class Tree extends Graph {
                 String label = leaves.stream()
                         .map(Node::getLabel)
                         .collect(Collectors.joining("+"));
-                System.out.println("Clusterized " + leaves.size() + " leaves into " + label);
+                System.out.println("[.] Clusterized " + leaves.size() + " leaves into " + label);
                 List<Tree> clusters = new ArrayList<>();
 
                 for (int t = 0; t < trees.size(); t++) {

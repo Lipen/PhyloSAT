@@ -26,11 +26,11 @@ class FormulaBuilder {
         this.m1 = maximumChildren;
         this.m2 = maximumParents;
 
-        System.out.println("n = " + n + (hasFictitiousRoot ? "+1" : "") + ", k = " + k);
-        System.out.println("L = " + makeList(L()));
-        System.out.println("V = " + makeList(V()));
-        System.out.println("R = " + makeList(R()));
-        System.out.println("T = " + makeList(T()));
+        // System.out.println("n = " + n + (hasFictitiousRoot ? "+1" : "") + ", k = " + k);
+        // System.out.println("L = " + makeList(L()));
+        // System.out.println("V = " + makeList(V()));
+        // System.out.println("R = " + makeList(R()));
+        // System.out.println("T = " + makeList(T()));
     }
 
     public String build() {

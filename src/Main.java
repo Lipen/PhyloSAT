@@ -7,7 +7,9 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.spi.BooleanOptionHandler;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.*;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
@@ -15,6 +17,7 @@ import java.util.logging.SimpleFormatter;
 import java.util.stream.Collectors;
 
 class Main {
+    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     @Argument(usage = "paths to files with trees", metaVar = "treesPaths", required = true)
     private List<String> treesPaths = new ArrayList<>();
 
@@ -25,9 +28,7 @@ class Main {
             "-r"}, usage = "write result network in GV format to this file", metaVar = "<GV file>")
     private String resultFilePath = "network";
 
-    @Option(name = "--cnf", usage = "write CNF formula to this file", metaVar = "<file>")
-    private String cnfFilePath = "cnf";
-
+    @SuppressWarnings("unused")
     @Option(name = "--solverOptions", aliases = {
             "-s"}, usage = "launch with this solver and solver options", metaVar = "<string>")
     private String solverOptions = "cryptominisat --threads=4";
@@ -35,14 +36,6 @@ class Main {
     @Option(name = "--hybridizationNumber", aliases = {
             "-h", "-hn"}, usage = "hybridization number, available in -ds mode", metaVar = "<int>")
     private int hn = -1;
-
-    @Option(name = "--enableReticulationEdges", aliases = {
-            "-e"}, handler = BooleanOptionHandler.class, usage = "does reticulation-reticulation connection enabled")
-    private boolean enableReticulationEdges = false;
-
-    @Option(name = "--disableComments", aliases = {
-            "-dc"}, handler = BooleanOptionHandler.class, usage = "disables comments in CNF")
-    private boolean disableComments = false;
 
     @Option(name = "--disableSplits", aliases = {
             "-ds"}, handler = BooleanOptionHandler.class, usage = "disables splits, so it is possible to set hybridization number")
@@ -72,28 +65,21 @@ class Main {
 
     private Logger logger = Logger.getLogger("Logger");
 
-    private static String path(String filepath) throws IOException {
-        return new File(filepath).getCanonicalPath();
-    }
-
     private static void checkTrees(List<SimpleRootedTree> trees) {
-        if (trees.size() < 2) {
+        if (trees.size() < 2)
             throw new RuntimeException("There are less then 2 trees");
-        }
 
         Set<Taxon> taxa = new TreeSet<>(trees.get(0).getTaxa());
         int taxaSize = taxa.size();
+
         for (int t = 1; t < trees.size(); t++) {
             SimpleRootedTree tree = trees.get(t);
             Set<Taxon> treeTaxa = new TreeSet<>(tree.getTaxa());
-            if (treeTaxa.size() != taxaSize) {
-                String msg = String.format("Tree %d has %d taxa, but tree 0 has %d", t, treeTaxa.size(), taxaSize);
-                throw new RuntimeException(msg);
-            }
-            if (!taxa.containsAll(treeTaxa)) {
-                String msg = String.format("Tree %d and tree 0 has different taxa", t);
-                throw new RuntimeException(msg);
-            }
+
+            if (treeTaxa.size() != taxaSize)
+                throw new RuntimeException(String.format("Tree %d has %d taxa, but tree 0 has %d", t, treeTaxa.size(), taxaSize));
+            if (!taxa.containsAll(treeTaxa))
+                throw new RuntimeException(String.format("Tree %d and tree 0 has different taxa", t));
         }
     }
 
@@ -103,20 +89,15 @@ class Main {
 
     private FileHandler addLoggerHandler(String logFilePath) throws IOException {
         FileHandler fh = new FileHandler(logFilePath, false);
-        logger.addHandler(fh);
-        SimpleFormatter formatter = new SimpleFormatter();
-        fh.setFormatter(formatter);
+        fh.setFormatter(new SimpleFormatter());
 
+        logger.addHandler(fh);
         logger.setUseParentHandlers(false);
         System.out.println("Log redirected to " + logFilePath);
         return fh;
     }
 
-    public void removeLoggerHandler(FileHandler fh) {
-        logger.removeHandler(fh);
-    }
-
-    private int launcher(String[] args) throws IOException {
+    private void launcher(String[] args) throws IOException {
         Locale.setDefault(Locale.US);
 
         CmdLineParser parser = new CmdLineParser(this);
@@ -129,12 +110,17 @@ class Main {
             parser.printSingleLineUsage(System.out);
             System.out.println();
             parser.printUsage(System.out);
-            return -1;
+            return;
         }
+
+        if (maxTimeLimit > 0)
+            maxTimeLimit *= 1000;
+        if (firstTimeLimit > 0)
+            firstTimeLimit *= 1000;
 
         if (!disableSplits && hn >= 0) {
             System.out.println("Hybridization number can be set only in -ds mode");
-            return -1;
+            return;
         }
 
         if (logFilePath != null) {
@@ -142,7 +128,7 @@ class Main {
                 this.loggerHandler = addLoggerHandler(logFilePath);
             } catch (Exception e) {
                 System.err.println("Can't work with log file " + logFilePath + ": " + e.getMessage());
-                return -1;
+                return;
             }
         }
 
@@ -151,55 +137,31 @@ class Main {
             try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
                 NewickImporter importer = new NewickImporter(reader, false);
                 trees.addAll(importer.importTrees().stream()
-                        // .map(SimpleRootedTree.class::cast)
                         .map(t -> (SimpleRootedTree) t)
                         .collect(Collectors.toList()));
             } catch (Exception e) {
                 logger.warning("Can't load trees from file " + filePath);
                 e.printStackTrace();
-                return -1;
+                return;
             }
         }
         checkTrees(trees);
 
-        Manager manager = new Manager(trees);
+        Manager manager = new Manager(trees,
+                new SolveParameters(hn, m1, m2, firstTimeLimit, maxTimeLimit, checkFirst));
+
+        manager.printTrees(resultFilePath, logger);
 
         if (!disableSplits)
             manager.preprocess();
 
-        for (CollapsedSubtask subtask : manager.getCollapsedSubtasks()) {
-            subtask.solve();
-        }
-
-        for (ClusterSubtask subtask : manager.getClusterSubtasks()) {
-            long[] time = new long[1];
-            if (hn >= 0)
-                subtask.solveEx(hn, m1, m2, maxTimeLimit, time);
-            else
-                subtask.solve(m1, m2, firstTimeLimit, maxTimeLimit, checkFirst, time);
-        }
-
-        if (resultFilePath != null) {
-            manager.printTrees(resultFilePath, logger);
-        }
+        manager.solve();
 
         Network result = manager.cookNetwork();
 
-        if (resultFilePath != null) {
-            try {
-                PrintWriter gvPrintWriter = new PrintWriter(new File(resultFilePath + ".gv"));
-                gvPrintWriter.print(result.toGVString());
-                gvPrintWriter.close();
-            } catch (FileNotFoundException e) {
-                logger.warning("Can not open " + resultFilePath + " :\n" + e.getMessage());
-            } catch (Exception e) {
-                logger.warning("Caught exception while printing network:\n" + e.getMessage());
-            }
-        }
+        manager.printNetwork(resultFilePath, logger);
 
-        int resultK = result.getK();
-        logger.info("Finally, there is a network with " + resultK + " reticulation nodes");
-        return resultK;
+        logger.info("Finally, there is a network with " + result.getK() + " reticulation nodes");
     }
 
     private void run(String[] args) {

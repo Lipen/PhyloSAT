@@ -1,6 +1,5 @@
 import beepp.BEEppCompiler;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
@@ -20,57 +19,56 @@ class ClusterSubtask extends Subtask {
         return String.join("+", clusters.get(0).getLabels());
     }
 
-    void solve(int maxChildren,
-               int maxParents,
-               long firstTimeLimit,
-               long maxTimeLimit,
-               int checkFirst,
-               long[] executionTime) throws IOException {
+    @Override
+    void solve(SolveParameters p) {
         normalize();
 
-        if (firstTimeLimit > 0)
-            firstTimeLimit *= 1000;
-        if (maxTimeLimit > 0)
-            maxTimeLimit *= 1000;
+        long[] executionTime = new long[1];
 
-        for (int k = 0; k <= checkFirst; k++) {
-            if (solveEx(k, maxChildren, maxParents, firstTimeLimit, executionTime))
-                return;
+        if (p.hybridizationNumber >= 0) {
+            solveEx(p.hybridizationNumber, p.maxChildren, p.maxParents, p.maxTimeLimit, executionTime);
+        } else {
+            for (int k = 0; k <= p.checkFirst; k++) {
+                if (solveEx(k, p.maxChildren, p.maxParents, p.firstTimeLimit, executionTime))
+                    return;
+            }
+
+            int n = clusters.get(0).getTaxaSize();
+
+            solveEx(n - 1, p.maxChildren, p.maxParents, INFINITE_TIMEOUT, executionTime);
+
+            for (int k = n - 2; k >= 0; k--) {
+                if (solveEx(k, p.maxChildren, p.maxParents, p.maxTimeLimit, executionTime))
+                    break;
+            }
         }
-
-        int n = clusters.get(0).getTaxaSize();
-
-        solveEx(n - 1, maxChildren, maxParents, INFINITE_TIMEOUT, executionTime);
-
-        for (int k = n - 2; k >= 0; k--) {
-            if (solveEx(k, maxChildren, maxParents, maxTimeLimit, executionTime))
-                break;
-        }
-
-        // TODO: Maybe denormalize network here?
     }
 
-    boolean solveEx(int k, int m1, int m2, long tl, long[] time) throws IOException {
+    private boolean solveEx(int k, int m1, int m2, long tl, long[] time) {
         System.out.println("[*] solveEx() :: n=" + clusters.get(0).getTaxaSize() + ", k=" + k);
 
         System.out.println("[*] Building BEE++ formula...");
         String formula = new FormulaBuilder(clusters, k, m1, m2).build();
         System.out.println("[+] Building BEE++ formula: OK");
+
         // DUMP BEEpp FORMULA
         // System.out.println("[*] Dumping BEE++ formula...");
         try (PrintWriter out = new PrintWriter("out.beepp")) {
             out.println(formula);
         } catch (IOException e) {
-            System.err.println("IOException: " + e.getMessage());
+            System.err.println("[!] So sad: " + e.getMessage());
+            e.printStackTrace();
         }
         // System.out.println("[+] Dumping BEE++ formula: OK");
         //
+
         System.out.println("[*] Compiling BEE++ to BEE...");
-        BEEppCompiler.fastCompile(formula, new FileOutputStream("out.bee"));
+        BEEppCompiler.fastCompile(formula, "out.bee");
         System.out.println("[+] Compiling BEE++ to BEE: OK");
+
         System.out.println("[*] Solving...");
         Map<String, Object> solution = Runner.resolve("out.bee", tl, time);
-
+        System.out.println("[.] Execution time: " + time[0] + " ms");
         if (solution != null)
             System.out.println("[+] Solving: OK");
         else

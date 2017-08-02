@@ -10,7 +10,8 @@ class CollapsedSubtask extends Subtask {
         return String.join("+", subtree.getLabels());
     }
 
-    void solve() {
+    @Override
+    void solve(SolveParameters p) {
         answer = new Network(subtree);
     }
 }
