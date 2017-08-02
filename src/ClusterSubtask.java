@@ -68,7 +68,7 @@ class ClusterSubtask extends Subtask {
 
         System.out.println("[*] Solving...");
         Map<String, Object> solution = Runner.resolve("out.bee", tl, time);
-        System.out.println("[.] Execution time: " + time[0] + " ms");
+        System.out.println("[.] Execution time: " + time[0] + " / " + tl + " (ms)");
         if (solution != null)
             System.out.println("[+] Solving: OK");
         else
