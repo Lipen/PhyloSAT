@@ -38,37 +38,37 @@ Grass2WaxyIts:
 
 Grass3:Grass3NdhfPhytRbcl Grass3NdhfPhytRpoc Grass3NdhfPhytWaxy Grass3NdhfRbclWaxy Grass3NdhfRpocWaxy Grass3NdhfWaxyIts Grass3PhytRbclIts Grass3PhytRbclRpoc Grass3PhytRbclWaxy Grass3PhytRpocIts Grass3PhytRpocWaxy Grass3PhytWaxyIts Grass3RbclRpocIts Grass3RbclRpocWaxy Grass3RbclWaxyIts Grass3RpocWaxyIts
 Grass3NdhfPhytRbcl:
-	${PY} run.py ${DIR_GRASS3}/Grass3NdhfPhytRbcl.tree.restrict.num network_Grass3NdhfPhytRbcl
+	${PY} run.py ${DIR_GRASS3}/Grass3NdhfPhytRbcl.tree.restrict.num network_Grass3NdhfPhytRbcl -tl -1 -cf 9 -ftl -1
 Grass3NdhfPhytRpoc:
-	${PY} run.py ${DIR_GRASS3}/Grass3NdhfPhytRpoc.tree.restrict.num network_Grass3NdhfPhytRpoc
+	${PY} run.py ${DIR_GRASS3}/Grass3NdhfPhytRpoc.tree.restrict.num network_Grass3NdhfPhytRpoc -tl -1 -cf 9 -ftl -1
 Grass3NdhfPhytWaxy:
-	${PY} run.py ${DIR_GRASS3}/Grass3NdhfPhytWaxy.tree.restrict.num network_Grass3NdhfPhytWaxy
+	${PY} run.py ${DIR_GRASS3}/Grass3NdhfPhytWaxy.tree.restrict.num network_Grass3NdhfPhytWaxy -tl -1 -cf 9 -ftl -1
 Grass3NdhfRbclWaxy:
-	${PY} run.py ${DIR_GRASS3}/Grass3NdhfRbclWaxy.tree.restrict.num network_Grass3NdhfRbclWaxy
+	${PY} run.py ${DIR_GRASS3}/Grass3NdhfRbclWaxy.tree.restrict.num network_Grass3NdhfRbclWaxy -tl -1 -cf 9 -ftl -1
 Grass3NdhfRpocWaxy:
-	${PY} run.py ${DIR_GRASS3}/Grass3NdhfRpocWaxy.tree.restrict.num network_Grass3NdhfRpocWaxy
+	${PY} run.py ${DIR_GRASS3}/Grass3NdhfRpocWaxy.tree.restrict.num network_Grass3NdhfRpocWaxy -tl -1 -cf 9 -ftl -1
 Grass3NdhfWaxyIts:
-	${PY} run.py ${DIR_GRASS3}/Grass3NdhfWaxyIts.tree.restrict.num network_Grass3NdhfWaxyIts
+	${PY} run.py ${DIR_GRASS3}/Grass3NdhfWaxyIts.tree.restrict.num network_Grass3NdhfWaxyIts -tl -1 -cf 9 -ftl -1
 Grass3PhytRbclIts:
-	${PY} run.py ${DIR_GRASS3}/Grass3PhytRbclIts.tree.restrict.num network_Grass3PhytRbclIts
+	${PY} run.py ${DIR_GRASS3}/Grass3PhytRbclIts.tree.restrict.num network_Grass3PhytRbclIts -tl -1 -cf 9 -ftl -1
 Grass3PhytRbclRpoc:
-	${PY} run.py ${DIR_GRASS3}/Grass3PhytRbclRpoc.tree.restrict.num network_Grass3PhytRbclRpoc
+	${PY} run.py ${DIR_GRASS3}/Grass3PhytRbclRpoc.tree.restrict.num network_Grass3PhytRbclRpoc -tl -1 -cf 9 -ftl -1
 Grass3PhytRbclWaxy:
-	${PY} run.py ${DIR_GRASS3}/Grass3PhytRbclWaxy.tree.restrict.num network_Grass3PhytRbclWaxy
+	${PY} run.py ${DIR_GRASS3}/Grass3PhytRbclWaxy.tree.restrict.num network_Grass3PhytRbclWaxy -tl -1 -cf 9 -ftl -1
 Grass3PhytRpocIts:
-	${PY} run.py ${DIR_GRASS3}/Grass3PhytRpocIts.tree.restrict.num network_Grass3PhytRpocIts
+	${PY} run.py ${DIR_GRASS3}/Grass3PhytRpocIts.tree.restrict.num network_Grass3PhytRpocIts -tl -1 -cf 9 -ftl -1
 Grass3PhytRpocWaxy:
-	${PY} run.py ${DIR_GRASS3}/Grass3PhytRpocWaxy.tree.restrict.num network_Grass3PhytRpocWaxy
+	${PY} run.py ${DIR_GRASS3}/Grass3PhytRpocWaxy.tree.restrict.num network_Grass3PhytRpocWaxy -tl -1 -cf 9 -ftl -1
 Grass3PhytWaxyIts:
-	${PY} run.py ${DIR_GRASS3}/Grass3PhytWaxyIts.tree.restrict.num network_Grass3PhytWaxyIts
+	${PY} run.py ${DIR_GRASS3}/Grass3PhytWaxyIts.tree.restrict.num network_Grass3PhytWaxyIts -tl -1 -cf 9 -ftl -1
 Grass3RbclRpocIts:
-	${PY} run.py ${DIR_GRASS3}/Grass3RbclRpocIts.tree.restrict.num network_Grass3RbclRpocIts
+	${PY} run.py ${DIR_GRASS3}/Grass3RbclRpocIts.tree.restrict.num network_Grass3RbclRpocIts -tl -1 -cf 9 -ftl -1
 Grass3RbclRpocWaxy:
-	${PY} run.py ${DIR_GRASS3}/Grass3RbclRpocWaxy.tree.restrict.num network_Grass3RbclRpocWaxy
+	${PY} run.py ${DIR_GRASS3}/Grass3RbclRpocWaxy.tree.restrict.num network_Grass3RbclRpocWaxy -tl -1 -cf 9 -ftl -1
 Grass3RbclWaxyIts:
-	${PY} run.py ${DIR_GRASS3}/Grass3RbclWaxyIts.tree.restrict.num network_Grass3RbclWaxyIts
+	${PY} run.py ${DIR_GRASS3}/Grass3RbclWaxyIts.tree.restrict.num network_Grass3RbclWaxyIts -tl -1 -cf 9 -ftl -1
 Grass3RpocWaxyIts:
-	${PY} run.py ${DIR_GRASS3}/Grass3RpocWaxyIts.tree.restrict.num network_Grass3RpocWaxyIts
+	${PY} run.py ${DIR_GRASS3}/Grass3RpocWaxyIts.tree.restrict.num network_Grass3RpocWaxyIts -tl -1 -cf 9 -ftl -1
 
 
 tests_ds: test_easiest_ds qwerty4_ds qwerty5_ds test_simple_ds test_medium_ds test_hard_ds

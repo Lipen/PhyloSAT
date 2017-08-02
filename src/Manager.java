@@ -9,9 +9,9 @@ import java.util.stream.Collectors;
 
 class Manager {
     private final List<Tree> trees;
-    private final List<Subtask> subtasks = new ArrayList<>(1);
-    private Network result;
     private final SolveParameters solveParameters;
+    private final List<Subtask> subtasks = new ArrayList<>(1);
+    Network result;
 
 
     Manager(List<SimpleRootedTree> trees, SolveParameters solveParameters) {
@@ -52,21 +52,16 @@ class Manager {
     }
 
     void solve() {
-        for (CollapsedSubtask subtask : getCollapsedSubtasks())
-            subtask.solve(solveParameters);
-
-        for (ClusterSubtask subtask : getClusterSubtasks())
+        for (Subtask subtask : subtasks)
             subtask.solve(solveParameters);
     }
 
-    Network cookNetwork() {
+    void cookNetwork() {
         result = subtasks.get(0).answer;
 
         for (int i = subtasks.size() - 1; i > 0; i--) {
             result.substituteSubtask(subtasks.get(i));
         }
-
-        return result;
     }
 
     void printTrees(String resultFilePath, Logger logger) {

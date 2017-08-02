@@ -32,11 +32,12 @@ os.makedirs(dir_merged, exist_ok=True)
 
 
 def run(cmd):
+    cmd = cmd.strip()
     print('[.] Running "{}"...'.format(cmd))
     subprocess.run(cmd, shell=True)
 
 
-run('java -jar out/artifacts/PhyloSAT_jar/PhyloSAT.jar {} {} -r {}'.format(filename_input, extra_args, filename_output_network))
+run('java -jar out/artifacts/PhyloSAT_jar/PhyloSAT.jar -i {} -r {} {}'.format(filename_input, filename_output_network, extra_args))
 
 print('[*] Rendering...')
 run('{0} -T{1} {2}.gv -o {2}.{1}'.format(engine, format_, filename_output_network))

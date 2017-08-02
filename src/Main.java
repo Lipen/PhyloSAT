@@ -1,11 +1,8 @@
+import com.beust.jcommander.JCommander;
+import com.beust.jcommander.Parameter;
 import jebl.evolution.io.NewickImporter;
 import jebl.evolution.taxa.Taxon;
 import jebl.evolution.trees.SimpleRootedTree;
-import org.kohsuke.args4j.Argument;
-import org.kohsuke.args4j.CmdLineException;
-import org.kohsuke.args4j.CmdLineParser;
-import org.kohsuke.args4j.Option;
-import org.kohsuke.args4j.spi.BooleanOptionHandler;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -17,53 +14,51 @@ import java.util.logging.SimpleFormatter;
 import java.util.stream.Collectors;
 
 class Main {
-    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
-    @Argument(usage = "paths to files with trees", metaVar = "treesPaths", required = true)
+    @Parameter(names = {"-i", "--trees"}, variableArity = true, required = true,
+            description = "Files with trees")
     private List<String> treesPaths = new ArrayList<>();
 
-    @Option(name = "--log", aliases = {"-l"}, usage = "write log to this file", metaVar = "<file>")
-    private String logFilePath = null;
+    @Parameter(names = {"-l", "--log"})
+    private String logFilePath;
 
-    @Option(name = "--result", aliases = {
-            "-r"}, usage = "write result network in GV format to this file", metaVar = "<GV file>")
+    @Parameter(names = {"-r", "--result"}, required = true,
+            description = "Results base filepath (without extension)")
     private String resultFilePath = "network";
 
-    @SuppressWarnings("unused")
-    @Option(name = "--solverOptions", aliases = {
-            "-s"}, usage = "launch with this solver and solver options", metaVar = "<string>")
-    private String solverOptions = "cryptominisat --threads=4";
+    @Parameter(names = "--help", help = true)
+    private boolean help = false;
 
-    @Option(name = "--hybridizationNumber", aliases = {
-            "-h", "-hn"}, usage = "hybridization number, available in -ds mode", metaVar = "<int>")
-    private int hn = -1;
+    @Parameter(names = {"-np", "--noPreprocessing"},
+            description = "Disables preprocessing (collapsing/clusterizing)")
+    private boolean disablePreprocessing = false;
 
-    @Option(name = "--disableSplits", aliases = {
-            "-ds"}, handler = BooleanOptionHandler.class, usage = "disables splits, so it is possible to set hybridization number")
-    private boolean disableSplits = false;
+    @Parameter(names = {"-h", "-hn", "--hybridizationNumber"},
+            description = "Hybridization number, available with disabled preprocessing")
+    private int hybridizationNumber = -1;
 
-    @Option(name = "--checkFirst", aliases = {
-            "-cf"}, usage = "solve first few subtasks", metaVar = "<int>")
+    @Parameter(names = {"-cf", "--checkFirst"},
+            description = "Number of first solved tasks")
     private int checkFirst = 3;
 
-    @Option(name = "--firstTimeLimit", aliases = {
-            "-ftl"}, usage = "time available to solve first few subtasks", metaVar = "<seconds>")
+    @Parameter(names = {"-ftl", "--firstTimeLimit"},
+            description = "Time available to solve first <checkFirst> subtasks")
     private int firstTimeLimit = 10;
 
-    @Option(name = "--maxTimeLimit", aliases = {
-            "-tl", "-mtl"}, usage = "maximum time available to solve subtask", metaVar = "<seconds>")
+    @Parameter(names = {"-tl", "-mtl", "--maxTimeLimit"},
+            description = "Maximum time available to solve subtask")
     private int maxTimeLimit = 300;
 
-    @Option(name = "--maxChildren", aliases = {
-            "-m1", "-mc"}, usage = "maximum common-vertex children", metaVar = "<int>")
+    @Parameter(names = {"-mc", "-m1", "--maxChildren"},
+            description = "maximum common-vertex children")
     private int m1 = 2;
 
-    @Option(name = "--maxParents", aliases = {
-            "-m2", "-mp"}, usage = "maximum reticular-vertex parents", metaVar = "<int>")
+    @Parameter(names = {"-mp", "-m2", "--maxParents"},
+            description = "maximum reticular-vertex parents")
     private int m2 = 2;
 
-    private FileHandler loggerHandler = null;
-
+    private FileHandler loggerHandler;
     private Logger logger = Logger.getLogger("Logger");
+
 
     private static void checkTrees(List<SimpleRootedTree> trees) {
         if (trees.size() < 2)
@@ -83,39 +78,26 @@ class Main {
         }
     }
 
-    public static void main(String[] args) {
-        new Main().run(args);
-    }
-
-    private FileHandler addLoggerHandler(String logFilePath) {
-        FileHandler fh;
-        try {
-            fh = new FileHandler(logFilePath, false);
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new RuntimeException("RUN!");
-        }
-        fh.setFormatter(new SimpleFormatter());
-
-        logger.addHandler(fh);
+    private void addLoggerHandler(String logFilePath) throws IOException {
+        loggerHandler = new FileHandler(logFilePath, false);
+        loggerHandler.setFormatter(new SimpleFormatter());
+        logger.addHandler(loggerHandler);
         logger.setUseParentHandlers(false);
-        System.out.println("Log redirected to " + logFilePath);
-        return fh;
+        System.out.println("[*] Log redirected to <" + logFilePath + ">");
     }
 
-    private void launcher(String[] args) {
+    private void removeAndCloseLoggerHandler() {
+        if (loggerHandler != null) {
+            logger.removeHandler(loggerHandler);
+            loggerHandler.close();
+        }
+    }
+
+    private void run(JCommander j) {
         Locale.setDefault(Locale.US);
 
-        CmdLineParser parser = new CmdLineParser(this);
-        try {
-            parser.parseArgument(args);
-        } catch (CmdLineException e) {
-            System.out.println("Constructing parsimonious hybridization network with multiple phylogenetic trees\n");
-            System.out.println("Author: Vladimir Ulyantsev (ulyantsev@rain.ifmo.ru)\n");
-            System.out.print("Usage: ");
-            parser.printSingleLineUsage(System.out);
-            System.out.println();
-            parser.printUsage(System.out);
+        if (help) {
+            j.usage();
             return;
         }
 
@@ -124,15 +106,15 @@ class Main {
         if (firstTimeLimit > 0)
             firstTimeLimit *= 1000;
 
-        if (!disableSplits && hn >= 0) {
+        if (!disablePreprocessing && hybridizationNumber >= 0) {
             System.out.println("Hybridization number can be set only in -ds mode");
             return;
         }
 
         if (logFilePath != null) {
             try {
-                this.loggerHandler = addLoggerHandler(logFilePath);
-            } catch (Exception e) {
+                addLoggerHandler(logFilePath);
+            } catch (IOException e) {
                 System.err.println("Can't work with log file " + logFilePath + ": " + e.getMessage());
                 return;
             }
@@ -146,7 +128,7 @@ class Main {
                         .map(t -> (SimpleRootedTree) t)
                         .collect(Collectors.toList()));
             } catch (Exception e) {
-                logger.warning("Can't load trees from file " + filePath);
+                logger.warning("[!] Can't load trees from <" + filePath + ">");
                 e.printStackTrace();
                 return;
             }
@@ -154,33 +136,35 @@ class Main {
         checkTrees(trees);
 
         Manager manager = new Manager(trees,
-                new SolveParameters(hn, m1, m2, firstTimeLimit, maxTimeLimit, checkFirst));
-
+                new SolveParameters(hybridizationNumber, m1, m2,
+                        firstTimeLimit, maxTimeLimit, checkFirst));
         manager.printTrees(resultFilePath, logger);
-
-        if (!disableSplits)
+        if (!disablePreprocessing)
             manager.preprocess();
-
         manager.solve();
-
-        Network result = manager.cookNetwork();
-
+        manager.cookNetwork();
         manager.printNetwork(resultFilePath, logger);
 
-        logger.info("Finally, there is a network with " + result.getK() + " reticulation nodes");
+        logger.info("Finally, there is a network with " + manager.result.getK() + " reticulation nodes");
     }
 
-    private void run(String[] args) {
+    private void run_wrapper(JCommander j) {
         try {
-            launcher(args);
+            run(j);
         } catch (Exception e) {
             e.printStackTrace();
-            System.exit(1);
         } finally {
-            if (this.loggerHandler != null) {
-                this.logger.removeHandler(loggerHandler);
-                loggerHandler.close();
-            }
+            removeAndCloseLoggerHandler();
         }
+    }
+
+    public static void main(String... argv) {
+        Main main = new Main();
+        JCommander j = JCommander.newBuilder()
+                .addObject(main)
+                .build();
+        j.setCaseSensitiveOptions(false);
+        j.parse(argv);
+        main.run_wrapper(j);
     }
 }
