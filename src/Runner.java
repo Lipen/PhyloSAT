@@ -57,15 +57,15 @@ class Runner {
                 executionTime[0] = -1;
             }
 
+            if (watchdog.killedProcess()) {
+                System.err.println("[!] BumbleBEE timeouted.");
+                return null;
+            }
+
             if (resultHandler.getExitValue() != 0) {
                 System.err.println("[!] BumbleBEE exitcode: " + resultHandler.getExitValue());
                 // System.err.println(outputStream.toString());
                 // System.err.println(errorStream.toString());
-                return null;
-            }
-
-            if (watchdog.killedProcess()) {
-                System.err.println("[!] BumbleBEE timeouted.");
                 return null;
             }
 
