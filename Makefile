@@ -6,19 +6,19 @@ default:
 
 all: tests Grass2 Grass3
 
-tests: test_easiest test_simple test_medium test_hard qwerty4 qwerty5
+tests: test_easiest qwerty4 qwerty5 test_simple test_medium test_hard
 test_easiest:
 	${PY} run.py test_easiest.trees network_test_easiest -tl -1
+qwerty4:
+	${PY} run.py qwerty4.trees network_qwerty4 -tl -1
+qwerty5:
+	${PY} run.py qwerty5.trees network_qwerty5 -tl -1
 test_simple:
 	${PY} run.py test_simple.trees network_test_simple -tl -1
 test_medium:
 	${PY} run.py test_medium.trees network_test_medium -tl -1
 test_hard:
-	${PY} run.py test_hard.trees network_test_hard -tl 300 -ftl 30
-qwerty4:
-	${PY} run.py qwerty4.trees network_qwerty4 -tl -1
-qwerty5:
-	${PY} run.py qwerty5.trees network_qwerty5 -tl -1
+	${PY} run.py test_hard.trees network_test_hard -tl -1
 
 Grass2: Grass2NdhfWaxy Grass2PhytRbcl Grass2PhytRpoc Grass2PhytWaxy Grass2RbclWaxy Grass2RpocWaxy Grass2WaxyIts
 Grass2NdhfWaxy:
@@ -71,17 +71,19 @@ Grass3RpocWaxyIts:
 	${PY} run.py ${DIR_GRASS3}/Grass3RpocWaxyIts.tree.restrict.num network_Grass3RpocWaxyIts
 
 
-tests_ds: test_easiest_ds test_simple_ds test_medium_ds qwerty4_ds qwerty5_ds
+tests_ds: test_easiest_ds qwerty4_ds qwerty5_ds test_simple_ds test_medium_ds test_hard_ds
 test_easiest_ds:
 	${PY} run.py test_easiest.trees network_test_easiest -ds -h 1 -tl -1
-test_simple_ds:
-	${PY} run.py test_simple.trees network_test_simple -ds -h 3 -tl -1
-test_medium_ds:
-	${PY} run.py test_medium.trees network_test_medium -ds -h 5 -tl -1
 qwerty4_ds:
 	${PY} run.py qwerty4.trees network_qwerty4 -ds -h 1 -tl -1
 qwerty5_ds:
 	${PY} run.py qwerty5.trees network_qwerty5 -ds -h 2 -tl -1
+test_simple_ds:
+	${PY} run.py test_simple.trees network_test_simple -ds -h 3 -tl -1
+test_medium_ds:
+	${PY} run.py test_medium.trees network_test_medium -ds -h 5 -tl -1
+test_hard_ds:
+	${PY} run.py test_hard.trees network_test_hard -ds -h 7 -tl -1
 
 Grass3NdhfRpocWaxy_ds:
 	${PY} run.py ${DIR_GRASS3}/Grass3NdhfRpocWaxy.tree.restrict.num network_Grass3NdhfRpocWaxy -ds -h 3 -tl -1
