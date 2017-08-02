@@ -11,7 +11,7 @@ class Manager {
     private final List<Tree> trees;
     private final List<Subtask> subtasks = new ArrayList<>(1);
     private Network result;
-    private SolveParameters solveParameters;
+    private final SolveParameters solveParameters;
 
 
     Manager(List<SimpleRootedTree> trees, SolveParameters solveParameters) {
