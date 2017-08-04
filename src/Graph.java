@@ -1,4 +1,4 @@
-class Graph {
+abstract class Graph {
     abstract class Node {
         // TODO: only leaves should have labels... so why does base class has it?
         private String label;

@@ -33,10 +33,10 @@ class FormulaBuilder {
         // System.out.println("T = " + makeList(T()));
     }
 
-    public String build() {
+    public Formula build() {
         declareVariables();     // [5/5] TODO: check
         declareConstraints();   // [1/2] TODO
-        return sb.toString();
+        return new Formula(sb.toString());
     }
 
 

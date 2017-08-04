@@ -26,15 +26,11 @@ class Manager {
     void preprocess() {
         System.out.println("[*] Preprocessing...");
 
-        int collapsedCounter = 0;
+        Tree.collapse(trees, subtasks);
+        while (Tree.clusterize(trees, subtasks) && Tree.collapse(trees, subtasks)) {
+        }
 
-        if (Tree.collapse(trees, subtasks))
-            collapsedCounter++;
-
-        while (Tree.clusterize(trees, subtasks) && Tree.collapse(trees, subtasks))
-            collapsedCounter++;
-
-        System.out.println("[+] Total number of collapses: " + collapsedCounter);
+        System.out.println("[+] Total number of subtasks: " + subtasks.size());
     }
 
     List<CollapsedSubtask> getCollapsedSubtasks() {
@@ -58,10 +54,8 @@ class Manager {
 
     void cookNetwork() {
         result = subtasks.get(0).answer;
-
-        for (int i = subtasks.size() - 1; i > 0; i--) {
+        for (int i = subtasks.size() - 1; i > 0; i--)
             result.substituteSubtask(subtasks.get(i));
-        }
     }
 
     void printTrees(String resultFilePath, Logger logger) {
@@ -72,7 +66,7 @@ class Manager {
             String treeFilePath = resultFilePath + ".tree" + i + ".gv";
 
             try (PrintWriter gvPrintWriter = new PrintWriter(treeFilePath)) {
-                logger.info(String.format("Printing tree #%d to <%s>", i, treeFilePath));
+                logger.info(String.format("Printing tree %d to <%s>", i, treeFilePath));
                 gvPrintWriter.print(trees.get(i).toGVString());
             } catch (FileNotFoundException e) {
                 logger.warning("Couldn't open <" + resultFilePath + ">:\n" + e.getMessage());

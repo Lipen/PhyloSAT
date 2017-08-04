@@ -1,7 +1,5 @@
 import beepp.BEEppCompiler;
 
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.List;
 import java.util.Map;
 
@@ -23,52 +21,49 @@ class ClusterSubtask extends Subtask {
     void solve(SolveParameters p) {
         normalize();
 
-        long[] executionTime = new long[1];
-
         if (p.hybridizationNumber >= 0) {
-            solveEx(p.hybridizationNumber, p.maxChildren, p.maxParents, p.maxTimeLimit, executionTime);
+            solveEx(p.hybridizationNumber, p.maxChildren, p.maxParents, p.maxTimeLimit, p.prefix);
         } else {
             for (int k = 0; k <= p.checkFirst; k++) {
-                if (solveEx(k, p.maxChildren, p.maxParents, p.firstTimeLimit, executionTime))
+                if (solveEx(k, p.maxChildren, p.maxParents, p.firstTimeLimit, p.prefix))
                     return;
             }
 
             int n = clusters.get(0).getTaxaSize();
 
-            solveEx(n - 1, p.maxChildren, p.maxParents, INFINITE_TIMEOUT, executionTime);
+            solveEx(n - 1, p.maxChildren, p.maxParents, INFINITE_TIMEOUT, p.prefix);
 
-            for (int k = n - 2; k >= 0; k--) {
-                if (solveEx(k, p.maxChildren, p.maxParents, p.maxTimeLimit, executionTime))
-                    break;
-            }
+            for (int k = n - 2; k >= 0; k--)
+                if (!solveEx(k, p.maxChildren, p.maxParents, p.maxTimeLimit, p.prefix))
+                    return;
         }
     }
 
-    private boolean solveEx(int k, int m1, int m2, long tl, long[] time) {
+    private boolean solveEx(int k, int m1, int m2, long tl, String prefix) {
         System.out.println("[*] solveEx() :: n=" + clusters.get(0).getTaxaSize() + ", k=" + k);
 
         System.out.println("[*] Building BEE++ formula...");
-        String formula = new FormulaBuilder(clusters, k, m1, m2).build();
+        Formula formula = new FormulaBuilder(clusters, k, m1, m2).build();
         System.out.println("[+] Building BEE++ formula: OK");
 
-        // DUMP BEEpp FORMULA
-        // System.out.println("[*] Dumping BEE++ formula...");
-        try (PrintWriter out = new PrintWriter("out.beepp")) {
-            out.println(formula);
-        } catch (IOException e) {
-            System.err.println("[!] So sad: " + e.getMessage());
-            e.printStackTrace();
-        }
-        // System.out.println("[+] Dumping BEE++ formula: OK");
-        //
+        System.out.println("[*] Dumping BEE++ formula...");
+        formula.dump(prefix + "out.beepp");
+        System.out.println("[+] Dumping BEE++ formula: OK");
 
         System.out.println("[*] Compiling BEE++ to BEE...");
-        BEEppCompiler.fastCompile(formula, "out.bee");
+        BEEppCompiler.fastCompile(formula.toString(), prefix + "out.bee");
         System.out.println("[+] Compiling BEE++ to BEE: OK");
 
         System.out.println("[*] Solving...");
-        Map<String, Object> solution = Runner.resolve("out.bee", tl, time);
-        System.out.println("[.] Execution time: " + time[0] + " / " + tl + " (ms)");
+        long[] time_solve = new long[1];
+        long time_total = System.currentTimeMillis();
+        Map<String, Object> solution = new SolverCombined(prefix + "out.bee").resolve(tl, time_solve);
+        // Map<String, Object> solution = new SolverCryptominisat(prefix + "out.bee", prefix + "out.dimacs", prefix + "out.map", 16).resolve(tl, time_solve);
+        time_total = System.currentTimeMillis() - time_total;
+        System.out.println("[.] Execution times (ms):");
+        System.out.println("  > Solve: " + time_solve[0]);
+        System.out.println("  > Total: " + time_total);
+        System.out.println("  > Limit: " + tl);
         if (solution != null)
             System.out.println("[+] Solving: OK");
         else

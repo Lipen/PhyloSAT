@@ -1,5 +1,6 @@
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
+import jebl.evolution.io.ImportException;
 import jebl.evolution.io.NewickImporter;
 import jebl.evolution.taxa.Taxon;
 import jebl.evolution.trees.SimpleRootedTree;
@@ -41,24 +42,49 @@ class Main {
     private int checkFirst = 3;
 
     @Parameter(names = {"-ftl", "--firstTimeLimit"},
-            description = "Time available to solve first <checkFirst> subtasks")
+            description = "Time available to resolve first <checkFirst> subtasks")
     private int firstTimeLimit = 10;
 
     @Parameter(names = {"-tl", "-mtl", "--maxTimeLimit"},
-            description = "Maximum time available to solve subtask")
+            description = "Maximum time available to resolve subtask")
     private int maxTimeLimit = 300;
 
     @Parameter(names = {"-mc", "-m1", "--maxChildren"},
-            description = "maximum common-vertex children")
+            description = "Maximum number of common vertex children")
     private int m1 = 2;
 
     @Parameter(names = {"-mp", "-m2", "--maxParents"},
-            description = "maximum reticular-vertex parents")
+            description = "Maximum number of reticulate node parents")
     private int m2 = 2;
+
+    @Parameter(names = "--prefix",
+    description = "Filenames prefix (path = prefix + out.{beepp,bee,dimacs,map})")
+    private String prefix = "";
 
     private FileHandler loggerHandler;
     private Logger logger = Logger.getLogger("Logger");
 
+
+    private List<SimpleRootedTree> readTrees() {
+        List<SimpleRootedTree> trees = new ArrayList<>();
+        for (String filePath : treesPaths) {
+            try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+                NewickImporter importer = new NewickImporter(reader, false);
+                trees.addAll(importer.importTrees().stream()
+                        .map(t -> (SimpleRootedTree) t)
+                        .collect(Collectors.toList()));
+            } catch (ImportException e) {
+                logger.severe("[!] Can't load trees from <" + filePath + ">");
+                e.printStackTrace();
+                System.exit(1);
+            } catch (IOException e) {
+                logger.severe("[!] So sad: " + e.getMessage());
+                e.printStackTrace();
+                System.exit(1);
+            }
+        }
+        return trees;
+    }
 
     private static void checkTrees(List<SimpleRootedTree> trees) {
         if (trees.size() < 2)
@@ -69,7 +95,7 @@ class Main {
 
         for (int t = 1; t < trees.size(); t++) {
             SimpleRootedTree tree = trees.get(t);
-            Set<Taxon> treeTaxa = new TreeSet<>(tree.getTaxa());
+            Set<Taxon> treeTaxa = new HashSet<>(tree.getTaxa());
 
             if (treeTaxa.size() != taxaSize)
                 throw new RuntimeException(String.format("Tree %d has %d taxa, but tree 0 has %d", t, treeTaxa.size(), taxaSize));
@@ -120,24 +146,12 @@ class Main {
             }
         }
 
-        List<SimpleRootedTree> trees = new ArrayList<>();
-        for (String filePath : treesPaths) {
-            try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
-                NewickImporter importer = new NewickImporter(reader, false);
-                trees.addAll(importer.importTrees().stream()
-                        .map(t -> (SimpleRootedTree) t)
-                        .collect(Collectors.toList()));
-            } catch (Exception e) {
-                logger.warning("[!] Can't load trees from <" + filePath + ">");
-                e.printStackTrace();
-                return;
-            }
-        }
+        List<SimpleRootedTree> trees = readTrees();
         checkTrees(trees);
 
         Manager manager = new Manager(trees,
                 new SolveParameters(hybridizationNumber, m1, m2,
-                        firstTimeLimit, maxTimeLimit, checkFirst));
+                        firstTimeLimit, maxTimeLimit, checkFirst, prefix));
         manager.printTrees(resultFilePath, logger);
         if (!disablePreprocessing)
             manager.preprocess();
@@ -151,8 +165,6 @@ class Main {
     private void run_wrapper(JCommander j) {
         try {
             run(j);
-        } catch (Exception e) {
-            e.printStackTrace();
         } finally {
             removeAndCloseLoggerHandler();
         }
