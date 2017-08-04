@@ -58,8 +58,12 @@ class Main {
     private int m2 = 2;
 
     @Parameter(names = "--prefix",
-    description = "Filenames prefix (path = prefix + out.{beepp,bee,dimacs,map})")
+            description = "Filenames prefix (path = prefix + out.{beepp,bee,dimacs,map})")
     private String prefix = "";
+
+    @Parameter(names = {"-e", "--external"},
+            description = "Use external solver instead of BumbleBEE's built-in")
+    private boolean isExternal = false;
 
     private FileHandler loggerHandler;
     private Logger logger = Logger.getLogger("Logger");
@@ -151,7 +155,7 @@ class Main {
 
         Manager manager = new Manager(trees,
                 new SolveParameters(hybridizationNumber, m1, m2,
-                        firstTimeLimit, maxTimeLimit, checkFirst, prefix));
+                        firstTimeLimit, maxTimeLimit, checkFirst, prefix, isExternal));
         manager.printTrees(resultFilePath, logger);
         if (!disablePreprocessing)
             manager.preprocess();

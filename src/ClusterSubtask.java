@@ -22,24 +22,24 @@ class ClusterSubtask extends Subtask {
         normalize();
 
         if (p.hybridizationNumber >= 0) {
-            solveEx(p.hybridizationNumber, p.maxChildren, p.maxParents, p.maxTimeLimit, p.prefix);
+            solveEx(p.hybridizationNumber, p.maxChildren, p.maxParents, p.maxTimeLimit, p.prefix, p.isExternal);
         } else {
             for (int k = 0; k <= p.checkFirst; k++) {
-                if (solveEx(k, p.maxChildren, p.maxParents, p.firstTimeLimit, p.prefix))
+                if (solveEx(k, p.maxChildren, p.maxParents, p.firstTimeLimit, p.prefix, p.isExternal))
                     return;
             }
 
             int n = clusters.get(0).getTaxaSize();
 
-            solveEx(n - 1, p.maxChildren, p.maxParents, INFINITE_TIMEOUT, p.prefix);
+            solveEx(n - 1, p.maxChildren, p.maxParents, INFINITE_TIMEOUT, p.prefix, p.isExternal);
 
             for (int k = n - 2; k >= 0; k--)
-                if (!solveEx(k, p.maxChildren, p.maxParents, p.maxTimeLimit, p.prefix))
+                if (!solveEx(k, p.maxChildren, p.maxParents, p.maxTimeLimit, p.prefix, p.isExternal))
                     return;
         }
     }
 
-    private boolean solveEx(int k, int m1, int m2, long tl, String prefix) {
+    private boolean solveEx(int k, int m1, int m2, long tl, String prefix, boolean isExternal) {
         System.out.println("[*] solveEx() :: n=" + clusters.get(0).getTaxaSize() + ", k=" + k);
 
         System.out.println("[*] Building BEE++ formula...");
@@ -57,8 +57,12 @@ class ClusterSubtask extends Subtask {
         System.out.println("[*] Solving...");
         long[] time_solve = new long[1];
         long time_total = System.currentTimeMillis();
-        Map<String, Object> solution = new SolverCombined(prefix + "out.bee").resolve(tl, time_solve);
-        // Map<String, Object> solution = new SolverCryptominisat(prefix + "out.bee", prefix + "out.dimacs", prefix + "out.map", 16).resolve(tl, time_solve);
+        Solver solver;
+        if (isExternal)
+            solver = new SolverCryptominisat(prefix + "out.bee", prefix + "out.dimacs", prefix + "out.map", 16);
+        else
+            solver = new SolverCombined(prefix + "out.bee");
+        Map<String, Object> solution = solver.resolve(tl, time_solve);
         time_total = System.currentTimeMillis() - time_total;
         System.out.println("[.] Execution times (ms):");
         System.out.println("  > Solve: " + time_solve[0]);
