@@ -42,16 +42,21 @@ class ClusterSubtask extends Subtask {
     private boolean solveEx(int k, int m1, int m2, long tl, String prefix, boolean isExternal) {
         System.out.println("[*] solveEx() :: n=" + clusters.get(0).getTaxaSize() + ", k=" + k);
 
+        String beeppFileName = prefix + uuid.toString() + "_out.beepp";
+        String beeFileName = prefix + uuid.toString() + "_out.bee";
+        String dimacsFileName = prefix + uuid.toString() + "_out.dimacs";
+        String mapFileName = prefix + uuid.toString() + "_out.map";
+
         System.out.println("[*] Building BEE++ formula...");
         Formula formula = new FormulaBuilder(clusters, k, m1, m2).build();
         System.out.println("[+] Building BEE++ formula: OK");
 
-        System.out.println("[*] Dumping BEE++ formula...");
-        formula.dump(prefix + "out.beepp");
-        System.out.println("[+] Dumping BEE++ formula: OK");
+        // System.out.println("[*] Dumping BEE++ formula...");
+        // formula.dump(beeppFileName);
+        // System.out.println("[+] Dumping BEE++ formula: OK");
 
         System.out.println("[*] Compiling BEE++ to BEE...");
-        BEEppCompiler.fastCompile(formula.toString(), prefix + "out.bee");
+        BEEppCompiler.fastCompile(formula.toString(), beeFileName);
         System.out.println("[+] Compiling BEE++ to BEE: OK");
 
         System.out.println("[*] Solving...");
@@ -59,9 +64,9 @@ class ClusterSubtask extends Subtask {
         long time_total = System.currentTimeMillis();
         Solver solver;
         if (isExternal)
-            solver = new SolverCryptominisat(prefix + "out.bee", prefix + "out.dimacs", prefix + "out.map", 16);
+            solver = new SolverCryptominisat(beeFileName, dimacsFileName, mapFileName, 16);
         else
-            solver = new SolverCombined(prefix + "out.bee");
+            solver = new SolverCombined(beeFileName);
         Map<String, Object> solution = solver.resolve(tl, time_solve);
         time_total = System.currentTimeMillis() - time_total;
         System.out.println("[.] Execution times (ms):");
@@ -72,6 +77,8 @@ class ClusterSubtask extends Subtask {
             System.out.println("[+] Solving: OK");
         else
             System.out.println("[-] Solving: no solution");
+
+        Main.deleteFile(beeFileName);
 
         if (solution == null)
             return false;

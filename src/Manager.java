@@ -4,6 +4,9 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -48,8 +51,17 @@ class Manager {
     }
 
     void solve() {
+        ExecutorService executor = Executors.newWorkStealingPool();
+
         for (Subtask subtask : subtasks)
-            subtask.solve(solveParameters);
+            executor.submit(() -> subtask.solve(solveParameters));
+
+        executor.shutdown();
+        try {
+            executor.awaitTermination(1, TimeUnit.HOURS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     void cookNetwork() {

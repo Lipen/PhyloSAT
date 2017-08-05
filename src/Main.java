@@ -6,8 +6,11 @@ import jebl.evolution.taxa.Taxon;
 import jebl.evolution.trees.SimpleRootedTree;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
@@ -120,6 +123,18 @@ class Main {
         if (loggerHandler != null) {
             logger.removeHandler(loggerHandler);
             loggerHandler.close();
+        }
+    }
+
+    static void deleteFile(String filename) {
+        System.out.println("[*] Deleting <" + filename + ">...");
+        try {
+            Files.delete(Paths.get(filename));
+            System.out.println("[+] Deleting <" + filename + ">: OK");
+        } catch (FileNotFoundException e) {
+            System.err.println("[-] No such file: <" + filename + ">");
+        } catch (IOException e) {
+            System.err.println("[!] So sad: " + e.getMessage());
         }
     }
 

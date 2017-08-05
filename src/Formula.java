@@ -1,4 +1,5 @@
-import java.io.*;
+import java.io.IOException;
+import java.io.PrintWriter;
 
 class Formula {
     private final String formula;
@@ -8,6 +9,7 @@ class Formula {
     }
 
     void dump(String filename) {
+        System.out.println("[.] Dumping formula to <" + filename + ">");
         try (PrintWriter out = new PrintWriter(filename)) {
             out.println(formula);
         } catch (IOException e) {

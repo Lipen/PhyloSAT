@@ -13,17 +13,17 @@ final class SolverCombined extends Solver {
     private static final Pattern SOLUTION_PATTERN =
             Pattern.compile("^(p_\\d+(?:_\\d+)?)\\s*=\\s*(\\d+|true|false)$");
 
-    private String inputFileName;
+    private String beeFileName;
 
-    SolverCombined(String inputFileName) {
-        this.inputFileName = inputFileName;
+    SolverCombined(String beeFileName) {
+        this.beeFileName = beeFileName;
     }
 
     @Override
     Map<String, Object> resolve(long timeLimit, long[] executionTime) {
         System.out.println("[.] Using built-it solver");
 
-        CommandLine command = new CommandLine("BumbleBEE").addArgument(inputFileName);
+        CommandLine command = new CommandLine("BumbleBEE").addArgument(beeFileName);
         ExecuteWatchdog watchdog = new ExecuteWatchdog(timeLimit);
         DefaultExecuteResultHandler resultHandler = new DefaultExecuteResultHandler();
         OutputStream outputStream = new ByteArrayOutputStream();

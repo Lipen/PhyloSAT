@@ -17,18 +17,18 @@ final class SolverCryptominisat extends Solver {
     private static final Pattern INT_PATTERN = Pattern.compile("\\((\\w+),int,order\\(min\\((-?\\d+)\\),\\[((?:(?:-?\\d+),)*(?:-?\\d+)?)\\]\\)\\)\\.");
     private static final Pattern END_PATTERN = Pattern.compile("end_bee_map\\.");
 
-    private final String inputFileName;
+    private final String beeFileName;
     private final String dimacsFileName;
     private final String mapFileName;
     private int threads;
 
 
-    SolverCryptominisat(String inputFileName, String dimacsFileName, String mapFileName) {
-        this(inputFileName, dimacsFileName, mapFileName, 4);
+    SolverCryptominisat(String beeFileName, String dimacsFileName, String mapFileName) {
+        this(beeFileName, dimacsFileName, mapFileName, 4);
     }
 
-    SolverCryptominisat(String inputFileName, String dimacsFileName, String mapFileName, int threads) {
-        this.inputFileName = inputFileName;
+    SolverCryptominisat(String beeFileName, String dimacsFileName, String mapFileName, int threads) {
+        this.beeFileName = beeFileName;
         this.dimacsFileName = dimacsFileName;
         this.mapFileName = mapFileName;
         this.threads = threads;
@@ -47,7 +47,7 @@ final class SolverCryptominisat extends Solver {
         }
 
         try {
-            Runtime.getRuntime().exec(String.format("BumbleBEE %s -dimacs %s %s", inputFileName, dimacsFileName, mapFileName)).waitFor();
+            Runtime.getRuntime().exec(String.format("BumbleBEE %s -dimacs %s %s", beeFileName, dimacsFileName, mapFileName)).waitFor();
         } catch (InterruptedException e) {
             System.err.println("[!] Execution interrupted: " + e.getMessage());
             return null;
@@ -179,12 +179,15 @@ final class SolverCryptominisat extends Solver {
                 }
             }
         } catch (FileNotFoundException e) {
-            System.err.println("[!] Couldn't open <out.map>: " + e.getMessage());
+            System.err.println("[!] Couldn't open <" + mapFileName + ">: " + e.getMessage());
             return null;
         } catch (IOException e) {
             System.err.println("[!] So sad: " + e.getMessage());
             return null;
         }
+
+        Main.deleteFile(dimacsFileName);
+        Main.deleteFile(mapFileName);
 
         return solution;
     }
