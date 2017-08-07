@@ -1,5 +1,9 @@
 import beepp.BEEppCompiler;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
@@ -22,40 +26,43 @@ class ClusterSubtask extends Subtask {
         normalize();
 
         if (p.hybridizationNumber >= 0) {
-            solveEx(p.hybridizationNumber, p.maxChildren, p.maxParents, p.maxTimeLimit, p.prefix, p.isExternal);
+            solveEx(p.hybridizationNumber, p.maxTimeLimit, p);
         } else {
             for (int k = 0; k <= p.checkFirst; k++) {
-                if (solveEx(k, p.maxChildren, p.maxParents, p.firstTimeLimit, p.prefix, p.isExternal))
+                if (solveEx(k, p.firstTimeLimit, p))
                     return;
             }
 
             int n = clusters.get(0).getTaxaSize();
 
-            solveEx(n - 1, p.maxChildren, p.maxParents, INFINITE_TIMEOUT, p.prefix, p.isExternal);
+            solveEx(n - 1, INFINITE_TIMEOUT, p);
 
             for (int k = n - 2; k >= 0; k--)
-                if (!solveEx(k, p.maxChildren, p.maxParents, p.maxTimeLimit, p.prefix, p.isExternal))
+                if (!solveEx(k, p.maxTimeLimit, p))
                     return;
         }
     }
 
-    private boolean solveEx(int k, int m1, int m2, long tl, String prefix, boolean isExternal) {
-        System.out.println("[*] solveEx() :: n=" + clusters.get(0).getTaxaSize() + ", k=" + k);
+    private boolean solveEx(int k, long tl, SolveParameters p) {
+        int n = clusters.get(0).getTaxaSize();
+        System.out.println("[*] solveEx() :: n=" + n + ", k=" + k);
 
-        String beeppFileName = prefix + uuid.toString() + "_out.beepp";
-        String beeFileName = prefix + uuid.toString() + "_out.bee";
-        String dimacsFileName = prefix + uuid.toString() + "_out.dimacs";
-        String mapFileName = prefix + uuid.toString() + "_out.map";
+        String beeppFileName = p.prefix + uuid.toString() + "_out.beepp";
+        String beeFileName = p.prefix + uuid.toString() + "_out.bee";
+        String dimacsFileName = p.prefix + uuid.toString() + "_out.dimacs";
+        String mapFileName = p.prefix + uuid.toString() + "_out.map";
 
         System.out.println("[*] Building BEE++ formula...");
+        int m1 = p.maxChildren;
+        int m2 = p.maxParents;
         Formula formula = new FormulaBuilder(clusters, k, m1, m2).build();
         System.out.println("[+] Building BEE++ formula: OK");
 
-        // System.out.println("[*] Dumping BEE++ formula...");
-        // formula.dump(beeppFileName);
-        // System.out.println("[+] Dumping BEE++ formula: OK");
+        if (p.isDumping) {
+            formula.dump(beeppFileName);
+        }
 
-        System.out.println("[*] Compiling BEE++ to BEE...");
+        System.out.println("[*] Compiling BEE++ to BEE: <" + beeFileName + ">");
         BEEppCompiler.fastCompile(formula.toString(), beeFileName);
         System.out.println("[+] Compiling BEE++ to BEE: OK");
 
@@ -63,8 +70,8 @@ class ClusterSubtask extends Subtask {
         long[] time_solve = new long[1];
         long time_total = System.currentTimeMillis();
         Solver solver;
-        if (isExternal)
-            solver = new SolverCryptominisat(beeFileName, dimacsFileName, mapFileName, 16);
+        if (p.isExternal)
+            solver = new SolverCryptominisat(beeFileName, dimacsFileName, mapFileName, p.threads);
         else
             solver = new SolverCombined(beeFileName);
         Map<String, Object> solution = solver.resolve(tl, time_solve);
@@ -78,7 +85,13 @@ class ClusterSubtask extends Subtask {
         else
             System.out.println("[-] Solving: no solution");
 
-        Main.deleteFile(beeFileName);
+        if (!p.isDumping) {
+            deleteFile(beeFileName);
+            if (p.isExternal) {
+                deleteFile(dimacsFileName);
+                deleteFile(mapFileName);
+            }
+        }
 
         if (solution == null)
             return false;
@@ -92,5 +105,17 @@ class ClusterSubtask extends Subtask {
 
     private void normalize() {
         // TODO
+    }
+
+    private static void deleteFile(String filename) {
+        System.out.println("[*] Deleting <" + filename + ">...");
+        try {
+            Files.delete(Paths.get(filename));
+            System.out.println("[+] Deleting <" + filename + ">: OK");
+        } catch (FileNotFoundException e) {
+            System.err.println("[-] No such file: <" + filename + ">");
+        } catch (IOException e) {
+            System.err.println("[!] So sad: " + e.getMessage());
+        }
     }
 }

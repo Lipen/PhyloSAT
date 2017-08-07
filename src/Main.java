@@ -6,11 +6,8 @@ import jebl.evolution.taxa.Taxon;
 import jebl.evolution.trees.SimpleRootedTree;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
@@ -67,6 +64,18 @@ class Main {
     @Parameter(names = {"-e", "--external"},
             description = "Use external solver instead of BumbleBEE's built-in")
     private boolean isExternal = false;
+
+    @Parameter(names = {"-p", "--parallel"},
+            description = "Solve subtasks in parallel")
+    private boolean isParallel = false;
+
+    @Parameter(names = {"-t", "--threads"},
+            description = "Number of threads for cryptominisat")
+    private int threads = 4;
+
+    @Parameter(names = {"-d", "--dump"},
+            description = "Dump directory")
+    private boolean isDumping = false;
 
     private FileHandler loggerHandler;
     private Logger logger = Logger.getLogger("Logger");
@@ -126,18 +135,6 @@ class Main {
         }
     }
 
-    static void deleteFile(String filename) {
-        System.out.println("[*] Deleting <" + filename + ">...");
-        try {
-            Files.delete(Paths.get(filename));
-            System.out.println("[+] Deleting <" + filename + ">: OK");
-        } catch (FileNotFoundException e) {
-            System.err.println("[-] No such file: <" + filename + ">");
-        } catch (IOException e) {
-            System.err.println("[!] So sad: " + e.getMessage());
-        }
-    }
-
     private void run(JCommander j) {
         Locale.setDefault(Locale.US);
 
@@ -169,12 +166,15 @@ class Main {
         checkTrees(trees);
 
         Manager manager = new Manager(trees,
-                new SolveParameters(hybridizationNumber, m1, m2,
-                        firstTimeLimit, maxTimeLimit, checkFirst, prefix, isExternal));
+                new SolveParameters(hybridizationNumber, m1, m2, firstTimeLimit,
+                        maxTimeLimit, checkFirst, prefix, isExternal, threads, isDumping));
         manager.printTrees(resultFilePath, logger);
         if (!disablePreprocessing)
             manager.preprocess();
-        manager.solve();
+        if (isParallel)
+            manager.solveParallel();
+        else
+            manager.solve();
         manager.cookNetwork();
         manager.printNetwork(resultFilePath, logger);
 

@@ -51,6 +51,11 @@ class Manager {
     }
 
     void solve() {
+        for (Subtask subtask : subtasks)
+            subtask.solve(solveParameters);
+    }
+
+    void solveParallel() {
         ExecutorService executor = Executors.newWorkStealingPool();
 
         for (Subtask subtask : subtasks)
@@ -58,7 +63,7 @@ class Manager {
 
         executor.shutdown();
         try {
-            executor.awaitTermination(1, TimeUnit.HOURS);
+            executor.awaitTermination(7, TimeUnit.DAYS);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

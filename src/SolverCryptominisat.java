@@ -186,9 +186,6 @@ final class SolverCryptominisat extends Solver {
             return null;
         }
 
-        Main.deleteFile(dimacsFileName);
-        Main.deleteFile(mapFileName);
-
         return solution;
     }
 }
