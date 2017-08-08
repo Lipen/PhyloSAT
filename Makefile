@@ -103,3 +103,6 @@ Grass2RpocWaxy_ds:
 	${PY} run.py ${DIR_GRASS2}/Grass2RpocWaxy.tree.restrict.num network_Grass2RpocWaxy -ds -h 2 -tl -1
 Grass2WaxyIts_ds:
 	${PY} run.py ${DIR_GRASS2}/Grass2WaxyIts.tree.restrict.num network_Grass2WaxyIts -ds -h 5 -tl -1
+
+clean:
+	rm -f *.bee *.beepp *.dimacs *.map
