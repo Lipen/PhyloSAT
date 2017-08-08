@@ -171,6 +171,9 @@ class Main {
         manager.printTrees(resultFilePath, logger);
         if (!disablePreprocessing)
             manager.preprocess();
+        else
+            System.out.println("[*] Not preprocessing");
+
         if (isParallel)
             manager.solveParallel();
         else

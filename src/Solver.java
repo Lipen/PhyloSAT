@@ -11,10 +11,14 @@ abstract class Solver {
     abstract Map<String, Object> solve();
 
     protected final OutputStream runSolver(CommandLine command) {
-        return runSolver(command, 0);
+        return runSolver(command, 0, null);
     }
 
-    protected final OutputStream runSolver(CommandLine command, int exitValue) {
+    protected final OutputStream runSolver(CommandLine command, int successExitValue) {
+        return runSolver(command, successExitValue, null);
+    }
+
+    protected final OutputStream runSolver(CommandLine command, int successExitValue, int[] ignoredExitValues) {
         ExecuteWatchdog watchdog = new ExecuteWatchdog(INFINITE_TIMEOUT);
         DefaultExecuteResultHandler resultHandler = new DefaultExecuteResultHandler();
         OutputStream outStream = new ByteArrayOutputStream();
@@ -26,12 +30,13 @@ abstract class Solver {
         });
 
         DefaultExecutor executor = new DefaultExecutor();
-        // executor.setExitValue(exitValue);
+        executor.setExitValues(ignoredExitValues);
         executor.setWatchdog(watchdog);
         executor.setStreamHandler(streamHandler);
 
         try {
             Runtime.getRuntime().addShutdownHook(t);
+            System.out.println("[.] Executing " + command + "...");
             executor.execute(command, resultHandler);
             resultHandler.waitFor();
             Runtime.getRuntime().removeShutdownHook(t);
@@ -41,7 +46,7 @@ abstract class Solver {
             System.err.println("[!] Execution failed: " + e.getMessage());
         }
 
-        if (resultHandler.getExitValue() != exitValue) {
+        if (resultHandler.getExitValue() != successExitValue) {
             System.err.println("[!] Exitcode: " + resultHandler.getExitValue());
             return null;
         }

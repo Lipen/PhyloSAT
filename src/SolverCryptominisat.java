@@ -1,4 +1,4 @@
-import org.apache.commons.exec.*;
+import org.apache.commons.exec.CommandLine;
 
 import java.io.*;
 import java.util.Arrays;
@@ -8,8 +8,6 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
-import static org.apache.commons.exec.ExecuteWatchdog.INFINITE_TIMEOUT;
 
 final class SolverCryptominisat extends Solver {
     private static final Pattern BOOL_PATTERN = Pattern.compile("\\((\\w+),bool,(-?\\d+)\\)\\.");
@@ -46,6 +44,8 @@ final class SolverCryptominisat extends Solver {
     }
 
     private boolean convertBEEtoDIMACS() {
+        System.out.println("[.] Converting to DIMACS...");
+
         try {
             new PrintWriter(dimacsFileName).close();
             new PrintWriter(mapFileName).close();
@@ -62,6 +62,7 @@ final class SolverCryptominisat extends Solver {
             return false;
         }
 
+        System.out.println("[+] Converting to DIMACS: OK");
         return true;
     }
 
@@ -95,10 +96,11 @@ final class SolverCryptominisat extends Solver {
         CommandLine command = new CommandLine("cryptominisat")
                 .addArgument("--threads=" + threads)
                 .addArgument(dimacsFileName);
-        return runSolver(command, 20);
+        return runSolver(command, 10, new int[]{20});
     }
 
     private static Map<Integer, Boolean> parseVariables(OutputStream outputStream) {
+        System.out.println("[.] Parsing variables...");
         Map<Integer, Boolean> variables = new HashMap<>();
 
         try (BufferedReader br = new BufferedReader(new StringReader(outputStream.toString()))) {
@@ -115,10 +117,13 @@ final class SolverCryptominisat extends Solver {
             return null;
         }
 
+        System.out.println("[+] Parsing variables: OK");
         return variables;
     }
 
     private Map<String, Object> mapSolution(Map<Integer, Boolean> variables) {
+        System.out.println("[.] Mapping solution...");
+
         Map<String, Object> solution = new HashMap<>();
 
         try (BufferedReader br = new BufferedReader(new FileReader(mapFileName))) {
@@ -181,6 +186,7 @@ final class SolverCryptominisat extends Solver {
             return null;
         }
 
+        System.out.println("[+] Mapping solution: OK");
         return solution;
     }
 }

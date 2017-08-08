@@ -136,6 +136,17 @@ final class Tree extends Graph {
         return hasFictitiousRoot;
     }
 
+    void addFictitiousRoot() {
+        if (hasFictitiousRoot())
+            throw new RuntimeException("Tree already has fictitious root");
+        TreeNode fictitiousRoot = new InternalNode();
+        fictitiousRoot.addChild(new LeafNode(fictitiousRoot, ""));
+        fictitiousRoot.addChild(root);
+        root.setParent(fictitiousRoot);
+        root = fictitiousRoot;
+        hasFictitiousRoot = true;
+    }
+
     int getParent(int nodeNum) {
         if (nodeNum == getRootNum())
             throw new IllegalArgumentException("Node " + nodeNum + " is a root and has no parent");
@@ -168,12 +179,15 @@ final class Tree extends Graph {
     }
 
     String getLabel(int nodeNum) {
-        return getLabels().get(nodeNum - (hasFictitiousRoot ? 0 : 1));
+        // return getLabels().get(nodeNum - (hasFictitiousRoot ? 0 : 1));
+        return getLabels().get(nodeNum - 1);
     }
 
     List<String> getLabels() {
-        // Maybe with, maybe without fictitious leaf label
+        // OLD(without filter): Maybe with, maybe without fictitious leaf label
+        // NEW(with filter): Always without fictitious leaf
         return getTaxa().stream()
+                .filter(node -> !node.getLabel().equals(""))
                 .map(Node::getLabel)
                 .collect(Collectors.toList());
     }
@@ -407,6 +421,7 @@ final class Tree extends Graph {
     }
 
     String toGVString() {
+        // Observation: on printing stage tree has no fictitious nodes
         StringBuilder ans = new StringBuilder("graph {\n");
         List<TreeNode> vertices = traverseBottomUp(true, true);
 
@@ -458,7 +473,7 @@ final class Tree extends Graph {
 
     private int getRootNum() {
         /* Root */
-        if (hasFictitiousRoot())
+        if (hasFictitiousRoot)
             return 2 * n;
         else
             return 2 * n - 1;

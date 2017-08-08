@@ -10,6 +10,7 @@ import java.util.Map;
 class ClusterSubtask extends Subtask {
     private final List<Tree> clusters;
 
+
     ClusterSubtask(List<Tree> clusters) {
         this.clusters = clusters;
     }
@@ -21,6 +22,7 @@ class ClusterSubtask extends Subtask {
 
     @Override
     String getLabel() {
+        // return String.join("+", clusters.get(0).getLabels());
         return String.join("+", clusters.get(0).getLabels());
     }
 
@@ -96,7 +98,9 @@ class ClusterSubtask extends Subtask {
     }
 
     private void normalize() {
-        // TODO
+        for (Tree cluster : clusters) {
+            cluster.addFictitiousRoot();
+        }
     }
 
     private static void deleteFile(String filename) {

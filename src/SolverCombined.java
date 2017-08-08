@@ -29,7 +29,7 @@ final class SolverCombined extends Solver {
     }
 
     private Map<String, Object> solveWithBumbleBEE() {
-        OutputStream outputStream = runSolver();
+        OutputStream outputStream = runBumbleBEE();
         if (outputStream == null)
             return null;
 
@@ -37,7 +37,7 @@ final class SolverCombined extends Solver {
         return solution;
     }
 
-    private OutputStream runSolver() {
+    private OutputStream runBumbleBEE() {
         CommandLine command = new CommandLine("BumbleBEE")
                 .addArgument(beeFileName);
         return runSolver(command);
