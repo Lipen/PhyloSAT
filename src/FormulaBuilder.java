@@ -435,7 +435,6 @@ class FormulaBuilder {
         println("// p_{i,s} and x_{t,i,v_t} and x_{t,s,v_t} => not(u_{t,s})");
         // with BEE: p_{i,s} and (x_{t,i} = x_{t,s}) => not(u_{t,s})
         T().forEach(t -> {
-            // TODO: what to do with leaves???
             L().forEach(i -> {
                 PP(i).forEach(s -> {
                     int vt = i;  // because it is leaf

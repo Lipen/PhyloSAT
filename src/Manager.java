@@ -51,7 +51,18 @@ class Manager {
     }
 
     void solve() {
-        for (Subtask subtask : subtasks)
+        for (ClusterSubtask subtask : getClusterSubtasks()) {
+            System.out.println("[*] Subtask: solving...");
+            long time_start = System.currentTimeMillis();
+            subtask.solve(solveParameters);
+            long time_total = System.currentTimeMillis() - time_start;
+            if (subtask.answer != null)
+                System.out.println(String.format("[+] Subtask: OK (n=%d, k=%d, time=%.3fs)", subtask.getN(), subtask.answer.getK(), time_total / 1000.));
+            else
+                System.out.println(String.format("[-] Subtask: no solution (n=%d, time=%.3fs)", subtask.getN(), time_total / 1000.));
+        }
+
+        for (CollapsedSubtask subtask : getCollapsedSubtasks())
             subtask.solve(solveParameters);
     }
 

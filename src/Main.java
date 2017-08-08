@@ -42,11 +42,11 @@ class Main {
     private int checkFirst = 3;
 
     @Parameter(names = {"-ftl", "--firstTimeLimit"},
-            description = "Time available to resolve first <checkFirst> subtasks")
+            description = "Time available to solve first <checkFirst> subtasks")
     private int firstTimeLimit = 10;
 
     @Parameter(names = {"-tl", "-mtl", "--maxTimeLimit"},
-            description = "Maximum time available to resolve subtask")
+            description = "Maximum time available to solve subtask")
     private int maxTimeLimit = 300;
 
     @Parameter(names = {"-mc", "-m1", "--maxChildren"},

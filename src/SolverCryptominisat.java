@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 
 import static org.apache.commons.exec.ExecuteWatchdog.INFINITE_TIMEOUT;
 
-@SuppressWarnings("Duplicates")
 final class SolverCryptominisat extends Solver {
     private static final Pattern BOOL_PATTERN = Pattern.compile("\\((\\w+),bool,(-?\\d+)\\)\\.");
     private static final Pattern INT_PATTERN = Pattern.compile("\\((\\w+),int,order\\(min\\((-?\\d+)\\),\\[((?:(?:-?\\d+),)*(?:-?\\d+)?)\\]\\)\\)\\.");
@@ -20,7 +19,7 @@ final class SolverCryptominisat extends Solver {
     private final String beeFileName;
     private final String dimacsFileName;
     private final String mapFileName;
-    private int threads;
+    private final int threads;
 
 
     SolverCryptominisat(String beeFileName, String dimacsFileName, String mapFileName) {
@@ -34,98 +33,94 @@ final class SolverCryptominisat extends Solver {
         this.threads = threads;
     }
 
+
     @Override
-    Map<String, Object> resolve(long timeLimit, long[] executionTime) {
+    Map<String, Object> solve() {
         System.out.println("[.] Using external solver");
 
+        if (!convertBEEtoDIMACS())
+            return null;
+
+        Map<String, Object> solution = solveWithCryptominisat();
+        return solution;
+    }
+
+    private boolean convertBEEtoDIMACS() {
         try {
             new PrintWriter(dimacsFileName).close();
             new PrintWriter(mapFileName).close();
         } catch (FileNotFoundException e) {
             System.err.println("[!] So sad: " + e.getMessage());
-            return null;
+            return false;
         }
 
-        try {
-            Runtime.getRuntime().exec(String.format("BumbleBEE %s -dimacs %s %s", beeFileName, dimacsFileName, mapFileName)).waitFor();
-        } catch (InterruptedException e) {
-            System.err.println("[!] Execution interrupted: " + e.getMessage());
-            return null;
-        } catch (IOException e) {
-            System.err.println("[!] Execution failed: " + e.getMessage());
-            return null;
-        }
+        if (!execCommand(String.format("BumbleBEE %s -dimacs %s %s", beeFileName, dimacsFileName, mapFileName)))
+            return false;
 
         if (new File(dimacsFileName).length() == 0) {
             System.err.println("[!] Dimacs file is empty => maybe pre-considered UNSAT");
-            return null;
+            return false;
         }
 
-        CommandLine command = new CommandLine("cryptominisat").addArgument("--threads=" + threads).addArgument(dimacsFileName);
-        ExecuteWatchdog watchdog = new ExecuteWatchdog(timeLimit);
-        DefaultExecuteResultHandler resultHandler = new DefaultExecuteResultHandler();
-        OutputStream outputStream = new ByteArrayOutputStream();
-        OutputStream errorStream = new ByteArrayOutputStream();
-        PumpStreamHandler streamHandler = new PumpStreamHandler(outputStream, errorStream);
-        Thread t = new Thread(() -> {
-            System.err.println("[!] Destroying process due to main program interrupt");
-            watchdog.destroyProcess();
-        });
+        return true;
+    }
 
-        DefaultExecutor executor = new DefaultExecutor();
-        // 10 - SAT, 20 - UNSAT
-        // executor.setExitValue(20);
-        executor.setWatchdog(watchdog);
-        executor.setStreamHandler(streamHandler);
-
-        long time = System.currentTimeMillis();
+    private static boolean execCommand(String command) {
         try {
-            Runtime.getRuntime().addShutdownHook(t);
-            executor.execute(command, resultHandler);
-            resultHandler.waitFor();
-            Runtime.getRuntime().removeShutdownHook(t);
+            Runtime.getRuntime().exec(command).waitFor();
         } catch (InterruptedException e) {
-            System.err.println("[!] Execution interrupted: " + e.getMessage());
-            e.printStackTrace();
+            System.err.println("[!] Execution of <" + command + "> interrupted");
+            return false;
         } catch (IOException e) {
-            System.err.println("[!] Execution failed: " + e.getMessage());
-            e.printStackTrace();
+            System.err.println("[!] Execution of <" + command + "> failed");
+            return false;
         }
+        return true;
+    }
 
-        executionTime[0] = System.currentTimeMillis() - time;
-        if (timeLimit != INFINITE_TIMEOUT && executionTime[0] > timeLimit)
-            executionTime[0] = -1;
-
-        if (watchdog.killedProcess()) {
-            System.err.println("[!] Timeout");
+    private Map<String, Object> solveWithCryptominisat() {
+        OutputStream outputStream = runCryptominisat();
+        if (outputStream == null)
             return null;
-        }
 
-        if (resultHandler.getExitValue() == 20) {
-            // System.err.println("[-] UNSAT");
+        Map<Integer, Boolean> variables = parseVariables(outputStream);
+        if (variables == null)
             return null;
-        }
 
-        if (resultHandler.getExitValue() != 10) {
-            System.err.println("[!] Exitcode: " + resultHandler.getExitValue());
-            return null;
-        }
+        Map<String, Object> solution = mapSolution(variables);
+        return solution;
+    }
 
+    private OutputStream runCryptominisat() {
+        CommandLine command = new CommandLine("cryptominisat")
+                .addArgument("--threads=" + threads)
+                .addArgument(dimacsFileName);
+        return runSolver(command, 20);
+    }
+
+    private static Map<Integer, Boolean> parseVariables(OutputStream outputStream) {
         Map<Integer, Boolean> variables = new HashMap<>();
+
         try (BufferedReader br = new BufferedReader(new StringReader(outputStream.toString()))) {
             for (String line : (Iterable<String>) br.lines()::iterator) {
-                if (line.startsWith("v"))
+                if (line.startsWith("v")) {
                     for (String token : line.substring(2).split(" ")) {
                         int x = Integer.parseInt(token);
                         variables.put(Math.abs(x), x > 0);
                     }
+                }
             }
         } catch (IOException e) {
             System.err.println("[!] So sad: " + e.getMessage());
             return null;
         }
 
+        return variables;
+    }
+
+    private Map<String, Object> mapSolution(Map<Integer, Boolean> variables) {
         Map<String, Object> solution = new HashMap<>();
+
         try (BufferedReader br = new BufferedReader(new FileReader(mapFileName))) {
             for (String line : (Iterable<String>) br.lines()::iterator) {
                 Matcher boolMatcher = BOOL_PATTERN.matcher(line);

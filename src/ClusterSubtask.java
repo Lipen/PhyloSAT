@@ -7,13 +7,16 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
-import static org.apache.commons.exec.ExecuteWatchdog.INFINITE_TIMEOUT;
-
 class ClusterSubtask extends Subtask {
     private final List<Tree> clusters;
 
     ClusterSubtask(List<Tree> clusters) {
         this.clusters = clusters;
+    }
+
+
+    int getN() {
+        return clusters.get(0).getTaxaSize();
     }
 
     @Override
@@ -26,24 +29,20 @@ class ClusterSubtask extends Subtask {
         normalize();
 
         if (p.hybridizationNumber >= 0) {
-            solveEx(p.hybridizationNumber, p.maxTimeLimit, p);
+            solveEx(p.hybridizationNumber, p);
         } else {
-            for (int k = 0; k <= p.checkFirst; k++) {
-                if (solveEx(k, p.firstTimeLimit, p))
+            for (int k = 0; k <= p.checkFirst; k++)
+                if (solveEx(k, p))
                     return;
-            }
 
             int n = clusters.get(0).getTaxaSize();
-
-            solveEx(n - 1, INFINITE_TIMEOUT, p);
-
-            for (int k = n - 2; k >= 0; k--)
-                if (!solveEx(k, p.maxTimeLimit, p))
+            for (int k = n - 1; k > p.checkFirst; k--)
+                if (!solveEx(k, p))
                     return;
         }
     }
 
-    private boolean solveEx(int k, long tl, SolveParameters p) {
+    private boolean solveEx(int k, SolveParameters p) {
         int n = clusters.get(0).getTaxaSize();
         System.out.println("[*] solveEx() :: n=" + n + ", k=" + k);
 
@@ -67,19 +66,12 @@ class ClusterSubtask extends Subtask {
         System.out.println("[+] Compiling BEE++ to BEE: OK");
 
         System.out.println("[*] Solving...");
-        long[] time_solve = new long[1];
-        long time_total = System.currentTimeMillis();
         Solver solver;
         if (p.isExternal)
             solver = new SolverCryptominisat(beeFileName, dimacsFileName, mapFileName, p.threads);
         else
             solver = new SolverCombined(beeFileName);
-        Map<String, Object> solution = solver.resolve(tl, time_solve);
-        time_total = System.currentTimeMillis() - time_total;
-        System.out.println("[.] Execution times (ms):");
-        System.out.println("  > Solve: " + time_solve[0]);
-        System.out.println("  > Total: " + time_total);
-        System.out.println("  > Limit: " + tl);
+        Map<String, Object> solution = solver.solve();
         if (solution != null)
             System.out.println("[+] Solving: OK");
         else
@@ -108,14 +100,14 @@ class ClusterSubtask extends Subtask {
     }
 
     private static void deleteFile(String filename) {
-        System.out.println("[*] Deleting <" + filename + ">...");
         try {
             Files.delete(Paths.get(filename));
-            System.out.println("[+] Deleting <" + filename + ">: OK");
+            System.out.println("[+] Removing <" + filename + ">: OK");
         } catch (FileNotFoundException e) {
-            System.err.println("[-] No such file: <" + filename + ">");
+            System.err.println("[-] Removing <" + filename + ">: no such file");
         } catch (IOException e) {
             System.err.println("[!] So sad: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }
