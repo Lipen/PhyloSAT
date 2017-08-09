@@ -245,7 +245,7 @@ final class Network extends Graph {
         List<NetworkNode> leaves = getTaxa();
 
         ans.append("  /* Leaves */\n");
-        ans.append("  { node [shape=invtriangle] rank=sink\n");
+        ans.append("  { node [shape=invhouse] rank=sink\n");
         for (int v = 1; v <= n; v++) {
             NetworkNode leaf = leaves.get(v - 1);
             ans.append(String.format("    %d [label=\"%s\"]\n", v, leaf.getLabel()));

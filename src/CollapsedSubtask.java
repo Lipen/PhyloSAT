@@ -1,8 +1,15 @@
 class CollapsedSubtask extends Subtask {
     private final Tree subtree;
 
+
     CollapsedSubtask(Tree subtree) {
         this.subtree = subtree;
+    }
+
+
+    @Override
+    int getN() {
+        return subtree.getTaxaSize();
     }
 
     @Override

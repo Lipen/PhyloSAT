@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 class Manager {
@@ -28,12 +27,17 @@ class Manager {
 
     void preprocess() {
         System.out.println("[*] Preprocessing...");
+        long time_start = System.currentTimeMillis();
 
-        Tree.collapse(trees, subtasks);
-        while (Tree.clusterize(trees, subtasks) && Tree.collapse(trees, subtasks)) {
+        boolean clusterized = false;
+        boolean collapsed = Tree.collapseAll(trees, subtasks);
+        while (clusterized || collapsed) {
+            clusterized = Tree.clusterize(trees, subtasks);
+            collapsed = Tree.collapseAll(trees, subtasks);
         }
 
-        System.out.println("[+] Total number of subtasks: " + subtasks.size());
+        long time_total = System.currentTimeMillis() - time_start;
+        System.out.printf("[+] Preprocessing done in %.3fs\n  > Total number of subtasks: %d\n", time_total / 1000., subtasks.size());
     }
 
     List<CollapsedSubtask> getCollapsedSubtasks() {
@@ -51,42 +55,60 @@ class Manager {
     }
 
     void solve() {
-        for (ClusterSubtask subtask : getClusterSubtasks()) {
-            System.out.println("[*] Subtask: solving...");
-            long time_start = System.currentTimeMillis();
-            subtask.solve(solveParameters);
-            long time_total = System.currentTimeMillis() - time_start;
-            if (subtask.answer != null)
-                System.out.println(String.format("[+] Subtask: OK (n=%d, k=%d, time=%.3fs)", subtask.getN(), subtask.answer.getK(), time_total / 1000.));
-            else
-                System.out.println(String.format("[-] Subtask: no solution (n=%d, time=%.3fs)", subtask.getN(), time_total / 1000.));
-        }
-
-        for (CollapsedSubtask subtask : getCollapsedSubtasks())
-            subtask.solve(solveParameters);
+        solveEx(Executors.newSingleThreadExecutor());
     }
 
     void solveParallel() {
-        ExecutorService executor = Executors.newWorkStealingPool();
+        solveEx(Executors.newWorkStealingPool());
+    }
 
-        for (Subtask subtask : subtasks)
-            executor.submit(() -> subtask.solve(solveParameters));
+    private void solveEx(ExecutorService executor) {
+        System.out.println("[*] Solving cluster subtasks...");
+        for (Subtask subtask : getClusterSubtasks()) {
+            executor.submit(() -> {
+                System.out.println("[*] " + subtask + ": solving...");
+                long time_solve = System.currentTimeMillis();
+                subtask.solve(solveParameters);
+                time_solve = System.currentTimeMillis() - time_solve;
+
+                if (subtask.answer != null)
+                    System.out.printf("[+] %s: solution with k=%d found in %.3fs)\n",
+                            subtask, subtask.answer.getK(), time_solve / 1000.);
+                else
+                    System.out.printf("[-] %s: no solution found in time=%.3fs)\n",
+                            subtask, time_solve / 1000.);
+            });
+        }
 
         executor.shutdown();
         try {
+            System.out.println("[*] Awaiting cluster subtasks...");
             executor.awaitTermination(7, TimeUnit.DAYS);
+            System.out.println("[+] All cluster subtasks solved");
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
+        System.out.println("[*] Expanding collapsed subtasks...");
+        for (Subtask subtask : getCollapsedSubtasks()) {
+            subtask.solve(solveParameters);
+            if (subtask.answer != null)
+                System.out.printf("[+] %s: successfully expanded\n", subtask);
+            else
+                System.out.printf("[-] %s: couldn't expand\n", subtask);
+        }
+        System.out.println("[+] All collapsed subtasks expanded");
     }
 
     void cookNetwork() {
+        System.out.println("[*] Cooking final network...");
         result = subtasks.get(0).answer;
         for (int i = subtasks.size() - 1; i > 0; i--)
             result.substituteSubtask(subtasks.get(i));
+        System.out.printf("[+] Finally, cooked network with %d reticulation nodes\n", result.getK());
     }
 
-    void printTrees(String resultFilePath, Logger logger) {
+    void printTrees(String resultFilePath) {
         if (resultFilePath == null)
             return;
 
@@ -94,24 +116,24 @@ class Manager {
             String treeFilePath = resultFilePath + ".tree" + i + ".gv";
 
             try (PrintWriter gvPrintWriter = new PrintWriter(treeFilePath)) {
-                logger.info(String.format("Printing tree %d to <%s>", i, treeFilePath));
+                System.out.println("[*] Printing tree " + i + " to <" + treeFilePath + ">");
                 gvPrintWriter.print(trees.get(i).toGVString());
             } catch (FileNotFoundException e) {
-                logger.warning("Couldn't open <" + resultFilePath + ">:\n" + e.getMessage());
+                System.err.println("[!] Couldn't open <" + resultFilePath + ">:\n" + e.getMessage());
             }
         }
     }
 
-    void printNetwork(String resultFilePath, Logger logger) {
+    void printNetwork(String resultFilePath) {
         if (resultFilePath == null)
             return;
         String networkFilePath = resultFilePath + ".gv";
 
         try (PrintWriter gvPrintWriter = new PrintWriter(networkFilePath)) {
-            logger.info(String.format("Printing network to <%s>", networkFilePath));
+            System.out.println("[*] Printing network to <" + networkFilePath + ">");
             gvPrintWriter.print(result.toGVString());
         } catch (FileNotFoundException e) {
-            logger.warning("Couldn't open <" + resultFilePath + ">:\n" + e.getMessage());
+            System.err.println("[!] Couldn't open <" + resultFilePath + ">:\n" + e.getMessage());
         }
     }
 }

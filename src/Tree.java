@@ -201,10 +201,10 @@ final class Tree extends Graph {
         return taxa;
     }
 
-    // static boolean collapse(List<Tree> trees, List<Tree> subtrees_external) {
-    static boolean collapse(List<Tree> trees, List<Subtask> subtasks_external) {
+    static boolean collapseAll(List<Tree> trees, List<Subtask> subtasks_external) {
         /* Replaces equal subtrees (equal in all trees) with Collapsed Nodes */
         Tree firstTree = trees.get(0);
+        boolean collapsed = false;
 
         for (TreeNode first : firstTree.traverseTopDown()) {
             List<TreeNode> anchors = new ArrayList<>();
@@ -232,7 +232,7 @@ final class Tree extends Graph {
                 String label = leaves.stream()
                         .map(Node::getLabel)
                         .collect(Collectors.joining("+"));
-                System.out.println("[.] Collapsed " + leaves.size() + " leaves into " + label);
+                System.out.println("[.] Collapsed " + leaves.size() + " leaves (" + leaves.stream().map(Node::getLabel).collect(Collectors.joining(", ")) + ") into " + label);
                 Tree subtree = firstTree.buildSubtree(first);
 
                 // subtrees_external.add(subtree);
@@ -244,11 +244,11 @@ final class Tree extends Graph {
                     tree.collapseNode(anchor, subtree, label);
                 }
 
-                return true;
+                collapsed = true;
             }
         }
 
-        return false;
+        return collapsed;
     }
 
     static boolean clusterize(List<Tree> trees, List<Subtask> subtasks_external) {
@@ -281,7 +281,7 @@ final class Tree extends Graph {
                 String label = leaves.stream()
                         .map(Node::getLabel)
                         .collect(Collectors.joining("+"));
-                System.out.println("[.] Clusterized " + leaves.size() + " leaves into " + label);
+                System.out.println("[.] Clusterized " + leaves.size() + " leaves (" + leaves.stream().map(Node::getLabel).collect(Collectors.joining(", ")) + ") into " + label);
                 List<Tree> clusters = new ArrayList<>();
 
                 for (int t = 0; t < trees.size(); t++) {
@@ -426,7 +426,7 @@ final class Tree extends Graph {
         List<TreeNode> vertices = traverseBottomUp(true, true);
 
         ans.append("  /* Leaves */\n");
-        ans.append("  { node [shape=invtriangle] rank=sink\n");
+        ans.append("  { node [shape=invhouse] rank=sink\n");
         L().forEach(v -> ans.append(String.format("    %d [label=\"%s\"]\n", v, getLabel(v))));
         ans.append("  }\n\n");
 

@@ -1,7 +1,6 @@
 import beepp.BEEppCompiler;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
@@ -16,6 +15,7 @@ class ClusterSubtask extends Subtask {
     }
 
 
+    @Override
     int getN() {
         return clusters.get(0).getTaxaSize();
     }
@@ -34,40 +34,45 @@ class ClusterSubtask extends Subtask {
             solveEx(p.hybridizationNumber, p);
         } else {
             for (int k = 0; k <= p.checkFirst; k++)
-                if (solveEx(k, p))
+                if (solveEx(k, p)) {
+                    System.out.printf("[#] %s: found solution with k=%d during check-first stage\n", this, k);
                     return;
+                }
 
             int n = clusters.get(0).getTaxaSize();
-            for (int k = n - 1; k > p.checkFirst; k--)
-                if (!solveEx(k, p))
+            solveEx(n - 1, p);
+            for (int k = n - 2; k > p.checkFirst; k--)
+                if (!solveEx(k, p)) {
+                    System.out.printf("[#] %s: found solution with k=%d during back-search stage\n", this, k);
                     return;
+                }
         }
     }
 
     private boolean solveEx(int k, SolveParameters p) {
-        int n = clusters.get(0).getTaxaSize();
-        System.out.println("[*] solveEx() :: n=" + n + ", k=" + k);
+        long time_start = System.currentTimeMillis();
+        System.out.printf("[*] %s: trying to solve with k = %d...\n", this, k);
 
         String beeppFileName = p.prefix + uuid.toString() + "_out.beepp";
         String beeFileName = p.prefix + uuid.toString() + "_out.bee";
         String dimacsFileName = p.prefix + uuid.toString() + "_out.dimacs";
         String mapFileName = p.prefix + uuid.toString() + "_out.map";
 
-        System.out.println("[*] Building BEE++ formula...");
+        System.out.printf("[*] %s: building BEE++ formula...\n", this);
         int m1 = p.maxChildren;
         int m2 = p.maxParents;
         Formula formula = new FormulaBuilder(clusters, k, m1, m2).build();
-        System.out.println("[+] Building BEE++ formula: OK");
+        System.out.printf("[+] %s: done building BEE++ formula\n", this);
 
         if (p.isDumping) {
             formula.dump(beeppFileName);
         }
 
-        System.out.println("[*] Compiling BEE++ to BEE: <" + beeFileName + ">");
+        System.out.printf("[*] %s: compiling BEE++ to BEE (<%s>)...\n", this, beeFileName);
         BEEppCompiler.fastCompile(formula.toString(), beeFileName);
-        System.out.println("[+] Compiling BEE++ to BEE: OK");
+        System.out.printf("[+] %s: done compiling BEE++ to BEE\n", this);
 
-        System.out.println("[*] Solving...");
+        System.out.printf("[*] %s: calling solver...\n", this);
         Solver solver;
         if (p.isExternal)
             solver = new SolverCryptominisat(beeFileName, dimacsFileName, mapFileName, p.threads);
@@ -75,9 +80,9 @@ class ClusterSubtask extends Subtask {
             solver = new SolverCombined(beeFileName);
         Map<String, Object> solution = solver.solve();
         if (solution != null)
-            System.out.println("[+] Solving: OK");
+            System.out.printf("[+] %s: solved\n", this);
         else
-            System.out.println("[-] Solving: no solution");
+            System.out.printf("[-] %s: no solution\n", this);
 
         if (!p.isDumping) {
             deleteFile(beeFileName);
@@ -87,12 +92,26 @@ class ClusterSubtask extends Subtask {
             }
         }
 
+        long time_total = System.currentTimeMillis() - time_start;
+        try (FileWriter fw = new FileWriter("subtasks.log", true);
+             BufferedWriter bw = new BufferedWriter(fw);
+             PrintWriter out = new PrintWriter(bw)) {
+            out.printf("%d,%d,%.3f,%s,%s\n",
+                    clusters.get(0).getTaxaSize(),
+                    k,
+                    time_total / 1000.,
+                    solution == null ? "UNSAT" : "SAT",
+                    p.isExternal ? "external" : "builtin");
+        } catch (IOException e) {
+            System.err.println("IOException: " + e.getMessage());
+        }
+
         if (solution == null)
             return false;
 
-        System.out.println("[*] Building network...");
+        System.out.printf("[*] %s: building network...\n", this);
         this.answer = new Network(clusters, k, solution);
-        System.out.println("[+] Building network: OK");
+        System.out.printf("[+] %s: done building network\n", this);
 
         return true;
     }

@@ -3,6 +3,8 @@ package beepp;
 import beepp.expression.Variable;
 
 import java.util.Map;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * @author Vyacheslav Moklev
@@ -10,11 +12,11 @@ import java.util.Map;
 public class StaticStorage {
     private static int lastTempVar;
     public static Map<String, Variable> vars;
-    
-    public static void resetVarCounter() {
+
+    static void resetVarCounter() {
         lastTempVar = 1;
     }
-    
+
     public static String newVar() {
         int val = lastTempVar++;
         StringBuilder sb = new StringBuilder();

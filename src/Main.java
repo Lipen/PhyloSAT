@@ -5,35 +5,27 @@ import jebl.evolution.io.NewickImporter;
 import jebl.evolution.taxa.Taxon;
 import jebl.evolution.trees.SimpleRootedTree;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.*;
-import java.util.logging.FileHandler;
-import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
 import java.util.stream.Collectors;
 
 class Main {
-    @Parameter(names = {"-i", "--trees"}, variableArity = true, required = true,
+    @Parameter(names = {"-i", "--trees"}, variableArity = true, required = true, order = 0,
             description = "Files with trees")
     private List<String> treesPaths = new ArrayList<>();
 
-    @Parameter(names = {"-l", "--log"})
-    private String logFilePath;
-
-    @Parameter(names = {"-r", "--result"}, required = true,
+    @Parameter(names = {"-r", "--result"}, required = true, order = 1,
             description = "Results base filepath (without extension)")
     private String resultFilePath = "network";
 
-    @Parameter(names = "--help", help = true)
+    @Parameter(names = "--help", help = true, hidden = true)
     private boolean help = false;
 
-    @Parameter(names = {"-np", "--noPreprocessing"},
+    @Parameter(names = {"-np", "-dp", "--noPreprocessing"}, order = 2,
             description = "Disables preprocessing (collapsing/clusterizing)")
     private boolean disablePreprocessing = false;
 
-    @Parameter(names = {"-h", "-hn", "--hybridizationNumber"},
+    @Parameter(names = {"-h", "-hn", "--hybridizationNumber"}, order = 3,
             description = "Hybridization number, available with disabled preprocessing")
     private int hybridizationNumber = -1;
 
@@ -41,70 +33,69 @@ class Main {
             description = "Number of first solved tasks")
     private int checkFirst = 3;
 
-    @Parameter(names = {"-ftl", "--firstTimeLimit"},
+    @Parameter(names = {"-ftl", "--firstTimeLimit"}, hidden = true,
             description = "Time available to solve first <checkFirst> subtasks")
     private int firstTimeLimit = 10;
 
-    @Parameter(names = {"-tl", "-mtl", "--maxTimeLimit"},
+    @Parameter(names = {"-tl", "-mtl", "--maxTimeLimit"}, hidden = true,
             description = "Maximum time available to solve subtask")
     private int maxTimeLimit = 300;
 
-    @Parameter(names = {"-mc", "-m1", "--maxChildren"},
+    @Parameter(names = {"-mc", "-m1", "--maxChildren"}, hidden = true,
             description = "Maximum number of common vertex children")
     private int m1 = 2;
 
-    @Parameter(names = {"-mp", "-m2", "--maxParents"},
+    @Parameter(names = {"-mp", "-m2", "--maxParents"}, hidden = true,
             description = "Maximum number of reticulate node parents")
     private int m2 = 2;
 
     @Parameter(names = "--prefix",
-            description = "Filenames prefix (path = prefix + out.{beepp,bee,dimacs,map})")
+            description = "Filenames prefix (path=prefix+uuid+out.{beepp,bee,dimacs,map})")
     private String prefix = "";
 
     @Parameter(names = {"-e", "--external"},
             description = "Use external solver instead of BumbleBEE's built-in")
     private boolean isExternal = false;
 
-    @Parameter(names = {"-p", "--parallel"},
-            description = "Solve subtasks in parallel")
-    private boolean isParallel = false;
-
     @Parameter(names = {"-t", "--threads"},
             description = "Number of threads for cryptominisat")
     private int threads = 4;
 
-    @Parameter(names = {"-d", "--dump"},
-            description = "Dump directory")
-    private boolean isDumping = false;
+    @Parameter(names = {"-p", "--parallel"}, hidden = true,
+            description = "Solve subtasks in parallel")
+    private boolean isParallel = false;
 
-    private FileHandler loggerHandler;
-    private Logger logger = Logger.getLogger("Logger");
+    @Parameter(names = {"-d", "--dump"},
+            description = "Keep temporary files")
+    private boolean isDumping = false;
 
 
     private List<SimpleRootedTree> readTrees() {
         List<SimpleRootedTree> trees = new ArrayList<>();
         for (String filePath : treesPaths) {
+            System.out.println("[*] Loading trees from <" + filePath + ">...");
             try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
                 NewickImporter importer = new NewickImporter(reader, false);
                 trees.addAll(importer.importTrees().stream()
                         .map(t -> (SimpleRootedTree) t)
                         .collect(Collectors.toList()));
             } catch (ImportException e) {
-                logger.severe("[!] Can't load trees from <" + filePath + ">");
+                System.err.println("[!] Can't load trees from <" + filePath + ">");
                 e.printStackTrace();
                 System.exit(1);
             } catch (IOException e) {
-                logger.severe("[!] So sad: " + e.getMessage());
+                System.err.println("[!] So sad: " + e.getMessage());
                 e.printStackTrace();
                 System.exit(1);
             }
         }
+        System.out.println("[+] Total trees loaded: " + trees.size());
         return trees;
     }
 
     private static void checkTrees(List<SimpleRootedTree> trees) {
         if (trees.size() < 2)
-            throw new RuntimeException("There are less then 2 trees");
+            throw new IllegalArgumentException("There are less then 2 trees");
 
         Set<Taxon> taxa = new TreeSet<>(trees.get(0).getTaxa());
         int taxaSize = taxa.size();
@@ -114,31 +105,22 @@ class Main {
             Set<Taxon> treeTaxa = new HashSet<>(tree.getTaxa());
 
             if (treeTaxa.size() != taxaSize)
-                throw new RuntimeException(String.format("Tree %d has %d taxa, but tree 0 has %d", t, treeTaxa.size(), taxaSize));
+                throw new IllegalArgumentException(String.format("Tree %d has %d taxa, but tree 0 has %d", t, treeTaxa.size(), taxaSize));
             if (!taxa.containsAll(treeTaxa))
-                throw new RuntimeException(String.format("Tree %d and tree 0 has different taxa", t));
+                throw new IllegalArgumentException(String.format("Tree %d and tree 0 has different taxa", t));
         }
-    }
 
-    private void addLoggerHandler(String logFilePath) throws IOException {
-        loggerHandler = new FileHandler(logFilePath, false);
-        loggerHandler.setFormatter(new SimpleFormatter());
-        logger.addHandler(loggerHandler);
-        logger.setUseParentHandlers(false);
-        System.out.println("[*] Log redirected to <" + logFilePath + ">");
-    }
-
-    private void removeAndCloseLoggerHandler() {
-        if (loggerHandler != null) {
-            logger.removeHandler(loggerHandler);
-            loggerHandler.close();
-        }
+        System.out.println("[+] All trees has n=" + taxaSize + " taxa");
     }
 
     private void run(JCommander j) {
         Locale.setDefault(Locale.US);
 
         if (help) {
+            System.out.println("Constructs parsimonious hybridization network from multiple non-binary* phylogenetic trees");
+            System.out.println("  * non-binary = not neccessary binary");
+            System.out.println("  * non-binary trees are not supported yet");
+            System.out.println("\nAuthors:\n  > Vladimir Ulyantsev (ulyantsev@rain.ifmo.ru)\n  > Vyacheslav Moklev\n  > Konstantin Chukharev (lipen00@gmail.com)\n");
             j.usage();
             return;
         }
@@ -149,26 +131,19 @@ class Main {
             firstTimeLimit *= 1000;
 
         if (!disablePreprocessing && hybridizationNumber >= 0) {
-            System.out.println("Hybridization number can be set only in -ds mode");
+            System.err.println("[!] Hybridization number can be set only in -ds mode");
             return;
-        }
-
-        if (logFilePath != null) {
-            try {
-                addLoggerHandler(logFilePath);
-            } catch (IOException e) {
-                System.err.println("Can't work with log file " + logFilePath + ": " + e.getMessage());
-                return;
-            }
         }
 
         List<SimpleRootedTree> trees = readTrees();
         checkTrees(trees);
 
+        long time_start = System.currentTimeMillis();
         Manager manager = new Manager(trees,
                 new SolveParameters(hybridizationNumber, m1, m2, firstTimeLimit,
                         maxTimeLimit, checkFirst, prefix, isExternal, threads, isDumping));
-        manager.printTrees(resultFilePath, logger);
+        manager.printTrees(resultFilePath);
+
         if (!disablePreprocessing)
             manager.preprocess();
         else
@@ -179,16 +154,22 @@ class Main {
         else
             manager.solve();
         manager.cookNetwork();
-        manager.printNetwork(resultFilePath, logger);
+        manager.printNetwork(resultFilePath);
 
-        logger.info("Finally, there is a network with " + manager.result.getK() + " reticulation nodes");
-    }
+        System.out.println("[+] Finally, there is a network with " + manager.result.getK() + " reticulation nodes");
 
-    private void run_wrapper(JCommander j) {
-        try {
-            run(j);
-        } finally {
-            removeAndCloseLoggerHandler();
+        long time_total = System.currentTimeMillis() - time_start;
+        try (FileWriter fw = new FileWriter("everything.log", true);
+             BufferedWriter bw = new BufferedWriter(fw);
+             PrintWriter out = new PrintWriter(bw)) {
+            out.printf("%s,%d,%d,%.3f,%s\n",
+                    new File(treesPaths.get(0)).getName().split("\\.")[0],
+                    trees.get(0).getTaxa().size(),
+                    manager.result.getK(),
+                    time_total / 1000.,
+                    isExternal ? "external" : "builtin");
+        } catch (IOException e) {
+            System.err.println("IOException: " + e.getMessage());
         }
     }
 
@@ -199,6 +180,6 @@ class Main {
                 .build();
         j.setCaseSensitiveOptions(false);
         j.parse(argv);
-        main.run_wrapper(j);
+        main.run(j);
     }
 }

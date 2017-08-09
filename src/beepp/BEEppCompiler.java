@@ -14,7 +14,7 @@ import java.util.HashMap;
  * @author Moklev Vyacheslav
  */
 public class BEEppCompiler {
-    public static void fastCompile(String formula, String filename) {
+    public static synchronized void fastCompile(String formula, String filename) {
         StaticStorage.resetVarCounter();
         StaticStorage.vars = new HashMap<>();
         try (BufferedReader br = new BufferedReader(new StringReader(formula));
