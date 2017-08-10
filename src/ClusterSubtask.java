@@ -35,7 +35,7 @@ class ClusterSubtask extends Subtask {
         } else {
             for (int k = 0; k <= p.checkFirst; k++)
                 if (solveEx(k, p)) {
-                    System.out.printf("[#] %s: found solution with k=%d during check-first stage\n", this, k);
+                    System.out.printf("[#] %s: solution found with k=%d during check-first stage\n", this, k);
                     return;
                 }
 
@@ -43,7 +43,7 @@ class ClusterSubtask extends Subtask {
             solveEx(n - 1, p);
             for (int k = n - 2; k > p.checkFirst; k--)
                 if (!solveEx(k, p)) {
-                    System.out.printf("[#] %s: found solution with k=%d during back-search stage\n", this, k);
+                    System.out.printf("[#] %s: no solution found with k=%d during back-search stage\n", this, k);
                     return;
                 }
         }
