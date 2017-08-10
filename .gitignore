@@ -1,19 +1,33 @@
-.idea
-gen
-out
+gen/
+out/
+networks/
+merged/
+
 
 *~
 *.iml
 *.exe
 *.gv
 *.png
+*.svg
 
 src/META-INF
+.idea/dictionaries
+.idea/workspace.xml
+.idea/tasks.xml
 
-/bee.dimacs
-/bee.map
-/in.beepp
 /log
-/out.bee
-/out.keksik
-/tmp.cnf
+/*.log
+/*.beepp
+/*.bee
+/*.dimacs
+/*.map
+/cnf
+/*.cnf
+/*.bat
+/*.jar
+/.Rhistory
+
+/*.R
+/*.py
+/*.txt

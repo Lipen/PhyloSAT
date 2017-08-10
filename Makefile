@@ -6,9 +6,12 @@ default:
 
 all: tests Grass2 Grass3
 
-tests: test_easiest test_simple test_medium test_hard
+# test_medium test_hard
+tests: test_easiest test_folded test_simple
 test_easiest:
 	${PY} run.py test_easiest.trees network_test_easiest
+test_folded:
+	${PY} run.py test_folded.trees network_test_folded
 test_simple:
 	${PY} run.py test_simple.trees network_test_simple
 test_medium:

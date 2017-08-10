@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="libs">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/antlr-4.7-complete.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/args4j-2.0.12.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/commons-exec-1.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/jebl.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
