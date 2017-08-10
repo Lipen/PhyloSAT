@@ -32,12 +32,13 @@ class Manager {
         boolean clusterized = false;
         boolean collapsed = Tree.collapseAll(trees, subtasks);
         while (clusterized || collapsed) {
+            // Note: It is best to make sure that both operations are performed
             clusterized = Tree.clusterize(trees, subtasks);
             collapsed = Tree.collapseAll(trees, subtasks);
         }
 
         long time_total = System.currentTimeMillis() - time_start;
-        System.out.printf("[+] Preprocessing done in %.3fs\n  > Total number of subtasks: %d\n", time_total / 1000., subtasks.size());
+        System.out.printf("[+] Preprocessing done in %.3fs\n  > Subtasks' sizes (total = %d): %s\n", time_total / 1000., subtasks.size(), subtasks.stream().map(Subtask::getN).collect(Collectors.toList()));
     }
 
     List<CollapsedSubtask> getCollapsedSubtasks() {
