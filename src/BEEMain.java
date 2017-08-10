@@ -56,7 +56,7 @@ public class BEEMain {
 
     @Option(name = "--firstTimeLimit", aliases = {
             "-ftl"}, usage = "time available to solve first few subtasks", metaVar = "<seconds>")
-    private int firstTimeLimit = 10;
+    private int firstTimeLimit = 30;
 
     @Option(name = "--maxTimeLimit", aliases = {
             "-tl", "-mtl"}, usage = "maximum time available to solve subtask", metaVar = "<seconds>")
