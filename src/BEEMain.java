@@ -140,6 +140,11 @@ public class BEEMain {
             }
         }
 
+        if (firstTimeLimit > 0)
+            firstTimeLimit *= 1000;
+        if (maxTimeLimit > 0)
+            maxTimeLimit *= 1000;
+
         List<SimpleRootedTree> trees = new ArrayList<>();
         for (String filePath : treesPaths) {
             try {
@@ -164,6 +169,8 @@ public class BEEMain {
             PhylogeneticTree inputTree = new PhylogeneticTree(srt);
             inputTrees.add(inputTree);
         }
+
+        long time_start = System.currentTimeMillis();
 
         int finalK = 0;
         List<PhylogeneticNetwork> res = new ArrayList<>();
@@ -215,6 +222,19 @@ public class BEEMain {
         }
 
         PhylogeneticNetwork resultNetwork = res.get(0);
+        long time_total = System.currentTimeMillis() - time_start;
+        System.out.printf("[+] Finally, network with k=%d was found in %.3fs\n", finalK, time_total / 1000.);
+        try (FileWriter fw = new FileWriter("oldthing.log", true);
+             BufferedWriter bw = new BufferedWriter(fw);
+             PrintWriter out = new PrintWriter(bw)) {
+            out.printf("%s,%d,%d,%.3f\n",
+                    new File(treesPaths.get(0)).getName().split("\\.")[0],
+                    inputTrees.get(0).getTaxaSize(),
+                    finalK,
+                    time_total / 1000.);
+        } catch (IOException e) {
+            System.err.println("IOException: " + e.getMessage());
+        }
 
         if (resultFilePath != null) {
             try {
@@ -248,7 +268,7 @@ public class BEEMain {
         int mink = 0;
         while (mink <= CHECK_FIRST) {
             long[] time = new long[1];
-            PhylogeneticNetwork res = solveSubtask(trees, mink, firstTimeLimit * 1000, time);
+            PhylogeneticNetwork res = solveSubtask(trees, mink, firstTimeLimit, time);
             if (time[0] == -1) {
                 break;
             }
@@ -267,7 +287,7 @@ public class BEEMain {
         // When found UNSAT case, roll back to the last known SAT-1 and continue with step 1 (or max(last_step/2, 1))
 
         while (k >= mink) {
-            PhylogeneticNetwork temp = solveSubtask(trees, k, maxTimeLimit * 1000, time);
+            PhylogeneticNetwork temp = solveSubtask(trees, k, maxTimeLimit, time);
             if (temp == null) {
                 break;
             }
@@ -283,6 +303,8 @@ public class BEEMain {
     }
 
     private PhylogeneticNetwork solveSubtask(List<PhylogeneticTree> trees, int k, long timeLimit, long[] time) throws IOException {
+        long time_start = System.currentTimeMillis();
+
         logger.info("Building BEE++ formula...");
         String BEEFormula = new BEEFormulaBuilder(trees, k, false).build();
 
@@ -308,6 +330,16 @@ public class BEEMain {
             System.err.println("IOException: " + e.getMessage());
         }
         // === LOG EXECUTION TIME ===
+
+        double time_total = (System.currentTimeMillis() - time_start) / 1000.;
+        System.out.printf("[.] Subtask with n=%d, k=%d took %.3fs\n", n, k, time_total);
+        try (FileWriter fw = new FileWriter("oldtasks.log", true);
+             BufferedWriter bw = new BufferedWriter(fw);
+             PrintWriter out = new PrintWriter(bw)) {
+            out.printf("%d,%d,%.3f,%s\n", n, k, time_total, map == null ? "UNSAT" : "SAT");
+        } catch (IOException e) {
+            System.err.println("IOException: " + e.getMessage());
+        }
 
         if (map == null) {
             logger.info("NO SOLUTION with k = " + k);

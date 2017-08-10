@@ -7,13 +7,19 @@ default:
 all: tests Grass2 Grass3
 
 # test_medium test_hard
-tests: test_easiest test_folded test_simple
+tests: test_easiest test_folded qwerty4 qwerty5 test_simple test_easy
 test_easiest:
 	${PY} run.py test_easiest.trees network_test_easiest
 test_folded:
 	${PY} run.py test_folded.trees network_test_folded
+qwerty4:
+	${PY} run.py qwerty4.trees network_qwerty4
+qwerty5:
+	${PY} run.py qwerty5.trees network_qwerty5
 test_simple:
 	${PY} run.py test_simple.trees network_test_simple
+test_easy:
+	${PY} run.py test_easy.trees network_test_easy
 test_medium:
 	${PY} run.py test_medium.trees network_test_medium
 test_hard:
