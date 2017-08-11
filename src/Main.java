@@ -9,6 +9,7 @@ import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("FieldCanBeLocal")
 class Main {
     @Parameter(names = {"-i", "--trees"}, variableArity = true, required = true, order = 0,
             description = "Files with trees")
@@ -118,7 +119,7 @@ class Main {
 
         if (help) {
             System.out.println("Constructs parsimonious hybridization network from multiple non-binary* phylogenetic trees");
-            System.out.println("  * non-binary = not neccessary binary");
+            System.out.println("  * non-binary = not necessary binary");
             System.out.println("  * non-binary trees are not supported yet");
             System.out.println("\nAuthors:\n  > Vladimir Ulyantsev (ulyantsev@rain.ifmo.ru)\n  > Vyacheslav Moklev\n  > Konstantin Chukharev (lipen00@gmail.com)\n");
             j.usage();
