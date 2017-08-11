@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+@SuppressWarnings({"CodeBlock2Expr", "unused", "UnnecessaryLocalVariable"})
 class FormulaBuilder {
     private final List<Tree> trees;
     private final boolean hasFictitiousRoot;
@@ -33,9 +34,9 @@ class FormulaBuilder {
         // System.out.println("T = " + makeList(T()));
     }
 
-    public Formula build() {
+    Formula build() {
         declareVariables();     // [5/5] TODO: check
-        declareConstraints();   // [1/2] TODO
+        declareConstraints();   // [2/2] TODO: check
         return new Formula(sb.toString());
     }
 
@@ -100,8 +101,8 @@ class FormulaBuilder {
 
     private void declareConstraints() {
         println("// 2. Constraints declaration");
-        declareNetworkStructureConstraints();       // [6/6] TODO: check
-        declareTreesToNetworkMappingConstraints();  // [1/6(9)] TODO: check
+        declareNetworkStructureConstraints();       // [4/4] TODO: check
+        declareTreesToNetworkMappingConstraints();  // [4/4] TODO: check
     }
 
 
