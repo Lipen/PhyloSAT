@@ -219,6 +219,16 @@ class FormulaBuilder {
     }
 
     private void declareTreesToNetworkMappingConstraints() {
+        boolean mapping_alo = true;
+        boolean mapping_root = true;
+        boolean reticular_not = true;
+        boolean reticular_used = true;
+        boolean reticular_alo = true;
+        boolean interrupt_or = false;
+        boolean interrupt_iff = true;
+        boolean union_iff = true;
+        boolean union_impl = true;
+
         println("// 2.2 Trees to network mapping constraints");
 
         println("// 2.2.1 Mapping");
@@ -227,21 +237,27 @@ class FormulaBuilder {
         // no need?
 
         println("// ALO(x_{t,i,v_t})_i");
-        T().forEach(t -> {
-            Vt().forEach(vt -> {
-                List<String> list = new ArrayList<>();
-                VR().forEach(i -> {
-                    list.add(var("x", t, i) + " = " + vt);
+        if (mapping_alo)
+            T().forEach(t -> {
+                Vt().forEach(vt -> {
+                    List<String> list = new ArrayList<>();
+                    VR().forEach(i -> {
+                        list.add(var("x", t, i) + " = " + vt);
+                    });
+                    String vars = list.stream().collect(Collectors.joining(", "));
+                    printlnf("ALO(1, %s)", vars);
                 });
-                String vars = list.stream().collect(Collectors.joining(", "));
-                printlnf("ALO(1, %s)", vars);
             });
-        });
+        else
+            println("// Not today");
 
         println("// Root mapping");
-        T().forEach(t -> {
-            printlnf("%s = %d", var("x", t, root()), rootT());
-        });
+        if (mapping_root)
+            T().forEach(t -> {
+                printlnf("%s = %d", var("x", t, root()), rootT());
+            });
+        else
+            println("// Not today");
 
 
         println("// 2.2.2 Reticular <parents>");
@@ -250,39 +266,48 @@ class FormulaBuilder {
         // no need
 
         println("// not(p_{r,u}) => not(p_{t,r,u})");
-        T().forEach(t -> {
-            R().forEach(r -> {
-                PP(r).forEach(u -> {
-                    printlnf("! %s => (%s != %d)",
-                            var("p", r, u),
-                            var("pt", t, r), u);
+        if (reticular_not)
+            T().forEach(t -> {
+                R().forEach(r -> {
+                    PP(r).forEach(u -> {
+                        printlnf("! %s => (%s != %d)",
+                                var("p", r, u),
+                                var("pt", t, r), u);
+                    });
                 });
             });
-        });
+        else
+            println("// Not today");
 
         println("// p_{r,u} and not(p_{t,r,u}) => not(u_{t,u})");
-        T().forEach(t -> {
-            R().forEach(r -> {
-                PP(r).forEach(u -> {
-                    printlnf("%s & (%s != %d) => ! %s",
-                            var("p", r, u),
-                            var("pt", t, r), u,
-                            var("u", t, u));
+        if (reticular_used)
+            T().forEach(t -> {
+                R().forEach(r -> {
+                    PP(r).forEach(u -> {
+                        printlnf("%s & (%s != %d) => ! %s",
+                                var("p", r, u),
+                                var("pt", t, r), u,
+                                var("u", t, u));
+                    });
                 });
             });
-        });
+        else
+            println("// Not today");
 
         println("// p_{r,u} => ALO(p_{t,r,u})_t");
-        R().forEach(r -> {
-            PP(r).forEach(u -> {
-                List<String> list = new ArrayList<>();
-                T().forEach(t -> {
-                    list.add(var("pt", t, r) + " = " + u);
+        if (reticular_alo)
+            R().forEach(r -> {
+                PP(r).forEach(u -> {
+                    List<String> list = new ArrayList<>();
+                    T().forEach(t -> {
+                        list.add(var("pt", t, r) + " = " + u);
+                    });
+                    String vars = list.stream().collect(Collectors.joining(", "));
+                    printlnf("%s => ALO(1, %s)", var("p", r, u), vars);
                 });
-                String vars = list.stream().collect(Collectors.joining(", "));
-                printlnf("%s => ALO(1, %s)", var("p", r, u), vars);
             });
-        });
+        else
+            println("// Not today");
 
 
         println("// 2.2.3 Mapping interrupt");
@@ -323,146 +348,158 @@ class FormulaBuilder {
         // More strict right part definition of previous constraint:
         println("// u_{t,v} and x_{t,v,v_t} and p_{u,v} => OR_{v_t^c}(x_{t,u,v_t^c})");
         // for R:                     ... and p_{t,u,v} => ...
-        T().forEach(t -> {
-            Vt().forEach(vt -> {
-                // L().forEach(u -> {
-                // ut = u, because it is leaf.
-                // x_t_u_ut = true, because it is leaf.
-                // Constraint should be "... => x_t_u_ut", but it is
-                // always true, so we completely do not need that L() loop
-                // })
-                V_().forEach(u -> {
-                    PP(u).forEach(v -> printlnf("%s & (%s = %d) & (%s = %d) => (%s)",
-                            var("u", t, v),
-                            var("x", t, v), vt,
-                            var("p", u), v,
-                            getChildrenInTree(t, vt).stream()
-                                    .map(vtc -> var("x", t, u) + " = " + vtc)
-                                    .collect(Collectors.joining(" | "))));
-                });
-                R().forEach(u -> {
-                    PP(u).forEach(v -> printlnf("%s & (%s = %d) & (%s = %d) => (%s)",
-                            var("u", t, v),
-                            var("x", t, v), vt,
-                            var("pt", t, u), v,
-                            getChildrenInTree(t, vt).stream()
-                                    .map(vtc -> var("x", t, u) + " = " + vtc)
-                                    .collect(Collectors.joining(" | "))));
+        if (interrupt_or)
+            T().forEach(t -> {
+                Vt().forEach(vt -> {
+                    // L().forEach(u -> {
+                    // ut = u, because it is leaf.
+                    // x_t_u_ut = true, because it is leaf.
+                    // Constraint should be "... => x_t_u_ut", but it is
+                    // always true, so we completely do not need that L() loop
+                    // })
+                    V_().forEach(u -> {
+                        PP(u).forEach(v -> printlnf("%s & (%s = %d) & (%s = %d) => (%s)",
+                                var("u", t, v),
+                                var("x", t, v), vt,
+                                var("p", u), v,
+                                getChildrenInTree(t, vt).stream()
+                                        .map(vtc -> var("x", t, u) + " = " + vtc)
+                                        .collect(Collectors.joining(" | "))));
+                    });
+                    R().forEach(u -> {
+                        PP(u).forEach(v -> printlnf("%s & (%s = %d) & (%s = %d) => (%s)",
+                                var("u", t, v),
+                                var("x", t, v), vt,
+                                var("pt", t, u), v,
+                                getChildrenInTree(t, vt).stream()
+                                        .map(vtc -> var("x", t, u) + " = " + vtc)
+                                        .collect(Collectors.joining(" | "))));
+                    });
                 });
             });
-        });
+        else
+            println("// Not today");
 
         // p_{u,v} and x_{t,u,u_t} and u_{t,u} => x_{t,v,v_t}
         // p_{u,v} and x_{t,u,u_t} and x_{t,v,v_t} => u_{t,v}
         // same as:
         println("// p_{u,v} and x_{t,u,u_t} => (u_{t,v} <=> x_{t,v,v_t})");
         // for R: p_{t,u,v} and x_{t,u,u_t} => (u_{t,v} <=> x_{t,v,v_t})");
-        T().forEach(t -> {
-            L().forEach(u -> {
-                PP(u).forEach(v -> {
-                    int ut = u;  // because it is leaf
-                    int vt = getParentInTree(t, ut);
-                    // x_{t,u,ut}=true for leaves!
-                    printlnf("(%s = %d) => (%s <=> (%s = %d))",
-                            var("p", u), v,
-                            var("u", t, v),
-                            var("x", t, v), vt);
-                });
-            });
-            V_().forEach(u -> {
-                PP(u).forEach(v -> {
-                    LVt_().forEach(ut -> {
+        if (interrupt_iff)
+            T().forEach(t -> {
+                L().forEach(u -> {
+                    PP(u).forEach(v -> {
+                        int ut = u;  // because it is leaf
                         int vt = getParentInTree(t, ut);
-                        printlnf("(%s = %d) and (%s = %d) => (%s <=> (%s = %d))",
+                        // x_{t,u,ut}=true for leaves!
+                        printlnf("(%s = %d) => (%s <=> (%s = %d))",
                                 var("p", u), v,
-                                var("x", t, u), ut,
                                 var("u", t, v),
                                 var("x", t, v), vt);
                     });
                 });
-            });
-            R().forEach(u -> {
-                PP(u).forEach(v -> {
-                    LVt_().forEach(ut -> {
-                        int vt = getParentInTree(t, ut);
-                        printlnf("(%s = %d) and (%s = %d) => (%s <=> (%s = %d))",
-                                var("pt", t, u), v,
-                                var("x", t, u), ut,
-                                var("u", t, v),
-                                var("x", t, v), vt);
+                V_().forEach(u -> {
+                    PP(u).forEach(v -> {
+                        LVt_().forEach(ut -> {
+                            int vt = getParentInTree(t, ut);
+                            printlnf("(%s = %d) and (%s = %d) => (%s <=> (%s = %d))",
+                                    var("p", u), v,
+                                    var("x", t, u), ut,
+                                    var("u", t, v),
+                                    var("x", t, v), vt);
+                        });
+                    });
+                });
+                R().forEach(u -> {
+                    PP(u).forEach(v -> {
+                        LVt_().forEach(ut -> {
+                            int vt = getParentInTree(t, ut);
+                            printlnf("(%s = %d) and (%s = %d) => (%s <=> (%s = %d))",
+                                    var("pt", t, u), v,
+                                    var("x", t, u), ut,
+                                    var("u", t, v),
+                                    var("x", t, v), vt);
+                        });
                     });
                 });
             });
-        });
+        else
+            println("// Not today");
 
 
         println("// 2.2.4 Mapping union");
 
         println("// not(u_{t,s}) and p_{i,s} => (x_{t,i,v_t} <=> x_{t,s,v_t})");
         // NOTE: with BEE I do not even need v_t
-        T().forEach(t -> {
-            L().forEach(i -> {
-                PP(i).forEach(s -> {
-                    int vt = i;  // because it is leaf
-                    // x_{t,i,vt}=true
-                    printlnf("! %s & (%s = %d) => (%s = %d)",
-                            // printlnf("! %s & (%s = %d) => ((%s = %d) <=> (%s = %d))",
-                            // printlnf("! %s & (%s = %d) => (%s = %s)",
-                            var("u", t, s),
-                            var("p", i), s,
-                            var("x", t, s), vt);
-                    // var("x", t, i), vt, var("x", t, s), vt);
-                    // var("x", t, i), var("x", t, s));
+        if (union_iff)
+            T().forEach(t -> {
+                L().forEach(i -> {
+                    PP(i).forEach(s -> {
+                        int vt = i;  // because it is leaf
+                        // x_{t,i,vt}=true
+                        printlnf("! %s & (%s = %d) => (%s = %d)",
+                                // printlnf("! %s & (%s = %d) => ((%s = %d) <=> (%s = %d))",
+                                // printlnf("! %s & (%s = %d) => (%s = %s)",
+                                var("u", t, s),
+                                var("p", i), s,
+                                var("x", t, s), vt);
+                        // var("x", t, i), vt, var("x", t, s), vt);
+                        // var("x", t, i), var("x", t, s));
+                    });
+                });
+                V_().forEach(i -> {
+                    PP(i).forEach(s -> {
+                        printlnf("! %s & (%s = %d) => (%s = %s)",
+                                var("u", t, s),
+                                var("p", i), s,
+                                var("x", t, i), var("x", t, s));
+                    });
+                });
+                R().forEach(i -> {
+                    PP(i).forEach(s -> {
+                        printlnf("! %s & (%s = %d) => (%s = %s)",
+                                var("u", t, s),
+                                var("pt", t, i), s,
+                                var("x", t, i), var("x", t, s));
+                    });
                 });
             });
-            V_().forEach(i -> {
-                PP(i).forEach(s -> {
-                    printlnf("! %s & (%s = %d) => (%s = %s)",
-                            var("u", t, s),
-                            var("p", i), s,
-                            var("x", t, i), var("x", t, s));
-                });
-            });
-            R().forEach(i -> {
-                PP(i).forEach(s -> {
-                    printlnf("! %s & (%s = %d) => (%s = %s)",
-                            var("u", t, s),
-                            var("pt", t, i), s,
-                            var("x", t, i), var("x", t, s));
-                });
-            });
-        });
+        else
+            println("// Not today");
 
         println("// p_{i,s} and x_{t,i,v_t} and x_{t,s,v_t} => not(u_{t,s})");
         // with BEE: p_{i,s} and (x_{t,i} = x_{t,s}) => not(u_{t,s})
-        T().forEach(t -> {
-            L().forEach(i -> {
-                PP(i).forEach(s -> {
-                    int vt = i;  // because it is leaf
-                    // x_{t,i,vt}=true
-                    printlnf("(%s = %d) & (%s = %d) => ! %s",
-                            var("p", i), s,
-                            var("x", t, s), vt,
-                            var("u", t, s));
+        if (union_impl)
+            T().forEach(t -> {
+                L().forEach(i -> {
+                    PP(i).forEach(s -> {
+                        int vt = i;  // because it is leaf
+                        // x_{t,i,vt}=true
+                        printlnf("(%s = %d) & (%s = %d) => ! %s",
+                                var("p", i), s,
+                                var("x", t, s), vt,
+                                var("u", t, s));
+                    });
+                });
+                V_().forEach(i -> {
+                    PP(i).forEach(s -> {
+                        printlnf("(%s = %d) & (%s = %s) => ! %s",
+                                var("p", i), s,
+                                var("x", t, i), var("x", t, s),
+                                var("u", t, s));
+                    });
+                });
+                R().forEach(i -> {
+                    PP(i).forEach(s -> {
+                        printlnf("(%s = %d) & (%s = %s) => ! %s",
+                                var("pt", t, i), s,
+                                var("x", t, i), var("x", t, s),
+                                var("u", t, s));
+                    });
                 });
             });
-            V_().forEach(i -> {
-                PP(i).forEach(s -> {
-                    printlnf("(%s = %d) & (%s = %s) => ! %s",
-                            var("p", i), s,
-                            var("x", t, i), var("x", t, s),
-                            var("u", t, s));
-                });
-            });
-            R().forEach(i -> {
-                PP(i).forEach(s -> {
-                    printlnf("(%s = %d) & (%s = %s) => ! %s",
-                            var("pt", t, i), s,
-                            var("x", t, i), var("x", t, s),
-                            var("u", t, s));
-                });
-            });
-        });
+        else
+            println("// Not today");
 
 
         /* THE MOST HILARIOUS AD-HOCs */
