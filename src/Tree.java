@@ -7,88 +7,9 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 final class Tree extends Graph {
-    private abstract class TreeNode extends Node {
-        private TreeNode parent;
-        private final List<TreeNode> children = new ArrayList<>();
-
-
-        TreeNode(TreeNode parent, String label) {
-            super(label);
-            this.parent = parent;
-        }
-
-
-        TreeNode getParent() {
-            return parent;
-        }
-
-        void setParent(TreeNode newParent) {
-            parent = newParent;
-        }
-
-        List<TreeNode> getChildren() {
-            return children;
-        }
-
-        void addChild(TreeNode newChild) {
-            children.add(newChild);
-        }
-
-        List<TreeNode> getLeaves() {
-            return getChildren().stream()
-                    .flatMap(child -> child.getLeaves().stream())
-                    .collect(Collectors.toList());
-        }
-    }
-
-    private class LeafNode extends TreeNode {
-        LeafNode(String label) {
-            this(null, label);
-        }
-
-        LeafNode(TreeNode parent, String label) {
-            super(parent, label);
-        }
-
-        @Override
-        List<TreeNode> getLeaves() {
-            return Stream.of(this).collect(Collectors.toList());
-        }
-    }
-
-    private class InternalNode extends TreeNode {
-        InternalNode() {
-            this(null);
-        }
-
-        InternalNode(TreeNode parent) {
-            super(parent, null);
-        }
-    }
-
-    private class CollapsedNode extends LeafNode {
-        final Tree subtree;
-
-        CollapsedNode(Tree subtree, TreeNode parent, String label) {
-            super(parent, label);
-            this.subtree = subtree;
-        }
-    }
-
-    private class ClusterNode extends LeafNode {
-        final Subtask subtask;
-
-        ClusterNode(Subtask subtask, TreeNode parent, String label) {
-            super(parent, label);
-            this.subtask = subtask;
-        }
-    }
-
-
     private TreeNode root;
     private int n;  // Number of taxa
     private boolean hasFictitiousRoot = false;
-
 
     private Tree(int n) {
         this.n = n;
@@ -98,6 +19,7 @@ final class Tree extends Graph {
         this(root.getLeaves().size());
         this.root = root;
     }
+
 
     Tree(SimpleRootedTree tree) {
         this(tree.getTaxa().size());
@@ -127,6 +49,140 @@ final class Tree extends Graph {
         this.root = m.get(tree.getRootNode());
     }
 
+    static boolean collapseAll(List<Tree> trees, List<Subtask> subtasks_external) {
+        /* Replaces equal subtrees (equal in all trees) with Collapsed Nodes */
+        Tree firstTree = trees.get(0);
+        boolean collapsed = false;
+
+        for (TreeNode first : firstTree.traverseTopDown()) {
+            List<TreeNode> anchors = new ArrayList<>();
+            anchors.add(first);
+
+            for (int t = 1; t < trees.size(); t++) {
+                Tree secondTree = trees.get(t);
+                boolean hasEqualSubtrees = false;
+
+                for (TreeNode second : secondTree.traverseTopDown()) {
+                    if (Tree.isSubtreesEquals(first, second)) {
+                        anchors.add(second);
+                        hasEqualSubtrees = true;
+                        break;
+                    }
+                }
+
+                if (!hasEqualSubtrees)
+                    break;
+            }
+
+            if (anchors.size() == trees.size()) {
+                List<TreeNode> leaves = first.getLeaves();
+                leaves.sort(Comparator.comparing(Node::getLabel));
+                String label = leaves.stream()
+                        .map(Node::getLabel)
+                        .collect(Collectors.joining("+"));
+                System.out.println("[.] Collapsed " + leaves.size() + " leaves (" + leaves.stream().map(Node::getLabel).collect(Collectors.joining(", ")) + ") into " + label);
+                Tree subtree = firstTree.buildSubtree(first);
+
+                subtasks_external.add(new CollapsedSubtask(subtree));
+
+                for (int t = 0; t < trees.size(); t++) {
+                    TreeNode anchor = anchors.get(t);
+                    Tree tree = trees.get(t);
+                    tree.collapseNode(anchor, subtree, label);
+                }
+
+                collapsed = true;
+            }
+        }
+
+        return collapsed;
+    }
+
+    static boolean clusterize(List<Tree> trees, List<Subtask> subtasks_external) {
+        /* Replaces clusters (subtrees with equal taxa) with Cluster Nodes */
+        Tree firstTree = trees.get(0);
+
+        for (TreeNode first : firstTree.traverseBottomUp()) {
+            List<TreeNode> anchors = new ArrayList<>();
+            anchors.add(first);
+
+            for (int t = 1; t < trees.size(); t++) {
+                Tree secondTree = trees.get(t);
+                boolean hasEqualTaxa = false;
+
+                for (TreeNode second : secondTree.traverseBottomUp()) {
+                    if (Tree.isTaxaEquals(first, second)) {
+                        anchors.add(second);
+                        hasEqualTaxa = true;
+                        break;
+                    }
+                }
+
+                if (!hasEqualTaxa)
+                    break;
+            }
+
+            if (anchors.size() == trees.size()) {
+                List<TreeNode> leaves = first.getLeaves();
+                leaves.sort(Comparator.comparing(Node::getLabel));
+                String label = leaves.stream()
+                        .map(Node::getLabel)
+                        .collect(Collectors.joining("+"));
+                System.out.println("[.] Clusterized " + leaves.size() + " leaves (" + leaves.stream().map(Node::getLabel).collect(Collectors.joining(", ")) + ") into " + label);
+                List<Tree> clusters = new ArrayList<>();
+
+                for (int t = 0; t < trees.size(); t++) {
+                    TreeNode anchor = anchors.get(t);
+                    Tree tree = trees.get(t);
+                    clusters.add(tree.buildSubtree(anchor));
+                }
+
+                Subtask subtask = new ClusterSubtask(clusters);
+                subtasks_external.add(subtask);
+
+                for (int t = 0; t < trees.size(); t++) {
+                    TreeNode anchor = anchors.get(t);
+                    Tree tree = trees.get(t);
+                    tree.clusterizeNode(anchor, subtask, label);
+                }
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static boolean isSubtreesEquals(TreeNode first, TreeNode second) {
+        if (first instanceof LeafNode && second instanceof LeafNode && first.getLabel().equals(second.getLabel()))
+            return true;
+
+        if (!isTaxaEquals(first, second))
+            return false;
+
+        for (TreeNode firstChild : first.getChildren()) {
+            boolean hasEquals = false;
+            for (TreeNode secondChild : second.getChildren()) {
+                if (isSubtreesEquals(firstChild, secondChild)) {
+                    hasEquals = true;
+                    break;
+                }
+            }
+            if (!hasEquals)
+                return false;
+        }
+        return true;
+    }
+
+    private static boolean isTaxaEquals(TreeNode first, TreeNode second) {
+        Set<String> firstTaxa = first.getLeaves().stream()
+                .map(Node::getLabel)
+                .collect(Collectors.toSet());
+        Set<String> secondTaxa = second.getLeaves().stream()
+                .map(Node::getLabel)
+                .collect(Collectors.toSet());
+        return firstTaxa.equals(secondTaxa);
+    }
 
     int getTaxaSize() {
         return n;
@@ -201,111 +257,6 @@ final class Tree extends Graph {
         return taxa;
     }
 
-    static boolean collapseAll(List<Tree> trees, List<Subtask> subtasks_external) {
-        /* Replaces equal subtrees (equal in all trees) with Collapsed Nodes */
-        Tree firstTree = trees.get(0);
-        boolean collapsed = false;
-
-        for (TreeNode first : firstTree.traverseTopDown()) {
-            List<TreeNode> anchors = new ArrayList<>();
-            anchors.add(first);
-
-            for (int t = 1; t < trees.size(); t++) {
-                Tree secondTree = trees.get(t);
-                boolean hasEqualSubtrees = false;
-
-                for (TreeNode second : secondTree.traverseTopDown()) {
-                    if (Tree.isSubtreesEquals(first, second)) {
-                        anchors.add(second);
-                        hasEqualSubtrees = true;
-                        break;
-                    }
-                }
-
-                if (!hasEqualSubtrees)
-                    break;
-            }
-
-            if (anchors.size() == trees.size()) {
-                List<TreeNode> leaves = first.getLeaves();
-                leaves.sort(Comparator.comparing(Node::getLabel));
-                String label = leaves.stream()
-                        .map(Node::getLabel)
-                        .collect(Collectors.joining("+"));
-                System.out.println("[.] Collapsed " + leaves.size() + " leaves (" + leaves.stream().map(Node::getLabel).collect(Collectors.joining(", ")) + ") into " + label);
-                Tree subtree = firstTree.buildSubtree(first);
-
-                // subtrees_external.add(subtree);
-                subtasks_external.add(new CollapsedSubtask(subtree));
-
-                for (int t = 0; t < trees.size(); t++) {
-                    TreeNode anchor = anchors.get(t);
-                    Tree tree = trees.get(t);
-                    tree.collapseNode(anchor, subtree, label);
-                }
-
-                collapsed = true;
-            }
-        }
-
-        return collapsed;
-    }
-
-    static boolean clusterize(List<Tree> trees, List<Subtask> subtasks_external) {
-        /* Replaces clusters (subtrees with equal taxa) with Cluster Nodes */
-        Tree firstTree = trees.get(0);
-
-        for (TreeNode first : firstTree.traverseBottomUp()) {
-            List<TreeNode> anchors = new ArrayList<>();
-            anchors.add(first);
-
-            for (int t = 1; t < trees.size(); t++) {
-                Tree secondTree = trees.get(t);
-                boolean hasEqualTaxa = false;
-
-                for (TreeNode second : secondTree.traverseBottomUp()) {
-                    if (Tree.isTaxaEquals(first, second)) {
-                        anchors.add(second);
-                        hasEqualTaxa = true;
-                        break;
-                    }
-                }
-
-                if (!hasEqualTaxa)
-                    break;
-            }
-
-            if (anchors.size() == trees.size()) {
-                List<TreeNode> leaves = first.getLeaves();
-                leaves.sort(Comparator.comparing(Node::getLabel));
-                String label = leaves.stream()
-                        .map(Node::getLabel)
-                        .collect(Collectors.joining("+"));
-                System.out.println("[.] Clusterized " + leaves.size() + " leaves (" + leaves.stream().map(Node::getLabel).collect(Collectors.joining(", ")) + ") into " + label);
-                List<Tree> clusters = new ArrayList<>();
-
-                for (int t = 0; t < trees.size(); t++) {
-                    TreeNode anchor = anchors.get(t);
-                    Tree tree = trees.get(t);
-                    clusters.add(tree.buildSubtree(anchor));
-                }
-
-                Subtask subtask = new ClusterSubtask(clusters);
-                subtasks_external.add(subtask);
-
-                for (int t = 0; t < trees.size(); t++) {
-                    TreeNode anchor = anchors.get(t);
-                    Tree tree = trees.get(t);
-                    tree.clusterizeNode(anchor, subtask, label);
-                }
-
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     private List<TreeNode> traverseTopDown() {
         return traverseTopDown(false, false);
     }
@@ -361,37 +312,6 @@ final class Tree extends Graph {
             ans.add(traversedNodes.pop());
 
         return ans;
-    }
-
-    private static boolean isSubtreesEquals(TreeNode first, TreeNode second) {
-        if (first instanceof LeafNode && second instanceof LeafNode && first.getLabel().equals(second.getLabel()))
-            return true;
-
-        if (!isTaxaEquals(first, second))
-            return false;
-
-        for (TreeNode firstChild : first.getChildren()) {
-            boolean hasEquals = false;
-            for (TreeNode secondChild : second.getChildren()) {
-                if (isSubtreesEquals(firstChild, secondChild)) {
-                    hasEquals = true;
-                    break;
-                }
-            }
-            if (!hasEquals)
-                return false;
-        }
-        return true;
-    }
-
-    private static boolean isTaxaEquals(TreeNode first, TreeNode second) {
-        Set<String> firstTaxa = first.getLeaves().stream()
-                .map(Node::getLabel)
-                .collect(Collectors.toSet());
-        Set<String> secondTaxa = second.getLeaves().stream()
-                .map(Node::getLabel)
-                .collect(Collectors.toSet());
-        return firstTaxa.equals(secondTaxa);
     }
 
     private Tree buildSubtree(TreeNode anchor) {
@@ -484,5 +404,82 @@ final class Tree extends Graph {
         return String.format("{Tree@%s :: %s}",
                 Integer.toHexString(hashCode()),
                 traverseBottomUp(true, true));
+    }
+
+    private abstract class TreeNode extends Node {
+        private final List<TreeNode> children = new ArrayList<>();
+        private TreeNode parent;
+
+
+        TreeNode(TreeNode parent, String label) {
+            super(label);
+            this.parent = parent;
+        }
+
+
+        TreeNode getParent() {
+            return parent;
+        }
+
+        void setParent(TreeNode newParent) {
+            parent = newParent;
+        }
+
+        List<TreeNode> getChildren() {
+            return children;
+        }
+
+        void addChild(TreeNode newChild) {
+            children.add(newChild);
+        }
+
+        List<TreeNode> getLeaves() {
+            return getChildren().stream()
+                    .flatMap(child -> child.getLeaves().stream())
+                    .collect(Collectors.toList());
+        }
+    }
+
+    private class LeafNode extends TreeNode {
+        LeafNode(String label) {
+            this(null, label);
+        }
+
+        LeafNode(TreeNode parent, String label) {
+            super(parent, label);
+        }
+
+        @Override
+        List<TreeNode> getLeaves() {
+            return Stream.of(this).collect(Collectors.toList());
+        }
+    }
+
+    private class InternalNode extends TreeNode {
+        InternalNode() {
+            this(null);
+        }
+
+        InternalNode(TreeNode parent) {
+            super(parent, null);
+        }
+    }
+
+    private class CollapsedNode extends LeafNode {
+        final Tree subtree;
+
+        CollapsedNode(Tree subtree, TreeNode parent, String label) {
+            super(parent, label);
+            this.subtree = subtree;
+        }
+    }
+
+    private class ClusterNode extends LeafNode {
+        final Subtask subtask;
+
+        ClusterNode(Subtask subtask, TreeNode parent, String label) {
+            super(parent, label);
+            this.subtask = subtask;
+        }
     }
 }
