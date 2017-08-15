@@ -108,51 +108,68 @@ class FormulaBuilder {
 
     private void declareNetworkStructureConstraints() {
         println("// 2.1 Network structure constraints");
+        boolean vertices_alo_amo = true;
+        boolean reticular_one = true;
+        boolean retucular_alo_amo = true;
+        // boolean leaves_ = true;
+        boolean numeration_reticular_through = true;
+        boolean numeration_vertices_through = false;
+        boolean numeration_reticular_order = true;
+        boolean numeration_vertices_order = false;
 
         println("// 2.1.1 Vertices (forall v in V)");
         // println("// ONE(p_{v,i})_i");
         // no need
 
         println("// AL2(p_{i,v})_i  and  AMM1(p_{i,v})_i");
-        V().forEach(v -> {
-            List<String> list = new ArrayList<>();
-            LV_().forEach(i -> {
-                list.add(var("p", i) + " = " + v);
+        if (vertices_alo_amo)
+            V().forEach(v -> {
+                List<String> list = new ArrayList<>();
+                LV_().forEach(i -> {
+                    list.add(var("p", i) + " = " + v);
+                });
+                R().forEach(r -> {
+                    list.add(var("p", r, v));
+                });
+                String vars = list.stream().collect(Collectors.joining(", "));
+                printlnf("ALO(%d, %s)", 2, vars);
+                printlnf("AMO(%d, %s)", m1, vars);
             });
-            R().forEach(r -> {
-                list.add(var("p", r, v));
-            });
-            String vars = list.stream().collect(Collectors.joining(", "));
-            printlnf("ALO(%d, %s)", 2, vars);
-            printlnf("AMO(%d, %s)", m1, vars);
-        });
+        else
+            println("// Not today!");
 
 
         println("// 2.1.2 Reticular (forall r in R)");
 
         println("// ONE(p_{i,r})_i");
-        R().forEach(r -> {
-            List<String> list = new ArrayList<>();
-            LV_().forEach(i -> {
-                list.add(var("p", i) + " = " + r);
+        if (reticular_one)
+            R().forEach(r -> {
+                List<String> list = new ArrayList<>();
+                LV_().forEach(i -> {
+                    list.add(var("p", i) + " = " + r);
+                });
+                String vars = list.stream().collect(Collectors.joining(", "));
+                // TODO: wtf, how to do ONE() properly?
+                printlnf("ALO(%d, %s)", 1, vars);
+                printlnf("AMO(%d, %s)", 1, vars);
             });
-            String vars = list.stream().collect(Collectors.joining(", "));
-            // TODO: wtf, how to do ONE() properly?
-            printlnf("ALO(%d, %s)", 1, vars);
-            printlnf("AMO(%d, %s)", 1, vars);
-        });
+        else
+            println("// Not today!");
 
 
         println("// AL2(p_{r,i})_i  and  AMM2(p_{r,i})_i");
-        R().forEach(r -> {
-            List<String> list = new ArrayList<>();
-            PP(r).forEach(i -> {
-                list.add(var("p", r, i));
+        if (retucular_alo_amo)
+            R().forEach(r -> {
+                List<String> list = new ArrayList<>();
+                PP(r).forEach(i -> {
+                    list.add(var("p", r, i));
+                });
+                String vars = list.stream().collect(Collectors.joining(", "));
+                printlnf("ALO(%d, %s)", 2, vars);
+                printlnf("AMO(%d, %s)", m2, vars);
             });
-            String vars = list.stream().collect(Collectors.joining(", "));
-            printlnf("ALO(%d, %s)", 2, vars);
-            printlnf("AMO(%d, %s)", m2, vars);
-        });
+        else
+            println("// Not today!");
 
 
         println("// 2.1.3 Leaves (forall l in L)");
@@ -165,16 +182,24 @@ class FormulaBuilder {
         // TODO: check wildly!
 
         println("// p_{r,v} and p_{u,r} => v > u");
-        R().forEach(r -> {
-            PP(r).forEach(v -> {
-                LV_().forEach(u -> {
-                    printlnf("%s & (%s = %d) => (%d > %d)",
-                            var("p", r, v),
-                            var("p", u), r,
-                            v, u);
+        if (numeration_reticular_through)
+            R().forEach(r -> {
+                PP(r).forEach(v -> {
+                    LV_().forEach(u -> {
+                        // printlnf("%s & (%s = %d) => (%d > %d)",
+                        //         var("p", r, v),
+                        //         var("p", u), r,
+                        //         v, u);
+                        if (!(v > u)) {
+                            printlnf("! %s | (%s != %d)",
+                                    var("p", r, v),
+                                    var("p", u), r);
+                        }
+                    });
                 });
             });
-        });
+        else
+            println("// Not today!");
 
         // // p_{i,v} => not p_{u,i}  ~~~  if u > v
         // // TODO: check is it really the same:
@@ -196,29 +221,78 @@ class FormulaBuilder {
         // });
 
         println("// p_{i,v} and p_{u,i} => v > u");
-        // println("// not today");
-        V_().forEach(i -> {
-            PP(i).forEach(v -> {
-                LV_().forEach(u -> {
-                    printlnf("(%s = %d) & (%s = %d) => (%d > %d)",
-                            var("p", i), v,
-                            var("p", u), i,
-                            v, u);
-                });
-                // it is also holds when {v in R}
-                if (v > root()) {
-                    R().filter(u -> u != v).forEach(u -> {
-                        printlnf("(%s = %d) & %s => (%d > %d)",
-                                var("p", i), v,
-                                var("p", u, i),
-                                v, u);
+        if (numeration_vertices_through)
+            V_().forEach(i -> {
+                PP(i).forEach(v -> {
+                    LV_().forEach(u -> {
+                        // printlnf("(%s = %d) & (%s = %d) => (%d > %d)",
+                        //         var("p", i), v,
+                        //         var("p", u), i,
+                        //         v, u);
+                        if (!(v > u)) {
+                            printlnf("(%s != %d) | (%s != %d)",
+                                    var("p", i), v,
+                                    var("p", u), i);
+                        }
                     });
-                }
+                    // it is also holds when {v in R}
+                    if (v > root()) {
+                        R().filter(u -> u != v).forEach(u -> {
+                            // printlnf("(%s = %d) & %s => (%d > %d)",
+                            //         var("p", i), v,
+                            //         var("p", u, i),
+                            //         v, u);
+                            if (!(v > u)) {
+                                printlnf("(%s != %d) | ! %s",
+                                        var("p", i), v,
+                                        var("p", u, i));
+                            }
+                        });
+                    }
+                });
             });
-        });
+        else
+            println("// Not today!");
+
+        println("// p_{u1,r1} and p_{u2,r2} => (r1 > r2 <=> u1 > u2)");
+        if (numeration_reticular_order)
+            LV_().forEach(u1 -> {
+                LV_().forEach(u2 -> {
+                    R().forEach(r1 -> {
+                        R().forEach(r2 -> {
+                            printlnf("(%s = %d) & (%s = %d) => ((%d > %d) <=> (%d > %d))",
+                                    var("p", u1), r1,
+                                    var("p", u2), r2,
+                                    r1, r2,
+                                    u1, u2);
+                        });
+                    });
+                });
+            });
+        else
+            println("// Not today!");
+
+        println("// p_{u1,v1} and p_{u2,v2} and u2 > u1 => v2 >= v1");
+        if (numeration_vertices_order)
+            V_().forEach(u1 -> {
+                PP(u1).forEach(v1 -> {
+                    V_().forEach(u2 -> {
+                        PP(u2).forEach(v2 -> {
+                            printlnf("(%s = %d) & (%s = %d) & (%d > %d) => (%d >= %d)",
+                                    var("p", u1), v1,
+                                    var("p", u2), v2,
+                                    u1, u2,
+                                    v1, v2);
+                        });
+                    });
+                });
+            });
+        else
+            println("// Not today!");
     }
 
     private void declareTreesToNetworkMappingConstraints() {
+        println("// 2.2 Trees to network mapping constraints");
         boolean mapping_alo = true;
         boolean mapping_root = true;
         boolean reticular_not = true;
@@ -228,8 +302,6 @@ class FormulaBuilder {
         boolean interrupt_iff = true;
         boolean union_iff = true;
         boolean union_impl = true;
-
-        println("// 2.2 Trees to network mapping constraints");
 
         println("// 2.2.1 Mapping");
 
@@ -249,7 +321,7 @@ class FormulaBuilder {
                 });
             });
         else
-            println("// Not today");
+            println("// Not today!");
 
         println("// Root mapping");
         if (mapping_root)
@@ -257,7 +329,7 @@ class FormulaBuilder {
                 printlnf("%s = %d", var("x", t, root()), rootT());
             });
         else
-            println("// Not today");
+            println("// Not today!");
 
 
         println("// 2.2.2 Reticular <parents>");
@@ -277,7 +349,7 @@ class FormulaBuilder {
                 });
             });
         else
-            println("// Not today");
+            println("// Not today!");
 
         println("// p_{r,u} and not(p_{t,r,u}) => not(u_{t,u})");
         if (reticular_used)
@@ -292,7 +364,7 @@ class FormulaBuilder {
                 });
             });
         else
-            println("// Not today");
+            println("// Not today!");
 
         println("// p_{r,u} => ALO(p_{t,r,u})_t");
         if (reticular_alo)
@@ -307,7 +379,7 @@ class FormulaBuilder {
                 });
             });
         else
-            println("// Not today");
+            println("// Not today!");
 
 
         println("// 2.2.3 Mapping interrupt");
@@ -378,7 +450,7 @@ class FormulaBuilder {
                 });
             });
         else
-            println("// Not today");
+            println("// Not today!");
 
         // p_{u,v} and x_{t,u,u_t} and u_{t,u} => x_{t,v,v_t}
         // p_{u,v} and x_{t,u,u_t} and x_{t,v,v_t} => u_{t,v}
@@ -424,7 +496,7 @@ class FormulaBuilder {
                 });
             });
         else
-            println("// Not today");
+            println("// Not today!");
 
 
         println("// 2.2.4 Mapping union");
@@ -465,7 +537,7 @@ class FormulaBuilder {
                 });
             });
         else
-            println("// Not today");
+            println("// Not today!");
 
         println("// p_{i,s} and x_{t,i,v_t} and x_{t,s,v_t} => not(u_{t,s})");
         // with BEE: p_{i,s} and (x_{t,i} = x_{t,s}) => not(u_{t,s})
@@ -499,7 +571,7 @@ class FormulaBuilder {
                 });
             });
         else
-            println("// Not today");
+            println("// Not today!");
 
 
         /* THE MOST HILARIOUS AD-HOCs */
