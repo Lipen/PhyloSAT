@@ -227,7 +227,7 @@ public class BEEMain {
         try (FileWriter fw = new FileWriter("oldthing.log", true);
              BufferedWriter bw = new BufferedWriter(fw);
              PrintWriter out = new PrintWriter(bw)) {
-            out.printf("%s,%d,%d,%.3f\n",
+            out.printf("%s,%d,%d,%.3f%n",
                     new File(treesPaths.get(0)).getName().split("\\.")[0],
                     inputTrees.get(0).getTaxaSize(),
                     finalK,
@@ -321,22 +321,17 @@ public class BEEMain {
             logger.info("Solver execution time: " + time[0] + " / " + timeLimit);
         }
 
-        // === LOG EXECUTION TIME ===
-        try (FileWriter fw = new FileWriter("solver_execution_time.log", true);
-             BufferedWriter bw = new BufferedWriter(fw);
-             PrintWriter out = new PrintWriter(bw)) {
-            out.println(n + "," + k + "," + time[0] + "," + (map == null ? "UNSAT" : "SAT"));
-        } catch (IOException e) {
-            System.err.println("IOException: " + e.getMessage());
-        }
-        // === LOG EXECUTION TIME ===
-
         double time_total = (System.currentTimeMillis() - time_start) / 1000.;
         System.out.printf("[.] Subtask with n=%d, k=%d took %.3fs\n", n, k, time_total);
         try (FileWriter fw = new FileWriter("oldtasks.log", true);
              BufferedWriter bw = new BufferedWriter(fw);
              PrintWriter out = new PrintWriter(bw)) {
-            out.printf("%d,%d,%.3f,%s\n", n, k, time_total, map == null ? "UNSAT" : "SAT");
+            out.printf("%s,%d,%d,%.3f,%s%n",
+                    new File(treesPaths.get(0)).getName().split("\\.")[0],
+                    n,
+                    k,
+                    time_total,
+                    map == null ? "UNSAT" : "SAT");
         } catch (IOException e) {
             System.err.println("IOException: " + e.getMessage());
         }
