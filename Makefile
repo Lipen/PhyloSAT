@@ -77,10 +77,6 @@ Grass3RbclWaxyIts:
 Grass3RpocWaxyIts:
 	${PY} ${SCRIPT} ${DIR_GRASS3}/Grass3RpocWaxyIts.tree.restrict.num network_Grass3RpocWaxyIts ${EXTRA}
 
-reset_logs: reset_logs_new reset_logs_old
-reset_logs_new:
-	echo f,n,k,t,solver > everything.log
-	echo f,n,k,t,sat,solver > subtasks.log
-reset_logs_old:
+reset_logs:
 	echo f,n,k,t > oldthing.log
 	echo f,n,k,t,sat > oldtasks.log
