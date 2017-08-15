@@ -14,7 +14,7 @@ import java.util.HashMap;
  * @author Moklev Vyacheslav
  */
 public class BEEppCompiler {
-    public static synchronized void fastCompile(String formula, String filename) {
+    public static synchronized void fastCompile(String formula, String filename, int numberOfSolutions) {
         StaticStorage.resetVarCounter();
         StaticStorage.vars = new HashMap<>();
         try (BufferedReader br = new BufferedReader(new StringReader(formula));
@@ -42,7 +42,10 @@ public class BEEppCompiler {
                 }
             });
 
-            pw.println("solve satisfy");
+            if (numberOfSolutions == 1)
+                pw.println("solve satisfy");
+            else
+                pw.printf("solve satisfy(%d)\n", numberOfSolutions);
             pw.flush();
         } catch (FileNotFoundException e) {
             System.err.println("[!] Couldn't open <" + filename + ">: " + e.getMessage());

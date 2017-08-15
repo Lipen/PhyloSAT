@@ -29,7 +29,7 @@ class Manager {
         System.out.println("[*] Preprocessing...");
         long time_start = System.currentTimeMillis();
 
-        boolean clusterized = false;
+        boolean clusterized = true;
         boolean collapsed = Tree.collapseAll(trees, subtasks);
         while (clusterized || collapsed) {
             // Note: It is best to make sure that both operations are performed
@@ -103,9 +103,11 @@ class Manager {
 
     void cookNetwork() {
         System.out.println("[*] Cooking final network...");
+
         result = subtasks.get(0).answer;
         for (int i = subtasks.size() - 1; i > 0; i--)
             result.substituteSubtask(subtasks.get(i));
+
         System.out.printf("[+] Finally, cooked network with %d reticulation nodes\n", result.getK());
     }
 
@@ -130,11 +132,39 @@ class Manager {
             return;
         String networkFilePath = resultFilePath + ".gv";
 
+        for (int i = 0; i < subtasks.size(); i++)
+            subtasks.get(i).subprefix = i + "_";
+
         try (PrintWriter gvPrintWriter = new PrintWriter(networkFilePath)) {
             System.out.println("[*] Printing network to <" + networkFilePath + ">");
             gvPrintWriter.print(result.toGVString());
         } catch (FileNotFoundException e) {
             System.err.println("[!] Couldn't open <" + resultFilePath + ">:\n" + e.getMessage());
+        }
+    }
+
+    void printNetworks(String resultFilePath) {
+        if (resultFilePath == null)
+            return;
+
+        for (int i = 0; i < subtasks.size(); i++)
+            // subtasks.get(i).subprefix = "";
+            subtasks.get(i).subprefix = i + "_";
+
+        for (int i = 0; i < subtasks.size(); i++) {
+            Subtask subtask = subtasks.get(i);
+            System.out.println("[*] Printing isomorphic networks for subtask " + i + ": " + subtask);
+            for (int j = 0; j < subtask.answers.size(); j++) {
+                Network isonetwork = subtask.answers.get(j);
+                String networkFilePath = resultFilePath + ".sub" + i + ".iso" + j + ".gv";
+
+                try (PrintWriter gvPrintWriter = new PrintWriter(networkFilePath)) {
+                    System.out.println("[*] Printing isomorphic network to <" + networkFilePath + ">");
+                    gvPrintWriter.print(isonetwork.toGVString());
+                } catch (FileNotFoundException e) {
+                    System.err.println("[!] Couldn't open <" + resultFilePath + ">:\n" + e.getMessage());
+                }
+            }
         }
     }
 }

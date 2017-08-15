@@ -70,6 +70,39 @@ class Main {
             description = "Keep temporary files")
     private boolean isDumping = false;
 
+    @Parameter(names = {"-nos", "--numberOfSolutions"},
+            description = "Number of different networks")
+    private int numberOfSolutions = 1;
+
+    private static void checkTrees(List<SimpleRootedTree> trees) {
+        if (trees.size() < 2)
+            throw new IllegalArgumentException("There are less then 2 trees");
+
+        Set<Taxon> taxa = new TreeSet<>(trees.get(0).getTaxa());
+        int taxaSize = taxa.size();
+
+        for (int t = 1; t < trees.size(); t++) {
+            SimpleRootedTree tree = trees.get(t);
+            Set<Taxon> treeTaxa = new HashSet<>(tree.getTaxa());
+
+            if (treeTaxa.size() != taxaSize)
+                throw new IllegalArgumentException(String.format("Tree %d has %d taxa, but tree 0 has %d", t, treeTaxa.size(), taxaSize));
+            if (!taxa.containsAll(treeTaxa))
+                throw new IllegalArgumentException(String.format("Tree %d and tree 0 has different taxa", t));
+        }
+
+        System.out.println("[+] All trees has n=" + taxaSize + " taxa");
+    }
+
+    public static void main(String... argv) {
+        Main main = new Main();
+        JCommander j = JCommander.newBuilder()
+                .addObject(main)
+                .build();
+        j.setCaseSensitiveOptions(false);
+        j.parse(argv);
+        main.run(j);
+    }
 
     private List<SimpleRootedTree> readTrees() {
         List<SimpleRootedTree> trees = new ArrayList<>();
@@ -94,26 +127,6 @@ class Main {
         return trees;
     }
 
-    private static void checkTrees(List<SimpleRootedTree> trees) {
-        if (trees.size() < 2)
-            throw new IllegalArgumentException("There are less then 2 trees");
-
-        Set<Taxon> taxa = new TreeSet<>(trees.get(0).getTaxa());
-        int taxaSize = taxa.size();
-
-        for (int t = 1; t < trees.size(); t++) {
-            SimpleRootedTree tree = trees.get(t);
-            Set<Taxon> treeTaxa = new HashSet<>(tree.getTaxa());
-
-            if (treeTaxa.size() != taxaSize)
-                throw new IllegalArgumentException(String.format("Tree %d has %d taxa, but tree 0 has %d", t, treeTaxa.size(), taxaSize));
-            if (!taxa.containsAll(treeTaxa))
-                throw new IllegalArgumentException(String.format("Tree %d and tree 0 has different taxa", t));
-        }
-
-        System.out.println("[+] All trees has n=" + taxaSize + " taxa");
-    }
-
     private void run(JCommander j) {
         Locale.setDefault(Locale.US);
 
@@ -126,15 +139,15 @@ class Main {
             return;
         }
 
+        if (!disablePreprocessing && hybridizationNumber >= 0) {
+            System.err.println("[!] Hybridization number can be set only in -np mode");
+            return;
+        }
+
         if (maxTimeLimit > 0)
             maxTimeLimit *= 1000;
         if (firstTimeLimit > 0)
             firstTimeLimit *= 1000;
-
-        if (!disablePreprocessing && hybridizationNumber >= 0) {
-            System.err.println("[!] Hybridization number can be set only in -ds mode");
-            return;
-        }
 
         List<SimpleRootedTree> trees = readTrees();
         checkTrees(trees);
@@ -142,7 +155,9 @@ class Main {
         long time_start = System.currentTimeMillis();
         Manager manager = new Manager(trees,
                 new SolveParameters(hybridizationNumber, m1, m2, firstTimeLimit,
-                        maxTimeLimit, checkFirst, prefix, isExternal, threads, isDumping));
+                        maxTimeLimit, checkFirst, prefix, isExternal, threads, isDumping,
+                        new File(treesPaths.get(0)).getName().split("\\.")[0],
+                        numberOfSolutions));
         manager.printTrees(resultFilePath);
 
         if (!disablePreprocessing)
@@ -154,12 +169,12 @@ class Main {
             manager.solveParallel();
         else
             manager.solve();
+        manager.printNetworks(resultFilePath);
         manager.cookNetwork();
         manager.printNetwork(resultFilePath);
 
-        System.out.println("[+] Finally, there is a network with " + manager.result.getK() + " reticulation nodes");
-
         long time_total = System.currentTimeMillis() - time_start;
+        System.out.printf("[*] Total execution time: %.3fs\n", time_total / 1000.);
         try (FileWriter fw = new FileWriter("everything.log", true);
              BufferedWriter bw = new BufferedWriter(fw);
              PrintWriter out = new PrintWriter(bw)) {
@@ -172,15 +187,5 @@ class Main {
         } catch (IOException e) {
             System.err.println("IOException: " + e.getMessage());
         }
-    }
-
-    public static void main(String... argv) {
-        Main main = new Main();
-        JCommander j = JCommander.newBuilder()
-                .addObject(main)
-                .build();
-        j.setCaseSensitiveOptions(false);
-        j.parse(argv);
-        main.run(j);
     }
 }

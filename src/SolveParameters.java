@@ -9,8 +9,10 @@ class SolveParameters {
     boolean isExternal;
     int threads;
     boolean isDumping;
+    String basefilename;
+    int numberOfSolutions;
 
-    SolveParameters(int hybridizationNumber, int maxChildren, int maxParents, long firstTimeLimit, long maxTimeLimit, int checkFirst, String prefix, boolean isExternal, int threads, boolean isDumping) {
+    SolveParameters(int hybridizationNumber, int maxChildren, int maxParents, long firstTimeLimit, long maxTimeLimit, int checkFirst, String prefix, boolean isExternal, int threads, boolean isDumping, String basefilename, int numberOfSolutions) {
         this.hybridizationNumber = hybridizationNumber;
         this.maxChildren = maxChildren;
         this.maxParents = maxParents;
@@ -21,5 +23,7 @@ class SolveParameters {
         this.isExternal = isExternal;
         this.threads = threads;
         this.isDumping = isDumping;
+        this.basefilename = basefilename;
+        this.numberOfSolutions = numberOfSolutions;
     }
 }

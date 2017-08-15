@@ -1,14 +1,13 @@
 import org.apache.commons.exec.*;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
+import java.util.List;
 import java.util.Map;
 
 import static org.apache.commons.exec.ExecuteWatchdog.INFINITE_TIMEOUT;
 
 abstract class Solver {
-    abstract Map<String, Object> solve();
+    abstract List<Map<String, Object>> solve();
 
     protected final OutputStream runSolver(CommandLine command) {
         return runSolver(command, 0, null);
@@ -49,6 +48,13 @@ abstract class Solver {
         if (resultHandler.getExitValue() != successExitValue) {
             System.err.println("[!] Exitcode: " + resultHandler.getExitValue());
             return null;
+        }
+
+        try (FileWriter fw = new FileWriter("log");
+             BufferedWriter bw = new BufferedWriter(fw)) {
+            bw.write(outStream.toString());
+        } catch (IOException e) {
+            System.err.println("[!] So sad: " + e.getMessage());
         }
 
         return outStream;

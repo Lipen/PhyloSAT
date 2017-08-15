@@ -1,8 +1,11 @@
+import java.util.List;
 import java.util.UUID;
 
 abstract class Subtask {
     protected final UUID uuid = UUID.randomUUID();
     Network answer;  // The best network found so far
+    List<Network> answers;
+    String subprefix = "";
 
     abstract int getN();
 

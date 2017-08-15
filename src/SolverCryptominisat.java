@@ -1,10 +1,7 @@
 import org.apache.commons.exec.CommandLine;
 
 import java.io.*;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -20,10 +17,6 @@ final class SolverCryptominisat extends Solver {
     private final int threads;
 
 
-    SolverCryptominisat(String beeFileName, String dimacsFileName, String mapFileName) {
-        this(beeFileName, dimacsFileName, mapFileName, 4);
-    }
-
     SolverCryptominisat(String beeFileName, String dimacsFileName, String mapFileName, int threads) {
         this.beeFileName = beeFileName;
         this.dimacsFileName = dimacsFileName;
@@ -31,16 +24,52 @@ final class SolverCryptominisat extends Solver {
         this.threads = threads;
     }
 
+    private static boolean execCommand(String command) {
+        try {
+            Runtime.getRuntime().exec(command).waitFor();
+        } catch (InterruptedException e) {
+            System.err.println("[!] Execution of <" + command + "> interrupted");
+            return false;
+        } catch (IOException e) {
+            System.err.println("[!] Execution of <" + command + "> failed");
+            return false;
+        }
+        return true;
+    }
+
+    private static Map<Integer, Boolean> parseVariables(OutputStream outputStream) {
+        System.out.println("[.] Parsing variables...");
+        Map<Integer, Boolean> variables = new HashMap<>();
+
+        try (BufferedReader br = new BufferedReader(new StringReader(outputStream.toString()))) {
+            for (String line : (Iterable<String>) br.lines()::iterator) {
+                if (line.startsWith("v")) {
+                    for (String token : line.substring(2).split(" ")) {
+                        int x = Integer.parseInt(token);
+                        variables.put(Math.abs(x), x > 0);
+                    }
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("[!] So sad: " + e.getMessage());
+            return null;
+        }
+
+        System.out.println("[+] Parsing variables: OK");
+        return variables;
+    }
 
     @Override
-    Map<String, Object> solve() {
+    List<Map<String, Object>> solve() {
         System.out.println("[.] Using external solver");
 
         if (!convertBEEtoDIMACS())
             return null;
 
         Map<String, Object> solution = solveWithCryptominisat();
-        return solution;
+        List<Map<String, Object>> solutions = new ArrayList<>();
+        solutions.add(solution);
+        return solutions;
     }
 
     private boolean convertBEEtoDIMACS() {
@@ -66,19 +95,6 @@ final class SolverCryptominisat extends Solver {
         return true;
     }
 
-    private static boolean execCommand(String command) {
-        try {
-            Runtime.getRuntime().exec(command).waitFor();
-        } catch (InterruptedException e) {
-            System.err.println("[!] Execution of <" + command + "> interrupted");
-            return false;
-        } catch (IOException e) {
-            System.err.println("[!] Execution of <" + command + "> failed");
-            return false;
-        }
-        return true;
-    }
-
     private Map<String, Object> solveWithCryptominisat() {
         OutputStream outputStream = runCryptominisat();
         if (outputStream == null)
@@ -97,28 +113,6 @@ final class SolverCryptominisat extends Solver {
                 .addArgument("--threads=" + threads)
                 .addArgument(dimacsFileName);
         return runSolver(command, 10, new int[]{20});
-    }
-
-    private static Map<Integer, Boolean> parseVariables(OutputStream outputStream) {
-        System.out.println("[.] Parsing variables...");
-        Map<Integer, Boolean> variables = new HashMap<>();
-
-        try (BufferedReader br = new BufferedReader(new StringReader(outputStream.toString()))) {
-            for (String line : (Iterable<String>) br.lines()::iterator) {
-                if (line.startsWith("v")) {
-                    for (String token : line.substring(2).split(" ")) {
-                        int x = Integer.parseInt(token);
-                        variables.put(Math.abs(x), x > 0);
-                    }
-                }
-            }
-        } catch (IOException e) {
-            System.err.println("[!] So sad: " + e.getMessage());
-            return null;
-        }
-
-        System.out.println("[+] Parsing variables: OK");
-        return variables;
     }
 
     private Map<String, Object> mapSolution(Map<Integer, Boolean> variables) {

@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 class ClusterSubtask extends Subtask {
     private final List<Tree> clusters;
@@ -14,6 +15,21 @@ class ClusterSubtask extends Subtask {
         this.clusters = clusters;
     }
 
+    private static void deleteFile(String filename) {
+        try {
+            Files.delete(Paths.get(filename));
+            System.out.println("[+] Removing <" + filename + ">: OK");
+        } catch (FileNotFoundException e) {
+            System.err.println("[-] Removing <" + filename + ">: no such file");
+        } catch (IOException e) {
+            System.err.println("[!] So sad: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    List<Tree> getClusters() {
+        return clusters;
+    }
 
     @Override
     int getN() {
@@ -40,7 +56,8 @@ class ClusterSubtask extends Subtask {
                 }
 
             int n = clusters.get(0).getTaxaSize();
-            solveEx(n - 1, p);
+            if (!solveEx(n - 1, p))
+                throw new RuntimeException("No solution at upper bound... weird!");
             for (int k = n - 2; k > p.checkFirst; k--)
                 if (!solveEx(k, p)) {
                     System.out.printf("[#] %s: no solution found with k=%d during back-search stage\n", this, k);
@@ -69,7 +86,7 @@ class ClusterSubtask extends Subtask {
         }
 
         System.out.printf("[*] %s: compiling BEE++ to BEE (<%s>)...\n", this, beeFileName);
-        BEEppCompiler.fastCompile(formula.toString(), beeFileName);
+        BEEppCompiler.fastCompile(formula.toString(), beeFileName, p.numberOfSolutions);
         System.out.printf("[+] %s: done compiling BEE++ to BEE\n", this);
 
         System.out.printf("[*] %s: calling solver...\n", this);
@@ -77,12 +94,12 @@ class ClusterSubtask extends Subtask {
         if (p.isExternal)
             solver = new SolverCryptominisat(beeFileName, dimacsFileName, mapFileName, p.threads);
         else
-            solver = new SolverCombined(beeFileName);
-        Map<String, Object> solution = solver.solve();
-        if (solution != null)
-            System.out.printf("[+] %s: solved\n", this);
+            solver = new SolverCombined(beeFileName, p.numberOfSolutions);
+        List<Map<String, Object>> solutions = solver.solve();
+        if (solutions != null)
+            System.out.printf("[+] %s: solved with k=%d\n", this, k);
         else
-            System.out.printf("[-] %s: no solution\n", this);
+            System.out.printf("[-] %s: no solution with k=%d\n", this, k);
 
         if (!p.isDumping) {
             deleteFile(beeFileName);
@@ -96,22 +113,26 @@ class ClusterSubtask extends Subtask {
         try (FileWriter fw = new FileWriter("subtasks.log", true);
              BufferedWriter bw = new BufferedWriter(fw);
              PrintWriter out = new PrintWriter(bw)) {
-            out.printf("%d,%d,%.3f,%s,%s\n",
+            out.printf("%s,%d,%d,%.3f,%s,%s\n",
+                    p.basefilename,
                     clusters.get(0).getTaxaSize(),
                     k,
                     time_total / 1000.,
-                    solution == null ? "UNSAT" : "SAT",
+                    solutions == null ? "UNSAT" : "SAT",
                     p.isExternal ? "external" : "builtin");
         } catch (IOException e) {
             System.err.println("IOException: " + e.getMessage());
         }
 
-        if (solution == null)
+        if (solutions == null)
             return false;
 
-        System.out.printf("[*] %s: building network...\n", this);
-        this.answer = new Network(clusters, k, solution);
-        System.out.printf("[+] %s: done building network\n", this);
+        System.out.printf("[*] %s: building networks...\n", this);
+        this.answers = solutions.stream()
+                .map(solution -> new Network(this, k, solution))
+                .collect(Collectors.toList());
+        this.answer = this.answers.get(0);
+        System.out.printf("[+] %s: done building %d network(s)\n", this, this.answers.size());
 
         return true;
     }
@@ -119,18 +140,6 @@ class ClusterSubtask extends Subtask {
     private void normalize() {
         for (Tree cluster : clusters) {
             cluster.addFictitiousRoot();
-        }
-    }
-
-    private static void deleteFile(String filename) {
-        try {
-            Files.delete(Paths.get(filename));
-            System.out.println("[+] Removing <" + filename + ">: OK");
-        } catch (FileNotFoundException e) {
-            System.err.println("[-] Removing <" + filename + ">: no such file");
-        } catch (IOException e) {
-            System.err.println("[!] So sad: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 }

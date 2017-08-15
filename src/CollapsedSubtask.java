@@ -1,3 +1,5 @@
+import java.util.ArrayList;
+
 class CollapsedSubtask extends Subtask {
     private final Tree subtree;
 
@@ -6,6 +8,10 @@ class CollapsedSubtask extends Subtask {
         this.subtree = subtree;
     }
 
+
+    Tree getSubtree() {
+        return subtree;
+    }
 
     @Override
     int getN() {
@@ -19,6 +25,8 @@ class CollapsedSubtask extends Subtask {
 
     @Override
     void solve(SolveParameters p) {
-        answer = new Network(subtree);
+        answer = new Network(this);
+        answers = new ArrayList<>();
+        answers.add(answer);
     }
 }
