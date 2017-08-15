@@ -114,3 +114,7 @@ Grass2WaxyIts_np:
 
 clean:
 	rm -f *.bee *.beepp *.dimacs *.map
+
+reset_logs:
+	echo f,n,k,t,solver > everything.log
+	echo f,n,k,t,sat,solver > subtasks.log
