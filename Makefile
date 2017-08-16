@@ -1,5 +1,6 @@
 PY = python
 SCRIPT = run.py
+EXTRA = -p
 DIR_GRASS2 = data/tests/small/Grass2
 DIR_GRASS3 = data/tests/small/Grass3
 
