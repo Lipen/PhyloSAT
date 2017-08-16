@@ -3,9 +3,9 @@
 
 
   <property file="phylosat.properties"/>
-  <!-- Uncomment the following property if no tests compilation is needed -->
 
-  <property name="skip.tests" value="true"/>
+  <!-- Uncomment the following property if no tests compilation is needed -->
+  <!-- <property name="skip.tests" value="true"/> -->
 
 
   <!-- Compiler options -->
@@ -61,6 +61,8 @@
     <pathelement location="${basedir}/lib/commons-exec-1.3.jar"/>
     <pathelement location="${basedir}/lib/jcommander-1.72.jar"/>
     <pathelement location="${basedir}/lib/jebl.jar"/>
+    <pathelement location="${basedir}/lib/junit-4.12.jar"/>
+    <pathelement location="${basedir}/lib/hamcrest-core-1.3.jar"/>
   </path>
 
   <!-- Modules -->
@@ -151,7 +153,7 @@
 
   <target name="compile.module.phylosat.tests" depends="compile.module.phylosat.production" description="compile module PhyloSAT; test classes" unless="skip.tests">
     <mkdir dir="${phylosat.testoutput.dir}"/>
-    <javac destdir="${phylosat.testoutput.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true">
+    <javac destdir="${phylosat.testoutput.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true" includeantruntime="false">
       <compilerarg line="${compiler.args.phylosat}"/>
       <bootclasspath refid="phylosat.module.bootclasspath"/>
       <classpath refid="phylosat.module.classpath"/>
@@ -192,10 +194,12 @@
     <mkdir dir="${artifact.temp.output.phylosat:jar}"/>
     <jar destfile="${temp.jar.path.PhyloSAT.jar}" duplicate="preserve" filesetmanifest="mergewithoutmain">
       <zipfileset dir="${phylosat.output.dir}"/>
+      <zipfileset src="${basedir}/lib/antlr-4.7-complete.jar"/>
+      <zipfileset src="${basedir}/lib/commons-exec-1.3.jar"/>
       <zipfileset src="${basedir}/lib/jcommander-1.72.jar"/>
       <zipfileset src="${basedir}/lib/jebl.jar"/>
-      <zipfileset src="${basedir}/lib/commons-exec-1.3.jar"/>
-      <zipfileset src="${basedir}/lib/antlr-4.7-complete.jar"/>
+      <zipfileset src="${basedir}/lib/junit-4.12.jar"/>
+      <zipfileset src="${basedir}/lib/hamcrest-core-1.3.jar"/>
       <manifest>
         <attribute name="Main-Class" value="Main"/>
       </manifest>
