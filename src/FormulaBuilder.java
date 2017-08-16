@@ -181,7 +181,7 @@ class FormulaBuilder {
         println("// 2.1.4* <Numeration order>");
         // TODO: check wildly!
 
-        println("// p_{r,v} and p_{u,r} => v > u");
+        println("// p_{r,v} and p_{u,r} => (v > u)");
         if (numeration_reticular_through)
             R().forEach(r -> {
                 PP(r).forEach(v -> {
@@ -220,7 +220,7 @@ class FormulaBuilder {
         //     });
         // });
 
-        println("// p_{i,v} and p_{u,i} => v > u");
+        println("// p_{i,v} and p_{u,i} => (v > u)");
         if (numeration_vertices_through)
             V_().forEach(i -> {
                 PP(i).forEach(v -> {
@@ -255,17 +255,22 @@ class FormulaBuilder {
         else
             println("// Not today!");
 
-        println("// p_{u1,r1} and p_{u2,r2} => (r1 > r2 <=> u1 > u2)");
+        println("// p_{u1,r1} and p_{u2,r2} => ((r1 > r2) <=> (u1 > u2))");
         if (numeration_reticular_order)
             LV_().forEach(u1 -> {
                 LV_().forEach(u2 -> {
                     R().forEach(r1 -> {
                         R().forEach(r2 -> {
-                            printlnf("(%s = %d) & (%s = %d) => ((%d > %d) <=> (%d > %d))",
-                                    var("p", u1), r1,
-                                    var("p", u2), r2,
-                                    r1, r2,
-                                    u1, u2);
+                            // printlnf("(%s = %d) & (%s = %d) => ((%d > %d) <=> (%d > %d))",
+                            //         var("p", u1), r1,
+                            //         var("p", u2), r2,
+                            //         r1, r2,
+                            //         u1, u2);
+                            if (!((r1 > r2) == (u1 > u2))) {
+                                printlnf("(%s != %d) | (%s != %d)",
+                                        var("p", u1), r1,
+                                        var("p", u2), r2);
+                            }
                         });
                     });
                 });
@@ -273,17 +278,23 @@ class FormulaBuilder {
         else
             println("// Not today!");
 
-        println("// p_{u1,v1} and p_{u2,v2} and u2 > u1 => v2 >= v1");
+        // println("// p_{u1,v1} and p_{u2,v2} and (u1 > u2) => (v1 >= v2)");
+        // TODO: check iff
+        println("// p_{u1,v1} and p_{u2,v2} => ((u1 > u2) <=> (v1 >= v2))");
         if (numeration_vertices_order)
             V_().forEach(u1 -> {
                 PP(u1).forEach(v1 -> {
                     V_().forEach(u2 -> {
                         PP(u2).forEach(v2 -> {
-                            printlnf("(%s = %d) & (%s = %d) & (%d > %d) => (%d >= %d)",
-                                    var("p", u1), v1,
-                                    var("p", u2), v2,
-                                    u1, u2,
-                                    v1, v2);
+                            // printlnf("(%s = %d) & (%s = %d) & (%d > %d) => (%d >= %d)",
+                            //         var("p", u1), v1,
+                            //         var("p", u2), v2,
+                            //         u1, u2,
+                            //         v1, v2);
+                            if (!((u1 > u2) == (v1 >= v2)))
+                                printlnf("(%s != %d) | (%s != %d)",
+                                        var("p", u1), v1,
+                                        var("p", u2), v2);
                         });
                     });
                 });
