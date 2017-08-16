@@ -406,6 +406,10 @@ final class Tree extends Graph {
                 traverseBottomUp(true, true));
     }
 
+    String repr() {
+        return root.repr() + ";";
+    }
+
     private abstract class TreeNode extends Node {
         private final List<TreeNode> children = new ArrayList<>();
         private TreeNode parent;
@@ -438,6 +442,14 @@ final class Tree extends Graph {
                     .flatMap(child -> child.getLeaves().stream())
                     .collect(Collectors.toList());
         }
+
+        String repr() {
+            return "(" +
+                    children.stream()
+                            .map(TreeNode::repr)
+                            .collect(Collectors.joining(",")) +
+                    ")";
+        }
     }
 
     private class LeafNode extends TreeNode {
@@ -452,6 +464,11 @@ final class Tree extends Graph {
         @Override
         List<TreeNode> getLeaves() {
             return Stream.of(this).collect(Collectors.toList());
+        }
+
+        @Override
+        String repr() {
+            return getLabel();
         }
     }
 

@@ -164,6 +164,7 @@ class Main {
             manager.preprocess();
         else
             System.out.println("[*] Not preprocessing");
+        manager.printSubtasks();
 
         if (isParallel)
             manager.solveParallel();

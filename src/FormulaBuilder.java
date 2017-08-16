@@ -112,10 +112,10 @@ class FormulaBuilder {
         boolean reticular_one = true;
         boolean retucular_alo_amo = true;
         // boolean leaves_ = true;
-        boolean numeration_reticular_through = true;
-        boolean numeration_vertices_through = false;
-        boolean numeration_reticular_order = true;
-        boolean numeration_vertices_order = false;
+        boolean numeration_reticular_through = true;  // need
+        boolean numeration_vertices_through = true;  // seems like we need it
+        boolean numeration_reticular_order = true;  // need
+        boolean numeration_vertices_order = false;  // excess
 
         println("// 2.1.1 Vertices (forall v in V)");
         // println("// ONE(p_{v,i})_i");
@@ -224,20 +224,21 @@ class FormulaBuilder {
         if (numeration_vertices_through)
             V_().forEach(i -> {
                 PP(i).forEach(v -> {
-                    LV_().forEach(u -> {
-                        // printlnf("(%s = %d) & (%s = %d) => (%d > %d)",
-                        //         var("p", i), v,
-                        //         var("p", u), i,
-                        //         v, u);
-                        if (!(v > u)) {
-                            printlnf("(%s != %d) | (%s != %d)",
-                                    var("p", i), v,
-                                    var("p", u), i);
-                        }
-                    });
+                    // LV_().forEach(u -> {
+                    //     // printlnf("(%s = %d) & (%s = %d) => (%d > %d)",
+                    //     //         var("p", i), v,
+                    //     //         var("p", u), i,
+                    //     //         v, u);
+                    //     if (!(v > u)) {
+                    //         printlnf("(%s != %d) | (%s != %d)",
+                    //                 var("p", i), v,
+                    //                 var("p", u), i);
+                    //     }
+                    // });
                     // it is also holds when {v in R}
                     if (v > root()) {
-                        R().filter(u -> u != v).forEach(u -> {
+                        // R().filter(u -> u != v).forEach(u -> {
+                        R().forEach(u -> {
                             // printlnf("(%s = %d) & %s => (%d > %d)",
                             //         var("p", i), v,
                             //         var("p", u, i),

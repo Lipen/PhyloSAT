@@ -38,7 +38,7 @@ class Manager {
         }
 
         long time_total = System.currentTimeMillis() - time_start;
-        System.out.printf("[+] Preprocessing done in %.3fs\n  > Subtasks' sizes (total = %d): %s\n", time_total / 1000., subtasks.size(), subtasks.stream().map(Subtask::getN).collect(Collectors.toList()));
+        System.out.printf("[+] Preprocessing done in %.3fs%n", time_total / 1000.);
     }
 
     List<CollapsedSubtask> getCollapsedSubtasks() {
@@ -68,16 +68,16 @@ class Manager {
         for (Subtask subtask : getClusterSubtasks()) {
             executor.submit(() -> {
                 System.out.println("[*] " + subtask + ": solving...");
-                long time_solve = System.currentTimeMillis();
+                long time_start = System.currentTimeMillis();
                 subtask.solve(solveParameters);
-                time_solve = System.currentTimeMillis() - time_solve;
+                double time_solve = (System.currentTimeMillis() - time_start) / 1000.;
 
                 if (subtask.answer != null)
                     System.out.printf("[+] %s: solution with k=%d found in %.3fs)\n",
-                            subtask, subtask.answer.getK(), time_solve / 1000.);
+                            subtask, subtask.answer.getK(), time_solve);
                 else
                     System.out.printf("[-] %s: no solution found in time=%.3fs)\n",
-                            subtask, time_solve / 1000.);
+                            subtask, time_solve);
             });
         }
 
@@ -109,6 +109,15 @@ class Manager {
             result.substituteSubtask(subtasks.get(i));
 
         System.out.printf("[+] Finally, cooked network with %d reticulation nodes\n", result.getK());
+    }
+
+    void printSubtasks() {
+        System.out.printf("[+] Subtasks (total=%d):%n", subtasks.size());
+        for (Subtask subtask : subtasks) {
+            System.out.printf("  > %s%n", subtask);
+            for (String item : subtask.reprData())
+                System.out.printf("  >-> %s%n", item);
+        }
     }
 
     void printTrees(String resultFilePath) {

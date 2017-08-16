@@ -1,4 +1,7 @@
 import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 class CollapsedSubtask extends Subtask {
     private final Tree subtree;
@@ -28,5 +31,11 @@ class CollapsedSubtask extends Subtask {
         answer = new Network(this);
         answers = new ArrayList<>();
         answers.add(answer);
+    }
+
+    @Override
+    List<String> reprData() {
+        return Stream.of(subtree.repr())
+                .collect(Collectors.toList());
     }
 }

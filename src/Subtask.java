@@ -13,6 +13,8 @@ abstract class Subtask {
 
     abstract void solve(SolveParameters p);
 
+    abstract List<String> reprData();
+
     @Override
     public String toString() {
         return String.format("{Subtask <%s> n=%d}", getLabel(), getN());
