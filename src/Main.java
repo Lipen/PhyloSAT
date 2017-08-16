@@ -15,9 +15,9 @@ class Main {
             description = "Files with trees")
     private List<String> treesPaths = new ArrayList<>();
 
-    @Parameter(names = {"-r", "--result"}, required = true, order = 1,
+    @Parameter(names = {"-r", "--result"}, order = 1,
             description = "Results base filepath (without extension)")
-    private String resultFilePath = "network";
+    private String resultFilePath = null;
 
     @Parameter(names = "--help", help = true, hidden = true)
     private boolean help = false;
@@ -127,7 +127,7 @@ class Main {
         return trees;
     }
 
-    private void run(JCommander j) {
+    int run(JCommander j) {
         Locale.setDefault(Locale.US);
 
         if (help) {
@@ -136,12 +136,12 @@ class Main {
             System.out.println("  * non-binary trees are not supported yet");
             System.out.println("\nAuthors:\n  > Vladimir Ulyantsev (ulyantsev@rain.ifmo.ru)\n  > Vyacheslav Moklev\n  > Konstantin Chukharev (lipen00@gmail.com)\n");
             j.usage();
-            return;
+            return -1;
         }
 
         if (!disablePreprocessing && hybridizationNumber >= 0) {
             System.err.println("[!] Hybridization number can be set only in -np mode");
-            return;
+            return -1;
         }
 
         if (maxTimeLimit > 0)
@@ -188,5 +188,7 @@ class Main {
         } catch (IOException e) {
             System.err.println("IOException: " + e.getMessage());
         }
+
+        return manager.result.getK();
     }
 }

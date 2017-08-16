@@ -5,6 +5,8 @@
       <root url="jar://$PROJECT_DIR$/lib/commons-exec-1.3.jar!/" />
       <root url="jar://$PROJECT_DIR$/lib/jcommander-1.72.jar!/" />
       <root url="jar://$PROJECT_DIR$/lib/jebl.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/hamcrest-core-1.3.jar!/" />
+      <root url="jar://$PROJECT_DIR$/lib/junit-4.12.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
