@@ -9,6 +9,7 @@ import org.antlr.v4.runtime.TokenStream;
 
 import java.io.*;
 import java.util.HashMap;
+import java.util.stream.Collectors;
 
 /**
  * @author Moklev Vyacheslav
@@ -57,5 +58,24 @@ public class BEEppCompiler {
         }
 
         return true;
+    }
+
+    public static void main(String... argv) {
+        if (argv.length < 1)
+            throw new RuntimeException("Please, pass path to file with bee++ formula");
+        String filename = argv[0];
+        try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
+            System.out.printf("[*] Reading formula from <%s>...%n", filename);
+            String formula = br.lines().collect(Collectors.joining(System.lineSeparator()));
+            System.out.printf("[*] Compiling formula (%d clauses)...%n", formula.split("\r\n|\r|\n").length);
+            fastCompile(formula, "out.bee", 1);
+            System.out.println("[+] OK");
+        } catch (FileNotFoundException e) {
+            System.err.println("[!] No such file: " + filename);
+            e.printStackTrace();
+        } catch (IOException e) {
+            System.err.println("[!] So sad: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }
