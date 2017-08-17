@@ -80,3 +80,11 @@ Grass3RpocWaxyIts:
 reset_logs:
 	echo f,n,k,t > oldthing.log
 	echo f,n,k,t,sat > oldtasks.log
+
+meh: meh_thing meh_sub
+meh_thing:
+	${PY} meh_thing.py everything.log > timing_thing_new.txt
+	${PY} meh_thing.py oldthing.log > timing_thing_old.txt
+meh_sub:
+	${PY} meh_sub.py subtasks.log > timing_sub_new.txt
+	${PY} meh_sub.py oldtasks.log > timing_sub_old.txt
