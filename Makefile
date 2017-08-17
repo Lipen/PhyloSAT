@@ -8,7 +8,7 @@ default:
 all: tests Grass2 Grass3
 
 # test_medium test_hard
-tests: test_easiest test_folded qwerty4 qwerty5 test_simple test_easy
+tests: test_easiest test_folded qwerty4 qwerty5 test_simple test_easy test_intermediate test_folded_large
 test_easiest:
 	${PY} ${SCRIPT} test_easiest.trees network_test_easiest ${EXTRA}
 test_folded:
@@ -21,10 +21,14 @@ test_simple:
 	${PY} ${SCRIPT} test_simple.trees network_test_simple ${EXTRA}
 test_easy:
 	${PY} ${SCRIPT} test_easy.trees network_test_easy ${EXTRA}
+test_intermediate:
+	${PY} ${SCRIPT} test_intermediate.trees network_test_intermediate ${EXTRA}
 test_medium:
 	${PY} ${SCRIPT} test_medium.trees network_test_medium ${EXTRA}
 test_hard:
 	${PY} ${SCRIPT} test_hard.trees network_test_hard -tl 300 -ftl 30 ${EXTRA}
+test_folded_large:
+	${PY} ${SCRIPT} test_folded_large.trees network_test_folded_large ${EXTRA}
 
 Grass2: Grass2NdhfWaxy Grass2PhytRbcl Grass2PhytRpoc Grass2PhytWaxy Grass2RbclWaxy Grass2RpocWaxy Grass2WaxyIts
 Grass2_: Grass2PhytRbcl Grass2PhytRpoc Grass2PhytWaxy Grass2RpocWaxy
