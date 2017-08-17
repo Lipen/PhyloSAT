@@ -32,7 +32,7 @@ def main():
         else:
             n_new = ' --- '
             k_new = ' --- '
-            t_new = '-------'
+            t_new = ' -------'
 
         if name in data_old:
             n_old, k_old, t_old = data_old[name]
@@ -42,7 +42,7 @@ def main():
         else:
             n_old = ' --- '
             k_old = ' --- '
-            t_old = '-------'
+            t_old = '--------'
 
         f = '{1: ^{0}}'.format(ll, name)
         print(' >  ' + ' | '.join([f, n_new, n_old, k_new, k_old, t_new, t_old]))
