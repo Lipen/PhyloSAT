@@ -169,7 +169,7 @@ class Manager {
 
                 try (PrintWriter gvPrintWriter = new PrintWriter(networkFilePath)) {
                     System.out.println("[*] Printing isomorphic network to <" + networkFilePath + ">");
-                    gvPrintWriter.print(isonetwork.toGVString());
+                    gvPrintWriter.print(isonetwork.toGVString(true));
                 } catch (FileNotFoundException e) {
                     System.err.println("[!] Couldn't open <" + resultFilePath + ">:\n" + e.getMessage());
                 }

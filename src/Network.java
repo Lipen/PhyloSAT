@@ -4,6 +4,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 final class Network extends Graph {
+    // Invariant: network has NO fictitious root/leaf
     private final NetworkNode root;
     private int n;  // Number of taxa
     private int k;  // Hybridization number
@@ -50,7 +51,6 @@ final class Network extends Graph {
         this.root.setParent(null);
     }
 
-
     Network(CollapsedSubtask subtask) {
         /* Builds network from just one tree, so it has no reticulate nodes */
         Tree subtree = subtask.getSubtree();
@@ -82,6 +82,7 @@ final class Network extends Graph {
         this.root.setParent(null);
     }
 
+
     int getN() {
         return n;
     }
@@ -89,7 +90,6 @@ final class Network extends Graph {
     int getK() {
         return k;
     }
-    // Invariant: network has NO fictitious root/leaf
 
     private List<NetworkNode> getTaxa() {
         List<NetworkNode> taxa = root.getLeaves();
@@ -159,6 +159,10 @@ final class Network extends Graph {
     }
 
     String toGVString() {
+        return toGVString(false);
+    }
+
+    String toGVString(boolean just_a_little_more_verbose) {
         Formatter ans = new Formatter();
         Map<NetworkNode, Integer> m = new HashMap<>();
         m.put(null, 0);  // stub
@@ -166,7 +170,10 @@ final class Network extends Graph {
 
         ans.format("graph {%n");
         ans.format("  /* Leaves */%n");
-        ans.format("  { node [shape=invhouse] rank=sink%n");
+        if (just_a_little_more_verbose)
+            ans.format("  { node [shape=invhouse] rank=sink%n");
+        else
+            ans.format("  { node [shape=invhouse fixedsize=true width=0.5 height=0.4] rank=sink%n");
         for (int v = 1; v <= n; v++) {
             NetworkNode leaf = leaves.get(v - 1);
             ans.format("    %d [label=\"%s\"]\n", v, leaf.getLabel());
@@ -174,19 +181,24 @@ final class Network extends Graph {
                 throw new RuntimeException("Ah!");
             m.put(leaf, m.size());
         }
-        ans.format("  }\n\n");
+        ans.format("  }%n%n");
 
         ans.format("  /* Internals and Reticulates */%n");
         List<NetworkNode> traversal = traverseBottomUp(true, false);
 
         for (NetworkNode node : traversal) {
             m.put(node, m.size());
-            if (node instanceof InternalNode)
-                // ans.format("    %d [shape=point label=\"\"]%n", m.get(node));
-                ans.format("    %d [shape=circle label=\"%s\" fixedsize=true width=0.5]%n", m.get(node), node.getPseudoName());
-            else if (node instanceof ReticulateNode)
-                // ans.format("    %d [shape=square label=\"\" fixedsize=true width=0.3 height=0.3]%n", m.get(node));
-                ans.format("    %d [shape=square label=\"%s\" fixedsize=true width=0.5]%n", m.get(node), node.getPseudoName());
+            if (node instanceof InternalNode) {
+                if (just_a_little_more_verbose)
+                    ans.format("    %d [shape=circle label=\"%s\"]%n", m.get(node), node.getPseudoName());
+                else
+                    ans.format("    %d [shape=point label=\"\"]%n", m.get(node));
+            } else if (node instanceof ReticulateNode) {
+                if (just_a_little_more_verbose)
+                    ans.format("    %d [shape=square label=\"%s\"]%n", m.get(node), node.getPseudoName());
+                else
+                    ans.format("    %d [shape=square label=\"\" fixedsize=true width=0.2]%n", m.get(node));
+            }
         }
         ans.format("%n");
 
@@ -194,7 +206,6 @@ final class Network extends Graph {
         for (NetworkNode node : traversal) {
             for (NetworkNode child : node.getChildren()) {
                 ans.format("    %d -- %d%n", m.get(node), m.get(child));
-                // ans.format("    \"%s\" -- \"%s\"%n", node.getIndex(), child.getIndex());
             }
         }
 
@@ -227,6 +238,7 @@ final class Network extends Graph {
         /* Leaves + Vertices without Root */
         return IntStream.concat(L(), V_(rho));
     }
+
 
     private abstract class NetworkNode extends Node {
         private final int index;

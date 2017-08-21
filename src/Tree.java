@@ -341,29 +341,41 @@ final class Tree extends Graph {
     }
 
     String toGVString() {
+        return toGVString(false);
+    }
+
+    String toGVString(boolean just_a_little_more_verbose) {
         // Observation: on printing stage tree has no fictitious nodes
-        StringBuilder ans = new StringBuilder("graph {\n");
+        Formatter ans = new Formatter();
+        // StringBuilder ans = new StringBuilder("graph {\n");
         List<TreeNode> vertices = traverseBottomUp(true, true);
 
-        ans.append("  /* Leaves */\n");
-        ans.append("  { node [shape=invhouse] rank=sink\n");
-        L().forEach(v -> ans.append(String.format("    %d [label=\"%s\"]\n", v, getLabel(v))));
-        ans.append("  }\n\n");
+        ans.format("graph {%n");
+        ans.format("  /* Leaves */%n");
+        ans.format("  { node [shape=invhouse fixedsize=true width=0.5 height=0.4] rank=sink%n");
+        L().forEach(v -> {
+            ans.format("    %d [label=\"%s\"]%n", v, getLabel(v));
+        });
+        ans.format("  }%n%n");
 
-        ans.append("  /* Vertices */\n");
-        ans.append("  { node [shape=circle]\n   ");
-        V().forEach(v -> ans.append(" ").append(v));
-        ans.append(";\n  }\n\n");
+        ans.format("  /* Vertices */%n");
+        ans.format("  { node [shape=circle]%n");
+        V().forEach(v -> {
+            if (just_a_little_more_verbose)
+                ans.format("    %d [shape=circle fixedsize=true width=0.5]%n", v);
+            else
+                ans.format("    %d [shape=point]%n", v);
+        });
+        ans.format("  }%n%n");
 
-        ans.append("  /* Edges */\n");
+        ans.format("  /* Edges */%n");
         for (int i = 0; i < vertices.size() - 1; i++) {
             TreeNode node = vertices.get(i);
             int parentNum = vertices.indexOf(node.getParent());
-            // ans.append(String.format("    %d -- %d;\n", i+1, parentNum+1));
-            ans.append(String.format("    %d -- %d\n", parentNum + 1, i + 1));
+            ans.format("    %d -- %d%n", parentNum + 1, i + 1);
         }
 
-        ans.append("}\n");
+        ans.format("}%n");
 
         return ans.toString();
     }
@@ -409,6 +421,7 @@ final class Tree extends Graph {
     String repr() {
         return root.repr() + ";";
     }
+
 
     private abstract class TreeNode extends Node {
         private final List<TreeNode> children = new ArrayList<>();
