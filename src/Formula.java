@@ -1,17 +1,23 @@
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.List;
 
 class Formula {
-    private final String formula;
+    private final List<String> clauses;
 
-    Formula(String formula) {
-        this.formula = formula;
+    Formula(List<String> clauses) {
+        this.clauses = clauses;
+    }
+
+
+    List<String> getClauses() {
+        return clauses;
     }
 
     void dump(String filename) {
         System.out.println("[.] Dumping formula to <" + filename + ">");
         try (PrintWriter out = new PrintWriter(filename)) {
-            out.println(formula);
+            out.println(this.toString());
         } catch (IOException e) {
             System.err.println("[!] So sad: " + e.getMessage());
             e.printStackTrace();
@@ -20,6 +26,6 @@ class Formula {
 
     @Override
     public String toString() {
-        return formula;
+        return String.join(System.lineSeparator(), clauses);
     }
 }

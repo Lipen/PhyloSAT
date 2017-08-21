@@ -93,7 +93,7 @@ class ClusterSubtask extends Subtask {
             formula.dump(beeppFileName);
 
         System.out.printf("[*] %s: compiling BEE++ to BEE (<%s>)...%n", this, beeFileName);
-        if (BEEppCompiler.fastCompile(formula.toString(), beeFileName, p.numberOfSolutions))
+        if (BEEppCompiler.fastCompile(formula.getClauses(), beeFileName, p.numberOfSolutions))
             System.out.printf("[+] %s: done compiling BEE++ to BEE%n", this);
         else {
             System.out.printf("[-] %s: compilation to BEE failed%n", this);

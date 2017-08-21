@@ -9,20 +9,20 @@ import org.antlr.v4.runtime.TokenStream;
 
 import java.io.*;
 import java.util.HashMap;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
  * @author Moklev Vyacheslav
  */
 public class BEEppCompiler {
-    public static synchronized boolean fastCompile(String formula, String filename, int numberOfSolutions) {
+    public static synchronized boolean fastCompile(List<String> clauses, String filename, int numberOfSolutions) {
         StaticStorage.resetVarCounter();
         StaticStorage.vars = new HashMap<>();
-        try (BufferedReader br = new BufferedReader(new StringReader(formula));
-             PrintWriter pw = new PrintWriter(filename)
+        try (PrintWriter pw = new PrintWriter(filename)
         ) {
-            br.lines().forEach(line -> {
-                CharStream inputStream = CharStreams.fromString(line);
+            for (String clause : clauses) {
+                CharStream inputStream = CharStreams.fromString(clause);
                 BEEppLexer lexer = new BEEppLexer(inputStream);
                 TokenStream tokens = new CommonTokenStream(lexer);
                 BEEppParser parser = new BEEppParser(tokens);
@@ -40,8 +40,10 @@ public class BEEppCompiler {
                 } else if (ctx.explicit != null) {
                     String explicit = ctx.explicit.replaceFirst("^@\\s*(.*)", "$1");
                     pw.println(explicit);
+                } else {
+                    System.err.printf("[!] Couldn't parse: %s%n", clause);
                 }
-            });
+            }
 
             if (numberOfSolutions == 1)
                 pw.println("solve satisfy");
@@ -50,10 +52,6 @@ public class BEEppCompiler {
             pw.flush();
         } catch (FileNotFoundException e) {
             System.err.println("[!] Couldn't open <" + filename + ">: " + e.getMessage());
-            return false;
-        } catch (IOException e) {
-            System.err.println("[!] So sad: " + e.getMessage());
-            e.printStackTrace();
             return false;
         }
 
@@ -66,9 +64,9 @@ public class BEEppCompiler {
         String filename = argv[0];
         try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
             System.out.printf("[*] Reading formula from <%s>...%n", filename);
-            String formula = br.lines().collect(Collectors.joining(System.lineSeparator()));
-            System.out.printf("[*] Compiling formula (%d clauses)...%n", formula.split("\r\n|\r|\n").length);
-            fastCompile(formula, "out.bee", 1);
+            List<String> clauses = br.lines().collect(Collectors.toList());
+            System.out.printf("[*] Compiling formula (%d clauses)...%n", clauses.size());
+            fastCompile(clauses, "out.bee", 1);
             System.out.println("[+] OK");
         } catch (FileNotFoundException e) {
             System.err.println("[!] No such file: " + filename);
