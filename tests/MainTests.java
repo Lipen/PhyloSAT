@@ -40,6 +40,11 @@ public class MainTests {
     }
 
     @Test
+    public void testNormalization() {
+        runTest(1, "test_normalization");
+    }
+
+    @Test
     public void testSimple() {
         runTest(3, "test_simple");
     }
