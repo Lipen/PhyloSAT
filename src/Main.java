@@ -39,7 +39,7 @@ class Main {
     private int firstTimeLimit = 10;
 
     @Parameter(names = {"-tl", "-mtl", "--maxTimeLimit"}, hidden = true,
-            description = "Maximum time available to solve subtask")
+            description = "Maximum time available to solve subtask with each k")
     private int maxTimeLimit = 300;
 
     @Parameter(names = {"-mc", "-m1", "--maxChildren"}, hidden = true,
