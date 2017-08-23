@@ -4,21 +4,15 @@ import java.io.*;
 import java.util.List;
 import java.util.Map;
 
-import static org.apache.commons.exec.ExecuteWatchdog.INFINITE_TIMEOUT;
-
 abstract class Solver {
-    abstract List<Map<String, Object>> solve();
+    abstract List<Map<String, Object>> solve(long timeout);
 
-    protected final OutputStream runSolver(CommandLine command) {
-        return runSolver(command, 0, null);
+    final OutputStream runSolver(CommandLine command, long timeout) {
+        return runSolver(command, timeout, 0, null);
     }
 
-    protected final OutputStream runSolver(CommandLine command, int successExitValue) {
-        return runSolver(command, successExitValue, null);
-    }
-
-    protected final OutputStream runSolver(CommandLine command, int successExitValue, int[] ignoredExitValues) {
-        ExecuteWatchdog watchdog = new ExecuteWatchdog(INFINITE_TIMEOUT);
+    final OutputStream runSolver(CommandLine command, long timeout, int successExitValue, int[] ignoredExitValues) {
+        ExecuteWatchdog watchdog = new ExecuteWatchdog(timeout);
         DefaultExecuteResultHandler resultHandler = new DefaultExecuteResultHandler();
         OutputStream outStream = new ByteArrayOutputStream();
         OutputStream errStream = new ByteArrayOutputStream();
@@ -43,6 +37,11 @@ abstract class Solver {
             System.err.println("[!] Execution interrupted: " + e.getMessage());
         } catch (IOException e) {
             System.err.println("[!] Execution failed: " + e.getMessage());
+        }
+
+        if (watchdog.killedProcess()) {
+            System.err.printf("[!] %s timeouted (%d)", command.getExecutable(), timeout);
+            return null;
         }
 
         if (resultHandler.getExitValue() != successExitValue) {

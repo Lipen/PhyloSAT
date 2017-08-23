@@ -7,6 +7,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static java.lang.Math.min;
+import static org.apache.commons.exec.ExecuteWatchdog.INFINITE_TIMEOUT;
+
 class ClusterSubtask extends Subtask {
     private final List<Tree> clusters;
 
@@ -46,24 +49,34 @@ class ClusterSubtask extends Subtask {
         normalize();
 
         if (p.hybridizationNumber >= 0) {
-            solveEx(p.hybridizationNumber, p);
+            solveEx(p.hybridizationNumber, p, INFINITE_TIMEOUT);
         } else {
             for (int k = 0; k <= p.checkFirst; k++)
-                if (solveEx(k, p)) {
+                if (solveEx(k, p, p.firstTimeLimit)) {
                     System.out.printf("[#] %s: solution found with k=%d during check-first stage%n", this, k);
                     return;
                 }
 
             int n = clusters.get(0).getTaxaSize();
-            if (!solveEx(n - 1, p)) {
+
+            long time_start = System.currentTimeMillis();
+            if (!solveEx(n - 1, p, INFINITE_TIMEOUT)) {
                 System.err.printf("[!] %s: no solution at upper bound... weird!%n", this);
                 return;
             }
-            for (int k = n - 2; k > p.checkFirst; k--)
-                if (!solveEx(k, p)) {
+            long time_total = System.currentTimeMillis() - time_start;
+
+            for (int k = n - 2; k > p.checkFirst; k--) {
+                time_start = System.currentTimeMillis();
+                long timeout = 3 * time_total;
+                if (p.maxTimeLimit >= 0)
+                    timeout = min(timeout, p.maxTimeLimit);
+                if (!solveEx(k, p, timeout)) {
                     System.out.printf("[#] %s: no solution found with k=%d during back-search stage%n", this, k);
                     return;
                 }
+                time_total = System.currentTimeMillis() - time_start;
+            }
         }
     }
 
@@ -74,7 +87,7 @@ class ClusterSubtask extends Subtask {
                 .collect(Collectors.toList());
     }
 
-    private boolean solveEx(int k, SolveParameters p) {
+    private boolean solveEx(int k, SolveParameters p, long timeout) {
         System.out.printf("[*] %s: trying to solve with k = %d...%n", this, k);
         long time_start = System.currentTimeMillis();
 
@@ -100,13 +113,13 @@ class ClusterSubtask extends Subtask {
             return false;
         }
 
-        System.out.printf("[*] %s: calling solver...%n", this);
+        System.out.printf("[*] %s: calling solver (timeout: %d)...%n", this, timeout);
         Solver solver;
         if (p.isExternal)
             solver = new SolverCryptominisat(beeFileName, dimacsFileName, mapFileName, p.threads);
         else
-            solver = new SolverCombined(beeFileName, p.numberOfSolutions);
-        List<Map<String, Object>> solutions = solver.solve();
+            solver = new SolverCombined(beeFileName);
+        List<Map<String, Object>> solutions = solver.solve(timeout);
         double time_total = (System.currentTimeMillis() - time_start) / 1000.;
         if (solutions != null)
             System.out.printf("[+] %s: solved with k=%d in %.3fs%n", this, k, time_total);

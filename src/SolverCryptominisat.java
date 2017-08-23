@@ -60,13 +60,13 @@ final class SolverCryptominisat extends Solver {
     }
 
     @Override
-    List<Map<String, Object>> solve() {
+    List<Map<String, Object>> solve(long timeout) {
         System.out.println("[.] Using external solver");
 
         if (!convertBEEtoDIMACS())
             return null;
 
-        Map<String, Object> solution = solveWithCryptominisat();
+        Map<String, Object> solution = solveWithCryptominisat(timeout);
         List<Map<String, Object>> solutions = new ArrayList<>();
         solutions.add(solution);
         return solutions;
@@ -95,8 +95,8 @@ final class SolverCryptominisat extends Solver {
         return true;
     }
 
-    private Map<String, Object> solveWithCryptominisat() {
-        OutputStream outputStream = runCryptominisat();
+    private Map<String, Object> solveWithCryptominisat(long timeout) {
+        OutputStream outputStream = runCryptominisat(timeout);
         if (outputStream == null)
             return null;
 
@@ -108,11 +108,11 @@ final class SolverCryptominisat extends Solver {
         return solution;
     }
 
-    private OutputStream runCryptominisat() {
+    private OutputStream runCryptominisat(long timeout) {
         CommandLine command = new CommandLine("cryptominisat")
                 .addArgument("--threads=" + threads)
                 .addArgument(dimacsFileName);
-        return runSolver(command, 10, new int[]{20});
+        return runSolver(command, timeout, 10, new int[]{20});
     }
 
     private Map<String, Object> mapSolution(Map<Integer, Boolean> variables) {

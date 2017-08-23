@@ -16,11 +16,9 @@ final class SolverCombined extends Solver {
             Pattern.compile("^(p_\\d+(?:_\\d+)?)\\s*=\\s*(\\d+|true|false)$");
 
     private final String beeFileName;
-    private final int numberOfSolutions;
 
-    SolverCombined(String beeFileName, int numberOfSolutions) {
+    SolverCombined(String beeFileName) {
         this.beeFileName = beeFileName;
-        this.numberOfSolutions = numberOfSolutions;
     }
 
     private static List<Map<String, Object>> parseSolutions(OutputStream outputStream) {
@@ -63,15 +61,15 @@ final class SolverCombined extends Solver {
     }
 
     @Override
-    List<Map<String, Object>> solve() {
+    List<Map<String, Object>> solve(long timeout) {
         System.out.println("[.] Using built-it solver");
 
-        List<Map<String, Object>> solutions = solveWithBumbleBEE();
+        List<Map<String, Object>> solutions = solveWithBumbleBEE(timeout);
         return solutions;
     }
 
-    private List<Map<String, Object>> solveWithBumbleBEE() {
-        OutputStream outputStream = runBumbleBEE();
+    private List<Map<String, Object>> solveWithBumbleBEE(long timeout) {
+        OutputStream outputStream = runBumbleBEE(timeout);
         if (outputStream == null)
             return null;
 
@@ -79,9 +77,9 @@ final class SolverCombined extends Solver {
         return solutions;
     }
 
-    private OutputStream runBumbleBEE() {
+    private OutputStream runBumbleBEE(long timeout) {
         CommandLine command = new CommandLine("BumbleBEE")
                 .addArgument(beeFileName);
-        return runSolver(command);
+        return runSolver(command, timeout);
     }
 }
