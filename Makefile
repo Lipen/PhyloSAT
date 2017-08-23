@@ -28,7 +28,7 @@ test_intermediate:
 test_medium:
 	${PY} ${SCRIPT} test_medium.trees network_test_medium ${EXTRA}
 test_hard:
-	${PY} ${SCRIPT} test_hard.trees network_test_hard -tl 300 -ftl 30 ${EXTRA}
+	${PY} ${SCRIPT} test_hard.trees network_test_hard ${EXTRA}
 test_folded_large:
 	${PY} ${SCRIPT} test_folded_large.trees network_test_folded_large ${EXTRA}
 
