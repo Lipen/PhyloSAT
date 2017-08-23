@@ -8,7 +8,7 @@ default:
 all: tests Grass2 Grass3
 
 # test_medium test_hard
-tests: test_easiest test_folded qwerty4 qwerty5 test_simple test_easy test_intermediate test_folded_large
+tests: test_easiest test_folded qwerty4 qwerty5 test_normalization test_simple test_easy test_intermediate test_folded_large
 test_easiest:
 	${PY} ${SCRIPT} test_easiest.trees network_test_easiest ${EXTRA}
 test_folded:
@@ -17,6 +17,8 @@ qwerty4:
 	${PY} ${SCRIPT} qwerty4.trees network_qwerty4 ${EXTRA}
 qwerty5:
 	${PY} ${SCRIPT} qwerty5.trees network_qwerty5 ${EXTRA}
+test_normalization:
+	${PY} ${SCRIPT} test_normalization.trees network_test_normalization ${EXTRA}
 test_simple:
 	${PY} ${SCRIPT} test_simple.trees network_test_simple ${EXTRA}
 test_easy:
