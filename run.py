@@ -65,7 +65,7 @@ for sub, isos in isodata.items():
     isonames = ' '.join(map(lambda iso: '{}.sub{}.iso{}.png'.format(filename_output, sub, iso), sorted(isos, key=int)))
     filename_isomerged = 'submerged_{}.sub{}.{}'.format(re.sub('^network_', '', filename_output), sub, format_)
     filename_isomerged = '../submerged/' + filename_isomerged
-    run('magick montage {} -gravity south -geometry +16+0 {}'.format(isonames, filename_isomerged))
+    run('gm montage {} -gravity south -geometry +16+0 {}'.format(isonames, filename_isomerged))
     os.chdir('..')
     # HACK END
 
@@ -86,4 +86,4 @@ if format_ == 'png':
     filenames += ' {}.{}'.format(filename_output_network, format_)
     filename_merged = 'merged_{}.{}'.format(re.sub('^network_', '', filename_output), format_)
     filename_merged = os.path.join(dir_merged, filename_merged)
-    run('magick convert {} -background white -gravity center -append {}'.format(filenames, filename_merged))
+    run('gm convert {} -background white -gravity center -append {}'.format(filenames, filename_merged))
