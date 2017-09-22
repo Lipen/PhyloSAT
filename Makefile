@@ -33,7 +33,7 @@ test_folded_large:
 	${PY} ${SCRIPT} test_folded_large.trees network_test_folded_large ${EXTRA}
 
 Grass2: Grass2NdhfWaxy Grass2PhytRbcl Grass2PhytRpoc Grass2PhytWaxy Grass2RbclWaxy Grass2RpocWaxy Grass2WaxyIts
-Grass2_: Grass2PhytRbcl Grass2PhytRpoc Grass2PhytWaxy Grass2RpocWaxy
+Grass2_: Grass2PhytRbcl Grass2PhytRpoc Grass2PhytWaxy Grass2RpocWaxy Grass2RbclWaxy
 Grass2NdhfWaxy:
 	${PY} ${SCRIPT} ${DIR_GRASS2}/Grass2NdhfWaxy.tree.restrict.num network_Grass2NdhfWaxy ${EXTRA}
 Grass2PhytRbcl:
