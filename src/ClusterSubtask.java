@@ -67,7 +67,7 @@ class ClusterSubtask extends Subtask {
             }
             long time_total = System.currentTimeMillis() - time_start;
 
-            for (int k = n - 2; k > p.checkFirst; k--) {
+            for (int k = n - 2; k >= 0; k--) {
                 time_start = System.currentTimeMillis();
                 long timeout = 3 * time_total;
                 if (p.maxTimeLimit >= 0)
