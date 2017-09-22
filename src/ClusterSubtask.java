@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static java.lang.Math.min;
+import static java.lang.Math.max;
 import static org.apache.commons.exec.ExecuteWatchdog.INFINITE_TIMEOUT;
 
 class ClusterSubtask extends Subtask {
@@ -70,7 +71,7 @@ class ClusterSubtask extends Subtask {
                 time_start = System.currentTimeMillis();
                 long timeout = 3 * time_total;
                 if (p.maxTimeLimit >= 0)
-                    timeout = min(timeout, p.maxTimeLimit);
+                    timeout = max(5000, min(timeout, p.maxTimeLimit));
                 if (!solveEx(k, p, timeout)) {
                     System.out.printf("[#] %s: no solution found with k=%d during back-search stage%n", this, k);
                     return;
